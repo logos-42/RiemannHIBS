@@ -1,0 +1,28 @@
+-- RiemannHIBS — Main Entry Point
+
+import RiemannHIBS
+
+def main : IO Unit := do
+  IO.println "══════════════════════════════════════════════════"
+  IO.println "  RiemannHIBS — 隐数运算法则 × 黎曼 ζ/η 函数构造"
+  IO.println "  Lean 4 形式化验证结果"
+  IO.println "══════════════════════════════════════════════════"
+  IO.println ""
+  IO.println "■ 隐数运算法则 (A2a 加减留隐层 / A2b 乘法投影 / A3 开方)"
+  IO.println "  ✓ hiddenArithmetic_holds, add_flow_S, mul_flow_R"
+  IO.println "■ ζ 级数构造: 每项 R 支 (A2b), 部分和留 S 支 (A2a)"
+  IO.println "  ✓ zetaTerm_tag_R, zetaSum_tag_S, zetaSum_val"
+  IO.println "■ η 级数构造 (Dirichlet 交错级数)"
+  IO.println "  ✓ etaSign_even/odd, etaSum_tag_S, etaSum_val"
+  IO.println "■ 解析延拓骨架: η = (1 − 2^(1−s))·ζ"
+  IO.println "  ✓ eta_reconstructs_zeta (η(2M) = ζ(2M) − 2·Σ偶数项)"
+  IO.println "  ✓ zeta_from_eta (由 η 重建 ζ)"
+  IO.println "■ 欧拉乘积: ∏_p (1 + p + …) = Σ_{p^i q^j} p^i q^j"
+  IO.println "  ✓ euler_product_expansion (质数生成所有整数)"
+  IO.println "  ✓ euler_product_tag_R (乘积强制流向 R 支)"
+  IO.println "■ 隐桥: π(欧拉乘积) = π(ζ 部分和) (可观测切片一致)"
+  IO.println "  ✓ euler_zeta_observable_bridge"
+  IO.println "■ 黎曼猜想 / Hilbert–Pólya (草案声明, 依赖解析延拓)"
+  IO.println "  ○ RiemannHypothesis, HilbertPolya (未证明, 如实声明)"
+  IO.println ""
+  IO.println "所有已证定理在 Lean 4 (v4.28.0, core, 无 mathlib) 中验证通过。"

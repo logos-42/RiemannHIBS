@@ -1,0 +1,10 @@
+name = "RiemannHIBS"
+version = "0.1.0"
+defaultTargets = ["riemannhibs"]
+
+[[lean_lib]]
+name = "RiemannHIBS"
+
+[[lean_exe]]
+name = "riemannhibs"
+root = "Main"
