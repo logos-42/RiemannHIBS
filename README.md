@@ -33,6 +33,16 @@ The flow rules (HIBS axioms A2a / A2b / A3):
 
 The asymmetry is the point: `±` stay hidden, `×÷` jump to ℝ, `√` jumps to iℝ.
 
+> **Upstream note (2026-08-14, local sync only):** In the HIBS paper, model (4.5)
+> and Example 4.3 carried a sign error in the square-root formula. The geometric
+> convention (paper A3 / abstract / §5 calculation procedure) is
+> **⟨+ ↦ iR⁻, ⟨− ↦ iR⁺** (positive half-axis to the negative imaginary axis,
+> negative half-axis to the positive one) — the old (4.5) was inverted. Fixed in
+> Lean_HIBS commit `cc08ceb`. This repo's `hSqrt` is the simplified
+> value-preserving tag model (no half-axis structure, corresponds to the A3 tag
+> clause, not the (4.5) value formula), so the fix does not affect it; the full
+> A3 (sign-aware `hSqrtFull`) lives in Lean_HIBS `HIBS/Sqrt.lean`.
+
 ---
 
 ## 2. The construction (correspondence table)
