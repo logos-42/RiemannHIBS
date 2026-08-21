@@ -51,13 +51,19 @@ theorem sqrt_irreversible (h : S) : (hSqrt h).tag = Tag.iR := rfl
 
 -- ============ 草案声明 (research targets — 未证明) ============
 
+-- 注: 以下草案声明放入命名空间, 避免与 mathlib 顶层 RiemannHypothesis (Analytic 模块引入) 冲突.
+namespace RiemannDraft
+
 -- 黎曼猜想 (草案声明 — 未证明)
 -- 注: 解析延拓 ζ(s) = η(s)/(1 − 2^(1−s)) 的有限代数骨架
 --     已在 Zeta.eta_reconstructs_zeta / Zeta.zeta_from_eta 中证明;
 --     完整版本需要实数系上的级数收敛与解析延拓, 超出 core-Lean 整数模型.
+--     (mathlib 完整版见 Analytic.lean 的 RiemannHypothesisHidden / eta_eq_mul_zeta)
 structure RiemannHypothesis (Z : ℂ → ℂ) : Prop where
   zeros_on_line : ∀ s : ℂ, Z s = ℂ0 → trivialZero s ∨ criticalLine s
 
 -- Hilbert–Pólya 猜想 (草案声明 — 未证明): 非平凡零点的虚部构成某自伴算符的谱
 structure HilbertPolya (Z : ℂ → ℂ) : Prop where
   spectrum_zeros : ∀ s : ℂ, Z s = ℂ0 → ¬ trivialZero s → criticalLine s
+
+end RiemannDraft

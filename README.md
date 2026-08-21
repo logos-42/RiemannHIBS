@@ -111,6 +111,31 @@ infinite-series convergence and analytic continuation are draft statements.
 - `doubledEmbedding_observable` — the hidden embedding of 2s = 1 + 2it
 - `sqrt_pure_imag` — the hidden square-root sends t² into the `iR` branch; its observable slice is the pure imaginary ⟨0, t²⟩
 
+### Analytic continuation & hidden-space Riemann Hypothesis (`Analytic.lean`, mathlib) ★
+This module uses **mathlib's analytic continuation** of ζ (`riemannZeta : ℂ → ℂ`,
+differentiable away from s = 1, `zeta_eq_tsum_one_div_nat_add_one_cpow` gives the
+Dirichlet-series form for Re(s) > 1, `riemannZeta_one_sub` the functional equation)
+to lift the Riemann Hypothesis into the hidden-number space:
+
+- **Hidden ↔ complex plane, both directions**: `hEval` reads a hidden number as a
+  complex number (⟨x,S⟩↦x, ⟨x,R⟩↦−x, ⟨x,iR⟩↦xi); `ι'` embeds lattice points
+  (a,b) ↦ two-component hidden number; `π'_ι'_id` proves π'∘ι' = id. The projection
+  is not injective (`π_nonInjective`, axiom A1).
+- **ζ in the hidden space**: `zetaHidden h := riemannZeta (hEval h)`. Trivial zeros
+  are present: `zetaHidden_trivialZero`. The doubled critical line 2s = 1 + 2it is
+  embedded as `doubledEmbeddingC t` with `doubledEmbeddingC_on_line`.
+- **Analytic continuation formula (proved, no sorry)**:
+  `eta_eq_mul_zeta` — η(s) = (1 − 2^(1−s))·ζ(s) for Re(s) > 1, where
+  η(s) = ∑' (−1)^n/(n+1)^s is the Dirichlet eta series (even/odd split via
+  `tsum_even_add_odd`; `evenSum_eq_mul_zeta` gives the even terms = 2^(−s)·ζ).
+  This is the analytic version of the finite skeleton `eta_reconstructs_zeta`
+  proved in `Zeta.lean`.
+- **Hidden-space Riemann Hypothesis** (declaration, not sorry — consistent with
+  mathlib's own `RiemannHypothesis`): every hidden number whose observable value is
+  a non-trivial zero of the continued ζ has real part 1/2:
+  `RiemannHypothesisHidden`. Theorem `riemannHypothesis_hidden_of_mathlib`:
+  the classical hypothesis implies the hidden-space one.
+
 ---
 
 ## 4. Draft statements (honestly unproved)
@@ -132,7 +157,12 @@ lake build
 .lake/build/bin/riemannhibs
 ```
 
-No external dependencies. Check for `sorry`:
+Dependencies: the core modules (`Hidden`, `Axioms`, `Zeta`, `Euler`, `Riemann`)
+use pure core Lean 4 (no mathlib). The `Analytic` module (analytic continuation,
+hidden-space Riemann Hypothesis) requires **mathlib v4.28.0** (see `lakefile.toml`;
+the local git path reuses an existing mathlib clone — set it to your own
+`mathlib` checkout or `https://github.com/leanprover-community/mathlib4.git`).
+Check for `sorry`:
 
 ```bash
 grep -rn -- "sorry" RiemannHIBS/ Main.lean

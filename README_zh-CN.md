@@ -99,6 +99,27 @@ zeta_from_eta        :  (zetaSum w (2M)).val = (etaSum w (2M)).val + 2·evenSum 
 - `doubledEmbedding_observable` — 临界线 2s = 1 + 2it 的隐数嵌入
 - `sqrt_pure_imag` — 隐方数把 t² 送入 iR 支，可观测切片为纯虚数 ⟨0, t²⟩
 
+### 解析延拓与隐数空间黎曼猜想（Analytic.lean，mathlib 完整版）★
+本模块用 **mathlib 的解析延拓**（`riemannZeta : ℂ → ℂ`，s≠1 处可微，
+`zeta_eq_tsum_one_div_nat_add_one_cpow` 给出 Re(s)>1 的 Dirichlet 级数形式，
+`riemannZeta_one_sub` 为函数方程）把黎曼猜想提升到隐数空间：
+
+- **隐数 ↔ 复平面双向互推**：`hEval` 把隐数读成复数（⟨x,S⟩↦x、⟨x,R⟩↦−x、⟨x,iR⟩↦xi）；
+  `ι'` 把格点 (a,b) 嵌入双分量隐数；`π'_ι'_id` 证明 π'∘ι'=id。投影非单射
+  （`π_nonInjective`，公理 A1）。
+- **隐数空间中的 ζ**：`zetaHidden h := riemannZeta (hEval h)`。平凡零点存在：
+  `zetaHidden_trivialZero`。倍化临界线 2s = 1 + 2it 由 `doubledEmbeddingC t` 嵌入，
+  `doubledEmbeddingC_on_line` 证明确实落在临界线上。
+- **解析延拓公式（已证，无 sorry）**：`eta_eq_mul_zeta` —
+  η(s) = (1 − 2^(1−s))·ζ(s)（Re s > 1），其中 η(s) = ∑' (−1)^n/(n+1)^s 为
+  Dirichlet eta 级数（经 `tsum_even_add_odd` 奇偶拆分；
+  `evenSum_eq_mul_zeta` 证偶数项 = 2^(−s)·ζ）。这是 Zeta.lean 有限骨架
+  `eta_reconstructs_zeta` 的解析完整版。
+- **隐数空间黎曼猜想**（声明，非 sorry — 与 mathlib 自己的 `RiemannHypothesis`
+  一致）：每个可观测值为延拓后 ζ 非平凡零点的隐数，其实部 = 1/2：
+  `RiemannHypothesisHidden`。定理 `riemannHypothesis_hidden_of_mathlib`：
+  经典猜想成立 ⟹ 隐数版成立。
+
 ---
 
 ## 3. 草案声明（未证明 — 如实标注）
@@ -119,7 +140,11 @@ lake build
 .lake/build/bin/riemannhibs
 ```
 
-无外部依赖。检查无 `sorry`：
+依赖：core 模块（`Hidden`/`Axioms`/`Zeta`/`Euler`/`Riemann`）用纯 core Lean 4
+（无 mathlib）。`Analytic` 模块（解析延拓、隐数空间黎曼猜想）需要
+**mathlib v4.28.0**（见 `lakefile.toml`；本地 git 路径复用已有 mathlib 克隆——
+可改为你自己的 mathlib checkout 或 `https://github.com/leanprover-community/mathlib4.git`）。
+检查无 `sorry`：
 
 ```bash
 grep -rn -- "sorry" RiemannHIBS/ Main.lean

@@ -8,3 +8,8 @@ name = "RiemannHIBS"
 [[lean_exe]]
 name = "riemannhibs"
 root = "Main"
+
+[[require]]
+name = "mathlib"
+git = "/Users/apple/Downloads/lean/mathlib-v4.28.0"
+rev = "v4.28.0"
