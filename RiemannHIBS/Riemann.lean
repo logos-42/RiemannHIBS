@@ -23,11 +23,7 @@ example : trivialZero (⟨-2, 0⟩ : ℂ) := by
   · rfl
 
 -- 双分量隐数 (与 HIBS Thm 6.5 的 ι' 一致): 实部/虚部分别承载, 避免 hAdd 合并值
-structure CompositeHidden where
-  realPart : S
-  imagPart : S
-
-def π2 (h : CompositeHidden) : ℂ := ⟨h.realPart.val, h.imagPart.val⟩
+-- (CompositeHidden / π' 定义在 Hidden.lean, 对齐上游 HIBS Definitions)
 
 -- 临界线 s = 1/2 + it 的倍化隐数嵌入: 2s = 1 + 2it (整数坐标)
 -- 实部 1 走 S 支, 虚部 2t 走 iR 支
@@ -35,20 +31,20 @@ def doubledEmbedding (t : Int) : CompositeHidden :=
   ⟨hiddenReal 1, hiddenImag (2 * t)⟩
 
 theorem doubledEmbedding_observable (t : Int) :
-    π2 (doubledEmbedding t) = ⟨1, 2 * t⟩ := by
-  simp [doubledEmbedding, π2, hiddenReal, hiddenImag]
+    π' (doubledEmbedding t) = ⟨1, 2 * t⟩ := by
+  simp [doubledEmbedding, π', hiddenReal, hiddenImag]
 
 theorem doubled_embeds_critical_line (t : Int) :
-    criticalLineDoubled (π2 (doubledEmbedding t)) := by
-  simp [doubledEmbedding, π2, hiddenReal, hiddenImag, criticalLineDoubled]
+    criticalLineDoubled (π' (doubledEmbedding t)) := by
+  simp [doubledEmbedding, π', hiddenReal, hiddenImag, criticalLineDoubled]
 
 -- ============ 隐方数 (A3: 开方强制流向虚部) ============
 
 -- 隐方数在黎曼描写中的角色:
 --   临界线零点 s = 1/2 + it 的虚部 t 由"方"产生 —— 平方量 t² 经隐方数 √ 强制流向 iR 支,
 --   其可观测切片是纯虚数 ⟨0, t²⟩: 虚轴方向从隐方数涌现 (A3).
-theorem sqrt_pure_imag (t : Int) : π (hSqrt (hiddenProj (t * t))) = ⟨0, t * t⟩ := by
-  simp [π, hSqrt, hiddenProj]
+theorem sqrt_pure_imag (t : Int) : π (hSqrt (ι_R (t * t))) = ⟨0, t * t⟩ := by
+  simp [π, hSqrt, ι_R]
 
 -- 开方不可逆地改变标签: 隐方数把 R 支对象送入 iR 支 (信息流向不可逆)
 theorem sqrt_irreversible (h : S) : (hSqrt h).tag = Tag.iR := rfl

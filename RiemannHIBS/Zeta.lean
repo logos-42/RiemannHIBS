@@ -18,10 +18,10 @@ def etaSign : Nat → Int
   | n + 1 => -etaSign n
 
 -- ζ 级数第 n 项: 隐数, 值 w n, 标签 R (幂次 = 乘法, A2b 强制投影)
-def zetaTerm (w : Nat → Int) (n : Nat) : S := hiddenProj (w n)
+def zetaTerm (w : Nat → Int) (n : Nat) : S := ι_R (w n)
 
 -- η 级数第 n 项: 带交错符号
-def etaTerm (w : Nat → Int) (n : Nat) : S := hiddenProj (etaSign n * w n)
+def etaTerm (w : Nat → Int) (n : Nat) : S := ι_R (etaSign n * w n)
 
 -- ζ 部分和: 逐项 hAdd, 加法留在隐层 S 支 (A2a)
 def zetaSum (w : Nat → Int) : Nat → S
@@ -75,14 +75,14 @@ theorem zetaSum_val (w : Nat → Int) (N : Nat) :
   induction N with
   | zero => rfl
   | succ N ih =>
-      simp [zetaSum, hAdd, zetaTerm, hiddenProj, finSum_succ, ih]
+      simp [zetaSum, hAdd, zetaTerm, ι_R, finSum_succ, ih]
 
 theorem etaSum_val (w : Nat → Int) (N : Nat) :
     (etaSum w N).val = finSum N (fun i : Fin N => etaSign i.val * w i.val) := by
   induction N with
   | zero => rfl
   | succ N ih =>
-      simp [etaSum, hAdd, etaTerm, hiddenProj, finSum_succ, ih]
+      simp [etaSum, hAdd, etaTerm, ι_R, finSum_succ, ih]
 
 -- 可观测切片: π(ζ 部分和) = ⟨和, 0⟩ (S 支投影到实轴)
 theorem zetaSum_observable (w : Nat → Int) (N : Nat) :
@@ -95,14 +95,14 @@ theorem etaSum_twoStep (w : Nat → Int) (M : Nat) :
     (etaSum w (2 * M + 2)).val = (etaSum w (2 * M)).val + w (2 * M) - w (2 * M + 1) := by
   have h : 2 * M + 2 = (2 * M + 1) + 1 := by omega
   rw [h]
-  simp only [etaSum, etaTerm, hAdd, hiddenProj, etaSign_even M, etaSign_odd M]
+  simp only [etaSum, etaTerm, hAdd, ι_R, etaSign_even M, etaSign_odd M]
   omega
 
 theorem zetaSum_twoStep (w : Nat → Int) (M : Nat) :
     (zetaSum w (2 * M + 2)).val = (zetaSum w (2 * M)).val + w (2 * M) + w (2 * M + 1) := by
   have h : 2 * M + 2 = (2 * M + 1) + 1 := by omega
   rw [h]
-  simp only [zetaSum, hAdd, zetaTerm, hiddenProj]
+  simp only [zetaSum, hAdd, zetaTerm, ι_R]
 
 theorem evenSum_succ (w : Nat → Int) (M : Nat) :
     evenSum w (M + 1) = evenSum w M + w (2 * M + 1) := by

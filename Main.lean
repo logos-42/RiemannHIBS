@@ -10,6 +10,7 @@ def main : IO Unit := do
   IO.println ""
   IO.println "■ 隐数运算法则 (A2a 加减留隐层 / A2b 乘法投影 / A3 开方)"
   IO.println "  ✓ hiddenArithmetic_holds, add_flow_S, mul_flow_R"
+  IO.println "  ✓ axiom1_holds / axiom2_holds / axiom3_holds, all_axioms_hold (对齐新版 HIBS)"
   IO.println "■ ζ 级数构造: 每项 R 支 (A2b), 部分和留 S 支 (A2a)"
   IO.println "  ✓ zetaTerm_tag_R, zetaSum_tag_S, zetaSum_val"
   IO.println "■ η 级数构造 (Dirichlet 交错级数)"

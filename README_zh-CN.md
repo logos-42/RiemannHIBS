@@ -28,10 +28,16 @@ HIBS 的隐数 `⟨值, 标签⟩` 有两条核心流规则：
 | **隐虚数** | `hiddenImag b` = ⟨b, iR⟩ | A3 开方流入虚部 | 临界线点 1/2 + it 的虚部 t 承载于 iR 支（`doubledEmbedding`） |
 | **隐方数** | `hSqrt h` = ⟨h.val, iR⟩ | A3 开方强制投影到 iℝ | 平方量 t² 经 √ 流入 iR 支，投影为纯虚数 ⟨0, t²⟩（`sqrt_pure_imag`）——虚轴方向从隐方数涌现 |
 
-> **上游修正注记（2026-08-14，仅本地同步）**：HIBS 论文模型 (4.5) 与例 4.3 的
-> 开方公式有一处符号笔误。几何一致约定（论文 A3 / 摘要 / §5 计算程序）为
-> **⟨+ ↦ iR⁻、⟨− ↦ iR⁺**（正实半轴 → 负虚半轴，负实半轴 → 正虚半轴），原 (4.5)
-> 符号相反。已由 Lean_HIBS commit `cc08ceb` 修正。本仓库 `hSqrt` 为简化的
+> **上游注记（2026-08-21）**：HIBS（Lean_HIBS）自 commit `cc08ceb` 起大幅重构 ——
+> `Definitions.lean` 新增 ℂ 的 `Add`/`Mul` 实例、`conj`、`CompositeHidden`、`DecidableEq`
+> 等；`Axioms.lean` 改为参数化结构 `Axiom1/2/3` + `HIBS_Axioms`；并新增
+> `Conjugation`（conjS/signalRev）、`Sqrt`（符号感知 `hSqrtFull`）、`Derivation`
+> （`hEval`/`imul`/`hMulAdj`）、`Embedding`（ι'/π'）、`Model`（公理独立性 M₁/M₂/M₃）
+> 五个模块。本仓库的 `Hidden.lean`/`Axioms.lean` 已**对齐新版 Definitions/Axioms**
+> （`ι_R` 替代旧 `hiddenProj`，`CompositeHidden`/`π'` 移到 Hidden.lean），ζ/η 构造不变。
+>
+> 关于开方符号：HIBS 论文模型 (4.5) 与例 4.3 曾有一处符号笔误，几何一致约定为
+> **⟨+ ↦ iR⁻、⟨− ↦ iR⁺**，已由 `cc08ceb` 修正。本仓库 `hSqrt` 为简化的
 > 值保持标签模型（无半轴结构，对应 A3 标签子句而非 (4.5) 值公式），**不受影响**；
 > 完整 A3（符号感知 `hSqrtFull`）在 Lean_HIBS `HIBS/Sqrt.lean`。
 
@@ -39,7 +45,7 @@ HIBS 的隐数 `⟨值, 标签⟩` 有两条核心流规则：
 
 | 隐数对象 | 运算法则 | 标签 | 数学对象 |
 |----------|----------|------|----------|
-| `zetaTerm w n = hiddenProj (w n)` | A2b 乘法投影 | `R` | n^(−s) 项（幂 = 多次乘法） |
+| `zetaTerm w n = ι_R (w n)` | A2b 乘法投影 | `R` | n^(−s) 项（幂 = 多次乘法） |
 | `zetaSum w N`（逐项 hAdd） | A2a 加法封闭 | `S` | ζ 部分和 |
 | `etaSum w N`（交错符号） | A2a 加法封闭 | `S` | η 部分和 |
 | `geomH p e`（几何因子） | A2a 加法封闭 | `S` | 1 + p + … + p^e |
@@ -56,6 +62,13 @@ HIBS 的隐数 `⟨值, 标签⟩` 有两条核心流规则：
 - `hiddenArithmetic_holds` — A2a ∧ A2b ∧ A3 在该模型成立
 - `add_flow_S / sub_flow_S / mul_flow_R / sqrt_flow_iR` — 四条流规则
 - `π_nonInjective` — 投影非单射（A1）：不同隐数可投影到同一可观测值
+- `CompositeHidden` / `π'` — 双分量嵌入与投影（对齐上游 Thm 6.5 的 ι'/π'）
+
+### 三公理形式化（Axioms.lean，对齐新版 HIBS）
+- `axiom1_holds` — (A1)：projR/projImag 均非单射
+- `axiom2_holds` — (A2)：± 留 S 支，× 强制投影 R 支
+- `axiom3_holds` — (A3)：√ 强制投影 iR 支
+- `all_axioms_hold` — 三公理在标签对模型 S = ℤ×{S,R,iR} 上全部成立
 
 ### ζ/η 构造（Zeta.lean）
 - `zetaTerm_tag_R` — 每一项是 R 支（乘法强制投影）

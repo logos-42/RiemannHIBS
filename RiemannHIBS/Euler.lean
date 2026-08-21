@@ -25,7 +25,7 @@ def smoothSum (p q : Int) (a b : Nat) : Int :=
 -- 几何因子作为隐数: 各项是 R 支 (乘方 = 乘法), 求和流回 S 支
 def geomH (p : Int) : (e : Nat) → S
   | 0 => hiddenReal 1
-  | e + 1 => hAdd (geomH p e) (hiddenProj (p ^ (e + 1)))
+  | e + 1 => hAdd (geomH p e) (ι_R (p ^ (e + 1)))
 
 -- 隐数网格和: 逐项 hAdd
 def hFinSum : (n : Nat) → (Fin n → S) → S
@@ -35,7 +35,7 @@ def hFinSum : (n : Nat) → (Fin n → S) → S
 -- p, q 生成的整数上的隐数 ζ 和
 def smoothH (p q : Int) (a b : Nat) : S :=
   hFinSum (a + 1)
-    (fun i : Fin (a + 1) => hFinSum (b + 1) (fun j : Fin (b + 1) => hiddenProj (p ^ i.val * q ^ j.val)))
+    (fun i : Fin (a + 1) => hFinSum (b + 1) (fun j : Fin (b + 1) => ι_R (p ^ i.val * q ^ j.val)))
 
 -- ============ 流定理 ============
 
@@ -66,7 +66,7 @@ theorem geomH_val (p : Int) (e : Nat) : (geomH p e).val = geom p e := by
   induction e with
   | zero => simp [geomH, geom, hiddenReal, finSum]
   | succ e ih =>
-      simp [geomH, hAdd, hiddenProj, ih, geom_succ]
+      simp [geomH, hAdd, ι_R, ih, geom_succ]
 
 theorem hFinSum_val : ∀ n : Nat, ∀ f : Fin n → S,
     (hFinSum n f).val = finSum n (fun i : Fin n => (f i).val)

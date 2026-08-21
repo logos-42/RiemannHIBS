@@ -33,15 +33,24 @@ The flow rules (HIBS axioms A2a / A2b / A3):
 
 The asymmetry is the point: `±` stay hidden, `×÷` jump to ℝ, `√` jumps to iℝ.
 
-> **Upstream note (2026-08-14, local sync only):** In the HIBS paper, model (4.5)
-> and Example 4.3 carried a sign error in the square-root formula. The geometric
-> convention (paper A3 / abstract / §5 calculation procedure) is
-> **⟨+ ↦ iR⁻, ⟨− ↦ iR⁺** (positive half-axis to the negative imaginary axis,
-> negative half-axis to the positive one) — the old (4.5) was inverted. Fixed in
-> Lean_HIBS commit `cc08ceb`. This repo's `hSqrt` is the simplified
-> value-preserving tag model (no half-axis structure, corresponds to the A3 tag
-> clause, not the (4.5) value formula), so the fix does not affect it; the full
-> A3 (sign-aware `hSqrtFull`) lives in Lean_HIBS `HIBS/Sqrt.lean`.
+> **Upstream note (2026-08-21):** HIBS (Lean_HIBS) has been substantially
+> refactored since commit `cc08ceb` — `Definitions.lean` gained `Add`/`Mul`
+> instances for ℂ, `conj`, `CompositeHidden`, `DecidableEq`; `Axioms.lean` became
+> parameterized structures `Axiom1/2/3` + `HIBS_Axioms`; five new modules were
+> added: `Conjugation` (conjS/signalRev), `Sqrt` (sign-aware `hSqrtFull`),
+> `Derivation` (`hEval`/`imul`/`hMulAdj`), `Embedding` (ι'/π'),
+> `Model` (axiom independence M₁/M₂/M₃). This repo's `Hidden.lean`/`Axioms.lean`
+> are now **aligned with the new Definitions/Axioms** (`ι_R` replaces the old
+> `hiddenProj`; `CompositeHidden`/`π'` moved into Hidden.lean); the ζ/η
+> construction is unchanged.
+>
+> On the square-root sign: the HIBS paper's model (4.5) and Example 4.3 carried a
+> sign error; the geometric convention (paper A3 / abstract / §5 calculation
+> procedure) is **⟨+ ↦ iR⁻, ⟨− ↦ iR⁺** — fixed in commit `cc08ceb`. This repo's
+> `hSqrt` is the simplified value-preserving tag model (no half-axis structure,
+> corresponds to the A3 tag clause, not the (4.5) value formula), so the fix does
+> not affect it; the full A3 (sign-aware `hSqrtFull`) lives in Lean_HIBS
+> `HIBS/Sqrt.lean`.
 
 ---
 
@@ -49,7 +58,7 @@ The asymmetry is the point: `±` stay hidden, `×÷` jump to ℝ, `√` jumps to
 
 | Hidden object | Rule | Tag | Mathematical object |
 |---------------|------|-----|---------------------|
-| `zetaTerm w n = hiddenProj (w n)` | A2b | `R` | the n-th term n^(−s) (a power, i.e. iterated multiplication) |
+| `zetaTerm w n = ι_R (w n)` | A2b | `R` | the n-th term n^(−s) (a power, i.e. iterated multiplication) |
 | `zetaSum w N` (built by `hAdd`) | A2a | `S` | ζ partial sum |
 | `etaSum w N` (alternating signs) | A2a | `S` | η (Dirichlet) partial sum |
 | `geomH p e` (geometric factor) | A2a | `S` | 1 + p + … + p^e |
@@ -66,6 +75,13 @@ The asymmetry is the point: `±` stay hidden, `×÷` jump to ℝ, `√` jumps to
 - `hiddenArithmetic_holds` — A2a ∧ A2b ∧ A3 hold in the labelled-pair model
 - `add_flow_S / sub_flow_S / mul_flow_R / sqrt_flow_iR` — the four flow rules
 - `π_nonInjective` — the projection is non-injective (A1): distinct hidden numbers can project to the same observable value
+- `CompositeHidden` / `π'` — two-component embedding and projection (aligned with upstream Thm 6.5's ι'/π')
+
+### Three axioms (`Axioms.lean`, aligned with the new HIBS)
+- `axiom1_holds` — (A1): projR/projImag are both non-injective
+- `axiom2_holds` — (A2): ± stay on the S branch, × forces projection to R
+- `axiom3_holds` — (A3): √ forces projection to iR
+- `all_axioms_hold` — all three axioms verified on S = ℤ×{S,R,iR}
 
 ### ζ/η construction (`Zeta.lean`)
 - `zetaTerm_tag_R` — every term is an `R`-branch object (multiplication forces projection)
