@@ -386,14 +386,14 @@ theorem zero_on_critical_line_envelope (t : ℝ)
   criticalLine_circle t
 
 -- ====================================================================
--- 7. 与 EnvelopeC 的桥: 相位包络 ↔ 临界线圆周
---    EnvelopeC.lean (并行模块) 的 EnvelopePhase: ⟨r,θ⟩ ↦ r·e^{iθ} 覆盖全 ℂ
---    (phaseCoversTotal), 临界截面 criticalPhaseC: 投影 = 1/2 + t·i.
+-- 7. 相位包络 ↔ 临界线圆周 (桥)
+--    EnvelopePhase (EnvelopeC.lean §6): ⟨r,θ⟩ ↦ r·e^{iθ} 覆盖全 ℂ,
+--    临界截面 criticalPhaseC: 投影 = 1/2 + t·i.
 --    桥定理: 临界截面经指数映射后的模恒为 √e — 临界线在相位包络的
---    "半径-相位"坐标下就是圆周 |w| = √e. 把对方的两套语言 (三叶壳/截面)
---    与本模块的共圆定理 (criticalLine_circle) 接上.
+--    "半径-相位"坐标下就是圆周 |w| = √e. 把两套语言 (三叶壳/截面 ↔ 共圆) 接上.
+--    注: 选择性 open 仅引入所需名字, 避免 EnvelopeC 的 Tag/Hidden 与本模块冲突.
 -- ====================================================================
-open RiemannHIBS.EnvelopeC
+open RiemannHIBS.EnvelopeC (EnvelopePhase hEvalPhase criticalPhaseC criticalPhaseC_proj)
 
 -- 桥: criticalPhaseC (相位包络的临界截面) 的指数像落在圆周 |w| = √e 上
 theorem criticalPhaseC_envelope_circle (t : ℝ) :
@@ -406,5 +406,80 @@ theorem zero_envelope_circle (t : ℝ)
     (_hζ : riemannZeta ((1 / 2 : ℂ) + Complex.I * t) = 0) :
     ‖Complex.exp (hEvalPhase (criticalPhaseC t))‖ = envelopeRadius :=
   criticalPhaseC_envelope_circle t
+
+-- ====================================================================
+-- 8. 相位包络 ↔ 对数坐标: 主支参数化, 多圈叶与连续折叠
+--    缝合 EnvelopeC 的 EnvelopePhase (覆盖全 ℂ) 与 log 主支 (可逆域):
+--    - 主支相位参数化: ζ̂(r·e^{iθ}) = ζ(log r + iθ)  (θ ∈ (−π, π])
+--    - 2π 周期: 多圈叶 ⟨r, θ+2πk⟩ 投影回同一点
+--    - 连续折叠: 叶 π+2πk 全部折叠到负实轴 (离散 envelope_fold 的连续版)
+--    - 每圈叶覆盖: 每个 w ≠ 0 的每一圈 k 都有主支相位 θ 使投影回 w
+--    (draft: 多值 log 的叶分支, 如实标注)
+-- ====================================================================
+
+-- 主支相位参数化: 对 r > 0, θ ∈ (−π, π], expZeta 在相位包络坐标下
+--   就是 ζ 的对数坐标: ζ̂(r·e^{iθ}) = ζ(log r + iθ)
+--   (log 主支在 ℂ∖(−∞,0] 上可逆 ⟺ 相位叶 θ ∈ (−π,π] 覆盖该区域)
+theorem expZeta_phase_principal (r : ℝ) (hr : 0 < r) (θ : ℝ)
+    (hθ : -Real.pi < θ) (hθ' : θ ≤ Real.pi) :
+    expZeta (hEvalPhase ⟨r, θ⟩) = riemannZeta ((Real.log r : ℂ) + (θ : ℂ) * Complex.I) := by
+  unfold expZeta
+  congr 1
+  change Complex.log ((r : ℂ) * Complex.exp (θ * Complex.I)) =
+    (Real.log r : ℂ) + (θ : ℂ) * Complex.I
+  have hlog : Complex.log ((r : ℂ) * Complex.exp (θ * Complex.I)) =
+      (Real.log r : ℂ) + Complex.log (Complex.exp (θ * Complex.I)) :=
+    Complex.log_ofReal_mul (r := r) hr (Complex.exp_ne_zero (θ * Complex.I))
+  rw [hlog]
+  rw [Complex.log_exp (by simpa using hθ) (by simpa using hθ')]
+
+-- 相位 2π 周期 (归纳): 同一 w 的多圈叶 ⟨r, θ+2πk⟩ 投影回同一点
+theorem phase_periodic (r : ℝ) (θ : ℝ) (k : ℕ) :
+    hEvalPhase ⟨r, θ + 2 * Real.pi * (k : ℝ)⟩ = hEvalPhase ⟨r, θ⟩ := by
+  unfold hEvalPhase
+  dsimp
+  congr 1
+  induction k with
+  | zero => simp
+  | succ k ih =>
+      -- 单步: exp((x + 2π)·I) = exp(x·I)
+      have hstep (x : ℝ) : Complex.exp ((x + 2 * Real.pi) * Complex.I) =
+          Complex.exp (x * Complex.I) := by
+        rw [add_mul, Complex.exp_add]
+        have h2 : Complex.exp (2 * (Real.pi : ℂ) * Complex.I) = 1 := by
+          simpa using Complex.exp_two_pi_mul_I
+        rw [h2, mul_one]
+      -- θ + 2π(k+1) = (θ + 2πk) + 2π  (ℝ 层)
+      rw [show θ + 2 * Real.pi * ((k + 1 : ℕ) : ℝ) =
+          (θ + 2 * Real.pi * (k : ℝ)) + 2 * Real.pi by
+        norm_num [Nat.cast_add, Nat.cast_one]
+        ring]
+      simpa using (hstep (θ + 2 * Real.pi * (k : ℝ))).trans ih
+
+-- 连续折叠: 相位叶 π + 2πk 全部投影到负实轴 −r
+--   (离散折叠 envelope_fold 的连续版: 同一像 −r 有可数多个叶)
+theorem phase_fold_neg_axis (r : ℝ) (k : ℕ) :
+    hEvalPhase ⟨r, Real.pi + 2 * Real.pi * (k : ℝ)⟩ = -(r : ℂ) := by
+  -- 先按周期折叠到 k = 0, 再用 exp(π·I) = -1
+  rw [phase_periodic r Real.pi k]
+  unfold hEvalPhase
+  dsimp
+  rw [Complex.exp_pi_mul_I]
+  ring
+
+-- 可数多叶折叠: 不同圈 k₁, k₂ 的相位叶投影到同一可观测点
+theorem phase_fold_many_sheets (r : ℝ) (k₁ k₂ : ℕ) :
+    hEvalPhase ⟨r, Real.pi + 2 * Real.pi * (k₁ : ℝ)⟩ =
+    hEvalPhase ⟨r, Real.pi + 2 * Real.pi * (k₂ : ℝ)⟩ := by
+  rw [phase_fold_neg_axis r k₁, phase_fold_neg_axis r k₂]
+
+-- 万有覆盖的多圈叶 (已证): 每个 w ≠ 0 的每一圈 k 都有主支相位 θ ∈ (−π, π]
+--   使 ⟨‖w‖, θ + 2πk⟩ 投影回 w — 相位包络是 ℂ∖{0} 上的可数叶覆盖
+theorem envelope_universal_cover_branch (w : ℂ) (k : ℕ) (_hw : w ≠ 0) :
+    ∃ θ : ℝ, -Real.pi < θ ∧ θ ≤ Real.pi ∧
+      hEvalPhase ⟨‖w‖, θ + 2 * Real.pi * (k : ℝ)⟩ = w := by
+  refine ⟨w.arg, Complex.neg_pi_lt_arg w, Complex.arg_le_pi w, ?_⟩
+  rw [phase_periodic]
+  simp [hEvalPhase, Complex.norm_mul_exp_arg_mul_I]
 
 end RiemannHIBS.Analytic

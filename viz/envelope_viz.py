@@ -161,6 +161,50 @@ def fig_phase_cover():
     plt.close(fig)
 
 
+def fig_covering_space():
+    """图5: 覆盖空间 —— θ 模 2π 显式化, 每根纤维 = 2πℤ 平移轨道.
+    对应 Lean 定理: phase_periodic / phase_periodic_int (投影不变),
+      phase_two_pi_distinct (总空间不同点), phase_covering_fiber(_subset) (纤维 = 2πℤ)."""
+    fig, (axL, axR) = plt.subplots(1, 2, figsize=(12, 6))
+
+    # --- 左: 基空间 ℂ, 一个非零点 z0 = r0·e^{iθ0}, 其无穷多个原像都落在此 ---
+    axL.axhline(0, color="gray", lw=0.7)
+    axL.axvline(0, color="gray", lw=0.7)
+    r0, th0 = 1.8, np.pi / 5
+    z0x, z0y = r0 * np.cos(th0), r0 * np.sin(th0)
+    axL.add_patch(Circle((0, 0), r0, fill=False, color="#888888", lw=0.8))
+    axL.plot([0, 3.2 * np.cos(th0)], [0, 3.2 * np.sin(th0)], color="#ff7f0e", lw=1, alpha=0.6)
+    axL.plot(z0x, z0y, "o", color="#d62728", ms=11, zorder=5)
+    axL.annotate("z0 = r0*e^(i*theta0)\nfiber: infinitely many preimages",
+                 xy=(z0x, z0y), xytext=(0.1, -2.6), fontsize=9,
+                 arrowprops=dict(arrowstyle="->"))
+    axL.set_xlim(-3.5, 3.5)
+    axL.set_ylim(-3.5, 3.5)
+    axL.set_aspect("equal")
+    axL.set_xlabel("Re(z)")
+    axL.set_ylabel("Im(z)")
+    axL.set_title("Base space C minus {0}\ncovering map hEvalPhase: E_theta -> C")
+    axL.grid(True, alpha=0.2)
+
+    # --- 右: 覆盖空间 E_θ 的纤维: θ₀ + 2πn (n ∈ ℤ) 全是 z0 的原像 ---
+    ns = np.arange(-4, 5)
+    ths = th0 + 2 * np.pi * ns
+    axR.axhline(0, color="gray", lw=0.7)
+    axR.scatter(ths, np.zeros_like(ths), color="#d62728", s=60, zorder=5)
+    for n, th in zip(ns, ths):
+        axR.text(th, 0.12, f"{n:+d}*2pi", ha="center", fontsize=7, color="#333333")
+    axR.set_xlim(th0 - 9.5, th0 + 9.5)
+    axR.set_ylim(-0.6, 0.8)
+    axR.set_yticks([])
+    axR.set_xlabel("theta (phase coord, unbounded R)")
+    axR.set_title("Covering space E_theta: fiber over z0 = {theta0 + 2pi*n | n in Z}\n"
+                  "phase_periodic_int (same projection), phase_two_pi_distinct (distinct points)")
+    axR.grid(True, alpha=0.2)
+    fig.tight_layout()
+    fig.savefig(f"{OUT}/fig5_covering_space.png", dpi=140)
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     import os
     os.makedirs(OUT, exist_ok=True)
@@ -168,7 +212,9 @@ if __name__ == "__main__":
     fig_envelope_shell()
     fig_critical_section()
     fig_phase_cover()
+    fig_covering_space()
     print("已生成:")
     for f in ["fig1_projection_cross.png", "fig2_envelope_shell.png",
-              "fig3_critical_section.png", "fig4_phase_cover.png"]:
+              "fig3_critical_section.png", "fig4_phase_cover.png",
+              "fig5_covering_space.png"]:
         print("  ", f"{OUT}/{f}")

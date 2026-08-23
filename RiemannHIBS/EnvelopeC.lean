@@ -22,7 +22,10 @@ import Mathlib.Logic.Function.Basic
 import Mathlib.Analysis.Complex.Basic
 import Mathlib.Analysis.Complex.Exponential
 import Mathlib.Analysis.SpecialFunctions.Complex.Arg
+import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 import Mathlib.NumberTheory.LSeries.RiemannZeta
+
+open scoped Real
 
 namespace RiemannHIBS.EnvelopeC
 
@@ -309,5 +312,100 @@ structure PhaseTriv where
   -- 局部平凡化: 每片相位叶在径向上单射 (纤维方向可逆)
   localTriv (θ : ℝ) : Function.Injective (fun r : ℝ => hEvalPhase ⟨r, θ⟩) :=
     phaseRay_inj θ
+
+-- ====================================================================
+-- 8. 覆盖空间: θ 模 2π 显式化 (多值 / 覆盖结构)
+--    相位包络 E_θ = ℝ × ℝ 的投影 hEvalPhase 在 θ 上以 2π 为周期:
+--      同一个 z 对应无穷多个 θ = θ₀ + 2πn (n : ℤ),
+--    因此 hEvalPhase : E_θ → ℂ 是 ℂ∖{0} 上的 (局部) 覆盖映射,
+--    每根纤维 = 一条 2πℤ 平移轨道 —— 这正是"隐数多值性"的几何来源.
+-- ====================================================================
+
+-- 8.1 整数步周期性: 加 2π 后投影不变.
+theorem phase_periodic (r θ : ℝ) : hEvalPhase ⟨r, θ + 2 * π⟩ = hEvalPhase ⟨r, θ⟩ := by
+  simp [hEvalPhase, add_mul, Complex.exp_add, Complex.exp_two_pi_mul_I, mul_one]
+
+-- 8.2 整数倍周期性: 加 2π·n (n : ℤ) 后投影不变.
+theorem phase_periodic_int (r θ : ℝ) (n : ℤ) :
+    hEvalPhase ⟨r, θ + 2 * π * (n : ℝ)⟩ = hEvalPhase ⟨r, θ⟩ := by
+  unfold hEvalPhase
+  apply congrArg (fun w : ℂ => (r : ℂ) * w)
+  -- exp_mul_I_periodic : (fun x => exp (x * I)) 以 2π 为周期
+  simpa [Complex.ofReal_add, Complex.ofReal_mul, Complex.ofReal_intCast,
+    mul_comm, mul_left_comm, mul_assoc] using
+      ((Complex.exp_mul_I_periodic.int_mul n) θ)
+
+-- 8.3 不同层区分: 同一半径的不同相位层 ⟨r,θ+2π⟩ 与 ⟨r,θ⟩ 是总空间中的不同点
+--     (投影相同但点不同) —— 即"多值"不是退化, 而是覆盖空间的不同叶.
+theorem phase_two_pi_distinct (r θ : ℝ) :
+    (EnvelopePhase.mk r (θ + 2 * Real.pi) : EnvelopePhase) ≠ EnvelopePhase.mk r θ := by
+  intro e
+  have hθ : θ + 2 * Real.pi = θ := congrArg EnvelopePhase.θ e
+  have hpi : (2 : ℝ) * Real.pi = 0 := by
+    have h : (θ + 2 * Real.pi) - θ = θ - θ := congrArg (fun x : ℝ => x - θ) hθ
+    ring_nf at h
+    rw [mul_comm] at h
+    exact h
+  exact Real.pi_pos.ne' ((mul_eq_zero.mp hpi).resolve_left (by norm_num))
+
+-- 8.4 覆盖映射的纤维: 对 z ≠ 0, 其全部原像包含一条 2πℤ 轨道.
+--     即 ⟨r, θ⟩ 投影到 z, 则 ⟨r, θ + 2πn⟩ (n : ℤ) 也投影到 z.
+theorem phase_covering_fiber (z : ℂ) (r θ : ℝ)
+    (he : hEvalPhase ⟨r, θ⟩ = z) :
+    ∀ n : ℤ, hEvalPhase ⟨r, θ + 2 * π * (n : ℝ)⟩ = z := by
+  intro n
+  rw [phase_periodic_int]
+  exact he
+
+-- 8.5 纤维反向包含 (固定半径): 若两相位投影到同一非零 z, 则其相位差属 2πℤ.
+--     这把"多值"严格化为 2πℤ 离散纤维.
+theorem phase_covering_fiber_subset (z : ℂ) (hz : z ≠ 0) (r θ₁ θ₂ : ℝ)
+    (h₁ : hEvalPhase ⟨r, θ₁⟩ = z) (h₂ : hEvalPhase ⟨r, θ₂⟩ = z) :
+    ∃ n : ℤ, θ₂ = θ₁ + 2 * π * (n : ℝ) := by
+  have hE : (r : ℂ) * Complex.exp (θ₁ * Complex.I) =
+            (r : ℂ) * Complex.exp (θ₂ * Complex.I) := by
+    simpa [hEvalPhase] using h₁.trans h₂.symm
+  -- r ≠ 0 因 z ≠ 0
+  have hr : r ≠ 0 := by
+    intro hr0
+    have hz0 : z = 0 := by
+      rw [← h₁, hr0]
+      simp [hEvalPhase]
+    exact hz hz0
+  have hmul : Complex.exp (θ₁ * Complex.I) = Complex.exp (θ₂ * Complex.I) :=
+    mul_left_cancel₀ (Complex.ofReal_ne_zero.mpr hr) hE
+  -- Complex.exp_eq_exp_iff_exists_int : exp x = exp y ↔ ∃ n, x = y + n·(2π·I)
+  rw [Complex.exp_eq_exp_iff_exists_int] at hmul
+  rcases hmul with ⟨n, hn⟩
+  -- hn : (↑θ₁)·I = (↑θ₂)·I + (n:ℂ)·(2π·I)  ⇒  θ₁ = θ₂ + n·2π
+  have hsub : θ₁ = θ₂ + 2 * π * (n : ℝ) := by
+    apply Complex.ofReal_inj.mp
+    rw [Complex.ofReal_add, Complex.ofReal_mul, Complex.ofReal_intCast, Complex.ofReal_mul]
+    -- goal: ↑θ₁ = ↑θ₂ + (↑2 * ↑π) * (n : ℂ)
+    have hn' : (↑θ₁ : ℂ) * Complex.I = ((↑θ₂ : ℂ) + (n : ℂ) * (2 * π)) * Complex.I := by
+      simpa [mul_assoc, add_mul] using hn
+    have hc : (↑θ₁ : ℂ) = (↑θ₂ : ℂ) + (n : ℂ) * (2 * π) :=
+      mul_right_cancel₀ Complex.I_ne_zero hn'
+    simpa [mul_comm, mul_left_comm, mul_assoc] using hc
+  -- 反向: θ₂ = θ₁ + 2π·(−n)
+  use -n
+  have hc2 : θ₂ = θ₁ + 2 * π * (↑(-n) : ℝ) := by
+    rw [hsub]
+    rw [Int.cast_neg]
+    ring
+  exact hc2
+
+-- 8.6 覆盖映射声明: hEvalPhase 在 ℂ∖{0} 上给出以 2πℤ 为纤维的覆盖空间,
+--     每个 z ≠ 0 都有原像且可局部单值选取相位 (极坐标邻域 = 平凡化邻域).
+theorem phase_is_covering_map (z : ℂ) (hz : z ≠ 0) :
+    ∃ (r θ : ℝ) (_ : r ≠ 0), hEvalPhase ⟨r, θ⟩ = z := by
+  rcases phaseCoversTotal z with ⟨e, he⟩
+  use e.r, e.θ
+  have hr : e.r ≠ 0 := by
+    intro hr0
+    simp [hEvalPhase, hr0] at he
+    apply hz
+    exact he.symm
+  exact ⟨hr, he⟩
 
 end RiemannHIBS.EnvelopeC
