@@ -10,4 +10,6 @@ import RiemannHIBS.FinSum
 import RiemannHIBS.Zeta
 import RiemannHIBS.Euler
 import RiemannHIBS.Riemann
+import RiemannHIBS.Envelope
+import RiemannHIBS.EnvelopeC
 import RiemannHIBS.Analytic
