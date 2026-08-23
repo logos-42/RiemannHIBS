@@ -716,11 +716,12 @@ theorem zeta_phase_alignment_condition {s : ℂ} (hs : 1 < s.re) :
     intro n
     -- 把 s 拆成 s.re + i·s.im
     have hsdef : s = (s.re : ℂ) + Complex.I * (s.im : ℂ) := by
-      rw [← Complex.re_add_im s]
-      ring
+      rw [Complex.ext_iff]
+      constructor <;> simp
     rw [hsdef]
-    exact dirichlet_term_rotating_vector n s.re s.im
-  exact Iff.of_eq hswap
+    simpa [Complex.add_re, Complex.add_im, Complex.mul_re, Complex.mul_im,
+      Complex.I_re, Complex.I_im] using dirichlet_term_rotating_vector n s.re s.im
+  exact Iff.of_eq (congrArg (fun x : ℂ => x = 0) hswap)
 
 -- 机制 (c): 方向不是内在的 — 反演 w ↦ e/w 交换圆内与圆外, 只有圆周 |w| = √e 不动.
 --   (猜想 2 "方向本身有问题" 的可证明内核: 圆内/圆外在反演下互为镜像,
@@ -734,10 +735,10 @@ theorem envelope_inversion_swaps_inside_outside (w : ℂ) (hw : w ≠ 0) :
     rw [this]
   rw [hsplit, envelopeRadius, ← exp_half_eq_sqrt_exp_one]
   have h1 : Real.exp 1 = (Real.exp (1 / 2 : ℝ)) ^ 2 := by
-    rw [← Real.exp_add]
+    rw [pow_two, ← Real.exp_add]
+    congr 1
     norm_num
   have he : 0 < Real.exp (1 / 2 : ℝ) := Real.exp_pos (1 / 2 : ℝ)
-  have hnw : ‖w‖ ≠ 0 := norm_ne_zero_iff.mpr hw
   have hnwpos : 0 < ‖w‖ := norm_pos_iff.mpr hw
   constructor
   · intro h
@@ -746,15 +747,15 @@ theorem envelope_inversion_swaps_inside_outside (w : ℂ) (hw : w ≠ 0) :
       (div_lt_iff₀ hnwpos).mp h
     have h'' : (Real.exp (1 / 2 : ℝ)) ^ 2 < Real.exp (1 / 2 : ℝ) * ‖w‖ := by
       simpa [h1] using h'
-    -- (c·c < c·‖w‖) ⟹ c < ‖w‖ (c > 0 左乘消去)
-    have h''' : Real.exp (1 / 2 : ℝ) < ‖w‖ :=
-      (mul_lt_mul_left he).mp (by simpa [pow_two, mul_comm] using h'')
-    exact h'''
+    -- (c² < c·‖w‖) ∧ (c > 0) ⟹ c < ‖w‖
+    nlinarith [he, h'']
   · intro h
     -- √e < ‖w‖ ⟹ e/‖w‖ < √e
+    -- (c < ‖w‖) ∧ (c > 0) ⟹ c² < c·‖w‖ ⟹ e < c·‖w‖
     have h' : Real.exp (1 : ℝ) < Real.exp (1 / 2 : ℝ) * ‖w‖ := by
-      rw [h1]
-      exact (mul_lt_mul_left he).mpr (by simpa [pow_two, mul_comm] using h)
+      have h2 : (Real.exp (1 / 2 : ℝ)) ^ 2 < Real.exp (1 / 2 : ℝ) * ‖w‖ := by
+        nlinarith [he, h]
+      simpa [h1] using h2
     exact (div_lt_iff₀ hnwpos).mpr h'
 
 end RiemannHIBS.Analytic
