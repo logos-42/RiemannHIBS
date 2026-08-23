@@ -333,4 +333,55 @@ theorem riemannHypothesis_hidden_of_mathlib :
   -- 直接应用 mathlib RiemannHypothesis 到 s = hEval h:
   exact hrh (hEval h) hz hnt' hne1
 
+-- ====================================================================
+-- 6. 隐数包络: expZeta 与临界线圆周 (w = e^s 坐标)
+--    包络结构: 隐数三标签 {S,R,iR} = 复平面锚定方向 {θ=0, π/2, π} 的离散采样
+--    (hEval ⟨x,S⟩ = x, hEval ⟨x,R⟩ = −x, hEval ⟨x,iR⟩ = x·i 即 x·e^{iθ});
+--    标签连续化 + 值连续化 → 极坐标/复对数曲面 w = log z (螺旋柱面).
+--    在包络坐标 w = e^s 下: 临界线 Re s = 1/2 卷成圆周 |w| = √e,
+--    因此 (若 RH) 所有非平凡零点共圆 |w| = √e.
+-- ====================================================================
+
+-- 包络坐标下的 ζ: ζ̂(w) := ζ(log w)  (log 主支, w ∉ (−∞,0])
+def expZeta (w : ℂ) : ℂ := riemannZeta (Complex.log w)
+
+-- 包络半径: √e = sqrt(exp 1)
+noncomputable def envelopeRadius : ℝ := Real.sqrt (Real.exp 1)
+
+-- 引理: exp(1/2) = √e  (包络半径的指数表示)
+lemma exp_half_eq_sqrt_exp_one :
+    Real.exp (1 / 2 : ℝ) = Real.sqrt (Real.exp 1) := by
+  -- (exp(1/2))^2 = exp(1/2 + 1/2) = exp 1
+  have h_sq : (Real.exp (1 / 2 : ℝ)) ^ 2 = Real.exp 1 := by
+    rw [pow_two, ← Real.exp_add]
+    norm_num
+  apply le_antisymm
+  · -- sqrt(exp 1) ≤ exp(1/2): 重写 exp 1 = (exp(1/2))^2 后用 sqrt_sq
+    rw [← h_sq]
+    rw [Real.sqrt_sq (Real.exp_pos (1 / 2 : ℝ)).le]
+  · -- exp(1/2) ≤ sqrt(exp 1): 重写 exp(1/2) = sqrt((exp(1/2))^2) 后反向
+    rw [← Real.sqrt_sq (Real.exp_pos (1 / 2 : ℝ)).le]
+    rw [h_sq]
+
+-- 临界线像 = 圆周 |w| = √e: 对任意 t, ‖exp(1/2 + it)‖ = √e
+--   (s = 1/2 + it 在临界线上 ⟹ w = e^s 满足 ‖w‖ = e^{1/2} = √e)
+--   证明: exp(1/2+it) = exp(1/2)·exp(it), 模 = exp(1/2)·1
+--     (norm_exp_ofReal_mul_I: 纯虚指数模为 1)
+theorem criticalLine_circle (t : ℝ) :
+    ‖Complex.exp ((1 / 2 : ℂ) + Complex.I * t)‖ = envelopeRadius := by
+  rw [Complex.exp_add, Complex.norm_mul]
+  have hcast : ((1 / 2 : ℝ) : ℂ) = (1 / 2 : ℂ) := by norm_num
+  rw [← hcast, Complex.norm_exp_ofReal (1 / 2 : ℝ)]
+  have hswap : Complex.I * (t : ℂ) = (t : ℂ) * Complex.I := by ring
+  rw [hswap, Complex.norm_exp_ofReal_mul_I t]
+  rw [mul_one]
+  exact exp_half_eq_sqrt_exp_one
+
+-- 包络坐标下的 RH 翻译: 若 s 在临界线上且 ζ(s) = 0 (非平凡),
+-- 则包络点 w = e^s 落在圆周 |w| = √e 上 (criticalLine_circle 的直接推论)
+theorem zero_on_critical_line_envelope (t : ℝ)
+    (_hζ : riemannZeta ((1 / 2 : ℂ) + Complex.I * t) = 0) :
+    ‖Complex.exp ((1 / 2 : ℂ) + Complex.I * t)‖ = envelopeRadius :=
+  criticalLine_circle t
+
 end RiemannHIBS.Analytic

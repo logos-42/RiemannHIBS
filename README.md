@@ -136,6 +136,30 @@ to lift the Riemann Hypothesis into the hidden-number space:
   `RiemannHypothesisHidden`. Theorem `riemannHypothesis_hidden_of_mathlib`:
   the classical hypothesis implies the hidden-space one.
 
+### Envelope structure: expZeta & the critical-line circle (`Analytic.lean`, §6) ★
+The three hidden tags are anchor directions of the complex plane — hEval reads
+⟨x,S⟩↦x, ⟨x,R⟩↦−x, ⟨x,iR⟩↦x·i, i.e. x·e^{iθ} with θ ∈ {0, π/2, π}. Continuizing
+the tag (θ ∈ S¹) and the value (x ∈ ℝ) envelops the hidden space into the polar /
+complex-logarithm surface w = log z (the spiral cylinder / universal cover). In
+envelope coordinates w = e^s, the critical line rolls up into a circle:
+
+- `expZeta w := riemannZeta (Complex.log w)` — ζ pulled back to the envelope
+  coordinate (principal branch, w ∉ (−∞, 0]).
+- `envelopeRadius : ℝ := Real.sqrt (Real.exp 1)` — the radius √e.
+- `criticalLine_circle (t : ℝ)` (proved, no sorry) — ‖exp(1/2 + it)‖ = √e for
+  every t: the critical line Re s = 1/2 maps onto the circle |w| = √e.
+  Proof: exp(1/2+it) = exp(1/2)·exp(it), with ‖exp(it)‖ = 1
+  (`norm_exp_ofReal_mul_I`), and exp(1/2) = √e (`exp_half_eq_sqrt_exp_one`).
+- `zero_on_critical_line_envelope` — an RH zero ζ(1/2+it) = 0 maps to a point on
+  the circle |w| = √e. **RH ⟺ all non-trivial zeros lie on the common circle
+  |w| = √e.** (Geometry: pole s=1 → point w=e; trivial zeros → point sequence
+  e^{−2k} → 0; convergence half-plane → outside |w| > e; the η factor's extra
+  zeros s = 1+2πik/ln 2 → dense on |w| = e since 2π/ln 2 is irrational.)
+
+Numerical verification: `experiments/envelope.py` (E1: zeros co-circular on √e;
+E2: η extra zeros dense on |w|=e; E3: trivial-zero sequence → 0; E4: winding
+number of ζ'/ζ along a rectangle = zero count — counting loops counts zeros).
+
 ---
 
 ## 4. Draft statements (honestly unproved)

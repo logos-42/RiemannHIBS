@@ -120,6 +120,27 @@ zeta_from_eta        :  (zetaSum w (2M)).val = (etaSum w (2M)).val + 2·evenSum 
   `RiemannHypothesisHidden`。定理 `riemannHypothesis_hidden_of_mathlib`：
   经典猜想成立 ⟹ 隐数版成立。
 
+### 包络结构：expZeta 与临界线圆周（Analytic.lean 第 6 节）★
+隐数三标签就是复平面的锚定方向——hEval 读作 ⟨x,S⟩↦x、⟨x,R⟩↦−x、⟨x,iR⟩↦x·i，
+即 x·e^{iθ}，θ ∈ {0, π/2, π}。把标签连续化（θ ∈ S¹）+ 值连续化（x ∈ ℝ）后，
+隐数空间包络成极坐标/复对数曲面 w = log z（螺旋柱面 / 万有覆盖）。在包络坐标
+w = e^s 下，临界线卷成一个圆周：
+
+- `expZeta w := riemannZeta (Complex.log w)` — ζ 拉回到包络坐标（主支，
+  w ∉ (−∞, 0]）
+- `envelopeRadius : ℝ := Real.sqrt (Real.exp 1)` — 包络半径 √e
+- `criticalLine_circle (t : ℝ)`（已证，无 sorry）— 对任意 t，‖exp(1/2 + it)‖ = √e：
+  临界线 Re s = 1/2 的像 = 圆周 |w| = √e。证明：exp(1/2+it) = exp(1/2)·exp(it)，
+  其中 ‖exp(it)‖ = 1（`norm_exp_ofReal_mul_I`），exp(1/2) = √e
+  （`exp_half_eq_sqrt_exp_one`）
+- `zero_on_critical_line_envelope` — 临界线上的零点 ζ(1/2+it)=0 映射到圆周
+  |w| = √e 上的点。**RH ⟺ 所有非平凡零点共圆 |w| = √e。**（几何画像：极点
+  s=1 → 单点 w=e；平凡零点 → 点列 e^{−2k}→0；收敛半平面 → 圆外 |w|>e；
+  η 因子多余零点 s = 1+2πik/ln2 → 稠密于 |w| = e，因 2π/ln2 无理。）
+
+数值验证：`experiments/envelope.py`（E1 零点共圆 √e；E2 η 多余零点稠密于
+|w|=e；E3 平凡零点点列→0；E4 ζ'/ζ 沿矩形绕数 = 零点数——数圈数 = 数零点）。
+
 ---
 
 ## 3. 草案声明（未证明 — 如实标注）
