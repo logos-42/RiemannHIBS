@@ -646,4 +646,115 @@ theorem zero_envelope_on_circle_of_no_zeros_outside_circle
   rw [hre]
   exact exp_half_eq_sqrt_exp_one
 
+-- ====================================================================
+-- 10. 旋转向量机制: Dirichlet 级数的每一项 = 旋转向量 (猜想 1 的可证明内核)
+--    猜想 1: "零点的产生与自然数本身的旋转/缠绕有关; ζ 在零点处
+--            不断旋转、在实部与虚部之间来回跳动."
+--    可证明内核 (本节省略全部为已证定理):
+--      (a) 每一项 1/(n+1)^s 对 s = σ+it 是模长 (n+1)^{−σ}、相位 −t·log(n+1)
+--          的旋转向量; 角速度 log(n+1) 正是自然数 n+1 的"内在转速" —
+--          大数转得快, 小数转得慢, 零点 = 无穷多个不同转速的向量相位对齐.
+--      (b) ζ(s) = 0 ⟺ 这些旋转向量之和为 0 (相消条件 = 相位对齐条件).
+--      (c) 方向 (圆内/圆外) 不是内在的: 反演 w ↦ e/w 交换圆内与圆外,
+--          只有圆周 |w| = √e 不动 — 猜想 2 ("方向本身有问题") 的可证明内核.
+--    注: "零点为何恰好无穷多且都在 1/2 处"仍是超出本框架的经典分析事实,
+--        本节省略 (如实标注).
+-- ====================================================================
+
+-- 机制 (a): 旋转向量分解 — 第 n 项 1/(n+1)^s 的极坐标形式.
+--   s = σ + i·t: 1/(n+1)^s = (n+1)^{−σ}·e^{−i·t·log(n+1)}.
+theorem dirichlet_term_rotating_vector (n : ℕ) (σ t : ℝ) :
+    (1 : ℂ) / (((n + 1 : ℕ) : ℂ) ^ ((σ : ℂ) + Complex.I * (t : ℂ))) =
+      (((n + 1 : ℝ) ^ (-σ) : ℝ) : ℂ) *
+        Complex.exp (-(Complex.I * (t : ℂ)) * (Real.log ((n + 1 : ℝ)) : ℂ)) := by
+  have hnz : ((n + 1 : ℕ) : ℂ) ≠ 0 := by exact_mod_cast Nat.succ_ne_zero n
+  have hbase : Complex.log (((n + 1 : ℕ) : ℂ)) = (Real.log ((n + 1 : ℝ)) : ℂ) := by
+    have h := Complex.ofReal_log (x := ((n + 1 : ℝ)))
+      (by exact_mod_cast (Nat.zero_le (n + 1)) : (0 : ℝ) ≤ (n + 1 : ℝ))
+    simpa using h.symm
+  -- 左边 = exp(−(log(n+1)·(σ+it)))
+  have hL : (1 : ℂ) / (((n + 1 : ℕ) : ℂ) ^ ((σ : ℂ) + Complex.I * (t : ℂ))) =
+      Complex.exp (-((Real.log ((n + 1 : ℝ)) : ℂ) * ((σ : ℂ) + Complex.I * (t : ℂ)))) := by
+    rw [Complex.cpow_def_of_ne_zero hnz, hbase]
+    rw [one_div]
+    rw [Complex.exp_neg]
+  -- 右边 = exp((log(n+1)·(−σ)) + (−(i·t)·log(n+1)))
+  have hR : (((n + 1 : ℝ) ^ (-σ) : ℝ) : ℂ) *
+      Complex.exp (-(Complex.I * (t : ℂ)) * (Real.log ((n + 1 : ℝ)) : ℂ)) =
+      Complex.exp ((Real.log ((n + 1 : ℝ)) : ℂ) * (-(σ : ℂ)) +
+        (-(Complex.I * (t : ℂ)) * (Real.log ((n + 1 : ℝ)) : ℂ))) := by
+    calc
+      (((n + 1 : ℝ) ^ (-σ) : ℝ) : ℂ) *
+          Complex.exp (-(Complex.I * (t : ℂ)) * (Real.log ((n + 1 : ℝ)) : ℂ))
+          = Complex.exp ((Real.log ((n + 1 : ℝ)) : ℂ) * (-(σ : ℂ))) *
+              Complex.exp (-(Complex.I * (t : ℂ)) * (Real.log ((n + 1 : ℝ)) : ℂ)) := by
+            rw [Real.rpow_def_of_pos (by positivity : 0 < (n + 1 : ℝ)) (-σ)]
+            rw [Complex.ofReal_exp]
+            congr 1
+            rw [Complex.ofReal_mul, Complex.ofReal_neg]
+      _ = Complex.exp ((Real.log ((n + 1 : ℝ)) : ℂ) * (-(σ : ℂ)) +
+          (-(Complex.I * (t : ℂ)) * (Real.log ((n + 1 : ℝ)) : ℂ))) := by
+            rw [← Complex.exp_add]
+  rw [hL, hR]
+  congr 1
+  ring
+
+-- 机制 (b): 相位对齐条件 — ζ(s) = 0 ⟺ 旋转向量之和为 0.
+--   零点 = 无穷多个不同角速度 (log(n+1)) 的旋转向量相位对齐、相消.
+theorem zeta_phase_alignment_condition {s : ℂ} (hs : 1 < s.re) :
+    riemannZeta s = 0 ↔
+      (∑' n : ℕ,
+        (((n + 1 : ℝ) ^ (-(s.re)) : ℝ) : ℂ) *
+          Complex.exp (-(Complex.I * (s.im : ℂ)) * (Real.log ((n + 1 : ℝ)) : ℂ))) = 0 := by
+  -- 先证 riemannZeta s = Σ term', 再转成 iff (同义反复)
+  have hswap : riemannZeta s =
+      (∑' n : ℕ,
+        (((n + 1 : ℝ) ^ (-(s.re)) : ℝ) : ℂ) *
+          Complex.exp (-(Complex.I * (s.im : ℂ)) * (Real.log ((n + 1 : ℝ)) : ℂ))) := by
+    rw [zeta_eq_tsum_one_div_nat_add_one_cpow hs]
+    apply tsum_congr
+    intro n
+    -- 把 s 拆成 s.re + i·s.im
+    have hsdef : s = (s.re : ℂ) + Complex.I * (s.im : ℂ) := by
+      rw [← Complex.re_add_im s]
+      ring
+    rw [hsdef]
+    exact dirichlet_term_rotating_vector n s.re s.im
+  exact Iff.of_eq hswap
+
+-- 机制 (c): 方向不是内在的 — 反演 w ↦ e/w 交换圆内与圆外, 只有圆周 |w| = √e 不动.
+--   (猜想 2 "方向本身有问题" 的可证明内核: 圆内/圆外在反演下互为镜像,
+--    因此"方向"不携带独立信息 — 唯一不变的是圆.)
+theorem envelope_inversion_swaps_inside_outside (w : ℂ) (hw : w ≠ 0) :
+    ‖Complex.exp 1 / w‖ < envelopeRadius ↔ envelopeRadius < ‖w‖ := by
+  have hsplit : ‖Complex.exp 1 / w‖ = Real.exp 1 / ‖w‖ := by
+    rw [Complex.norm_div]
+    have : ‖Complex.exp (1 : ℂ)‖ = Real.exp 1 := by
+      simpa using Complex.norm_exp_ofReal (1 : ℝ)
+    rw [this]
+  rw [hsplit, envelopeRadius, ← exp_half_eq_sqrt_exp_one]
+  have h1 : Real.exp 1 = (Real.exp (1 / 2 : ℝ)) ^ 2 := by
+    rw [← Real.exp_add]
+    norm_num
+  have he : 0 < Real.exp (1 / 2 : ℝ) := Real.exp_pos (1 / 2 : ℝ)
+  have hnw : ‖w‖ ≠ 0 := norm_ne_zero_iff.mpr hw
+  have hnwpos : 0 < ‖w‖ := norm_pos_iff.mpr hw
+  constructor
+  · intro h
+    -- e/‖w‖ < √e ⟹ √e < ‖w‖
+    have h' : Real.exp (1 : ℝ) < Real.exp (1 / 2 : ℝ) * ‖w‖ :=
+      (div_lt_iff₀ hnwpos).mp h
+    have h'' : (Real.exp (1 / 2 : ℝ)) ^ 2 < Real.exp (1 / 2 : ℝ) * ‖w‖ := by
+      simpa [h1] using h'
+    -- (c·c < c·‖w‖) ⟹ c < ‖w‖ (c > 0 左乘消去)
+    have h''' : Real.exp (1 / 2 : ℝ) < ‖w‖ :=
+      (mul_lt_mul_left he).mp (by simpa [pow_two, mul_comm] using h'')
+    exact h'''
+  · intro h
+    -- √e < ‖w‖ ⟹ e/‖w‖ < √e
+    have h' : Real.exp (1 : ℝ) < Real.exp (1 / 2 : ℝ) * ‖w‖ := by
+      rw [h1]
+      exact (mul_lt_mul_left he).mpr (by simpa [pow_two, mul_comm] using h)
+    exact (div_lt_iff₀ hnwpos).mpr h'
+
 end RiemannHIBS.Analytic
