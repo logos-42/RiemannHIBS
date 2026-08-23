@@ -160,6 +160,34 @@ Numerical verification: `experiments/envelope.py` (E1: zeros co-circular on √e
 E2: η extra zeros dense on |w|=e; E3: trivial-zero sequence → 0; E4: winding
 number of ζ'/ζ along a rectangle = zero count — counting loops counts zeros).
 
+### Phase envelope ↔ log coordinates (`Analytic.lean` §7–8) ★
+Bridges EnvelopeC's phase envelope with the expZeta circle picture:
+
+- **Bridge (§7)**: `criticalPhaseC_envelope_circle (t : ℝ)` (proved, no sorry) —
+  ‖exp(hEvalPhase (criticalPhaseC t))‖ = √e: the phase-envelope critical
+  section maps onto the circle |w| = √e. `zero_envelope_circle`: RH zero on
+  the critical line ⟹ co-circular image.
+- **Principal-branch parametrization (§8)**: `expZeta_phase_principal` —
+  for r > 0, θ ∈ (−π, π]: ζ̂(r·e^{iθ}) = ζ(log r + iθ), i.e. expZeta in phase
+  coordinates is ζ in log coordinates (log principal branch covers ℂ∖(−∞,0];
+  the phase leaves θ ∈ (−π,π] cover exactly that region).
+- **Multi-sheet leaves (§8)**: `phase_periodic` (induction) — the leaf
+  ⟨r, θ+2πk⟩ projects back to the same point for every k; `phase_fold_neg_axis`
+  — all leaves π+2πk fold onto the negative real axis −r (the continuous
+  version of the discrete fold `envelope_fold`); `phase_fold_many_sheets` —
+  countably many leaves share one observable; `envelope_universal_cover_branch`
+  — every w ≠ 0 has, on every turn k, a principal-phase preimage. Together:
+  the phase envelope is a countable-sheet cover of ℂ∖{0} (the discrete skeleton
+  of the universal cover).
+- **Draft (honestly unproved)**: `EnvelopeUniversalCoverMultiLog` — the
+  multi-valued log leaf structure log w + 2πik needs a multi-valued arg;
+  mathlib's Complex.log is single-valued (folds all sheets to the principal
+  value), so full sheet expansion is beyond this module.
+
+Figures: `viz/fig5_rollup.png` (critical line straight ↔ circle |w|=√e with
+matched zero labels) and `viz/fig6_winding.png` (argument-principle image curve
+winding 6× around the origin) — see `viz/envelope_extra.py`.
+
 ---
 
 ## 4. Draft statements (honestly unproved)

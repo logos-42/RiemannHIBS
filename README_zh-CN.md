@@ -141,6 +141,28 @@ w = e^s 下，临界线卷成一个圆周：
 数值验证：`experiments/envelope.py`（E1 零点共圆 √e；E2 η 多余零点稠密于
 |w|=e；E3 平凡零点点列→0；E4 ζ'/ζ 沿矩形绕数 = 零点数——数圈数 = 数零点）。
 
+### 相位包络 ↔ 对数坐标（Analytic.lean 第 7-8 节）★
+把 EnvelopeC 的相位包络与 expZeta 共圆图景接通：
+
+- **桥（§7）**：`criticalPhaseC_envelope_circle (t : ℝ)`（已证，无 sorry）—
+  ‖exp(hEvalPhase (criticalPhaseC t))‖ = √e：相位包络的临界截面映射到圆周
+  |w| = √e。`zero_envelope_circle`：临界线上的 RH 零点 ⟹ 像共圆。
+- **主支相位参数化（§8）**：`expZeta_phase_principal` — 对 r > 0，
+  θ ∈ (−π, π]：ζ̂(r·e^{iθ}) = ζ(log r + iθ)，即 expZeta 在相位坐标下就是
+  ζ 的对数坐标（log 主支覆盖 ℂ∖(−∞,0]，相位叶 θ ∈ (−π,π] 恰好覆盖该区域）。
+- **多圈叶（§8）**：`phase_periodic`（归纳）— 叶 ⟨r, θ+2πk⟩ 对任意 k 投影
+  回同一点；`phase_fold_neg_axis` — 所有叶 π+2πk 折叠到负实轴 −r（离散折叠
+  `envelope_fold` 的连续版）；`phase_fold_many_sheets` — 可数多叶共享同一
+  可观测值；`envelope_universal_cover_branch` — 每个 w ≠ 0 的每一圈 k 都有
+  主支相位原像。合起来：相位包络是 ℂ∖{0} 上的可数叶覆盖（万有覆盖的离散骨架）。
+- **Draft（如实标注）**：`EnvelopeUniversalCoverMultiLog` — 多值 log 的叶
+  分支 log w + 2πik 需要多值 arg；mathlib 的 Complex.log 是单值主支（把所有
+  叶折叠回主值），完整叶展开超出本模块范围。
+
+图：`viz/fig5_rollup.png`（临界线直线 ↔ 圆周 |w|=√e，零点编号对应）与
+`viz/fig6_winding.png`（argument principle：像曲线绕原点 6 圈）—
+  见 `viz/envelope_extra.py`。
+
 ---
 
 ## 3. 草案声明（未证明 — 如实标注）
