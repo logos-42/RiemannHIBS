@@ -20,6 +20,7 @@
 import Mathlib.NumberTheory.LSeries.RiemannZeta
 import Mathlib.Topology.Algebra.InfiniteSum.NatInt
 import Mathlib.Analysis.SpecialFunctions.Pow.Complex
+import RiemannHIBS.EnvelopeC
 
 noncomputable section
 open scoped Topology
@@ -383,5 +384,27 @@ theorem zero_on_critical_line_envelope (t : ℝ)
     (_hζ : riemannZeta ((1 / 2 : ℂ) + Complex.I * t) = 0) :
     ‖Complex.exp ((1 / 2 : ℂ) + Complex.I * t)‖ = envelopeRadius :=
   criticalLine_circle t
+
+-- ====================================================================
+-- 7. 与 EnvelopeC 的桥: 相位包络 ↔ 临界线圆周
+--    EnvelopeC.lean (并行模块) 的 EnvelopePhase: ⟨r,θ⟩ ↦ r·e^{iθ} 覆盖全 ℂ
+--    (phaseCoversTotal), 临界截面 criticalPhaseC: 投影 = 1/2 + t·i.
+--    桥定理: 临界截面经指数映射后的模恒为 √e — 临界线在相位包络的
+--    "半径-相位"坐标下就是圆周 |w| = √e. 把对方的两套语言 (三叶壳/截面)
+--    与本模块的共圆定理 (criticalLine_circle) 接上.
+-- ====================================================================
+open RiemannHIBS.EnvelopeC
+
+-- 桥: criticalPhaseC (相位包络的临界截面) 的指数像落在圆周 |w| = √e 上
+theorem criticalPhaseC_envelope_circle (t : ℝ) :
+    ‖Complex.exp (hEvalPhase (criticalPhaseC t))‖ = envelopeRadius := by
+  rw [criticalPhaseC_proj t]
+  simpa [mul_comm] using criticalLine_circle t
+
+-- 桥 (RH 版): 临界线上的零点 ζ(1/2+it) = 0 在相位包络的指数像共圆 √e
+theorem zero_envelope_circle (t : ℝ)
+    (_hζ : riemannZeta ((1 / 2 : ℂ) + Complex.I * t) = 0) :
+    ‖Complex.exp (hEvalPhase (criticalPhaseC t))‖ = envelopeRadius :=
+  criticalPhaseC_envelope_circle t
 
 end RiemannHIBS.Analytic
