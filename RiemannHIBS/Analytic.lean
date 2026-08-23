@@ -20,10 +20,12 @@
 import Mathlib.NumberTheory.LSeries.RiemannZeta
 import Mathlib.Topology.Algebra.InfiniteSum.NatInt
 import Mathlib.Analysis.SpecialFunctions.Pow.Complex
+import Mathlib.Analysis.Complex.Trigonometric
 import RiemannHIBS.EnvelopeC
 
 noncomputable section
 open scoped Topology
+open scoped ComplexConjugate
 
 namespace RiemannHIBS.Analytic
 
@@ -481,5 +483,167 @@ theorem envelope_universal_cover_branch (w : ℂ) (k : ℕ) (_hw : w ≠ 0) :
   refine ⟨w.arg, Complex.neg_pi_lt_arg w, Complex.arg_le_pi w, ?_⟩
   rw [phase_periodic]
   simp [hEvalPhase, Complex.norm_mul_exp_arg_mul_I]
+
+-- ====================================================================
+-- 9. 零点共圆机制: 函数方程反射 + 反演不动圆 + 全称机制定理
+--    回答: "能否证明零点不落在圆外?" / "能否机制性说明零点都在圆上?"
+--
+--    包络坐标 w = e^s: 临界线 Re(s)=1/2 卷成圆周 |w| = √e (criticalLine_circle).
+--    机制链:
+--      (a) 反射机制: 函数方程 ζ(1−s) = 2·(2π)^{−s}·Γ(s)·cos(πs/2)·ζ(s)
+--          使零点集在 s ↦ 1−s 下闭合 (零点必然成对出现);
+--      (b) 不动圆: 该反射在包络坐标下 = 反演 w ↦ e/w, 其不动集恰为 |w| = √e;
+--      (c) 全称机制定理: 若"圆外无零点" (Re s ≤ 1/2), 则由反射闭合性,
+--          "圆内也无零点" (Re s ≥ 1/2), 故零点全在圆上 (Re s = 1/2 = RH).
+--          —— 即"证明零点不落在圆外"与"零点全在圆上"在机制上是等价的.
+--      (d) 平凡零点在圆内 (|w| = e^{−2(n+1)} < 1): 圆内的零点来源确知;
+--      (e) 圆上反演 = 共轭: 临界线/圆是"相位对齐"的自共轭结构;
+--      (f) 螺旋线版本: 上述机制在相位包络 (螺旋面) 中的表述 —
+--          零点在螺旋面上的半径被锁定为 √e.
+--
+--    注: Re(s) > 1 (即 |w| > e, 圆外严格更远的区域) 无零点是经典结果
+--        (欧拉乘积 ζ(s) = ∏_p (1−p^{−s})⁻¹ ≠ 0), 其 Lean 形式化需要
+--        EulerProduct 框架, 作为独立工作; 本节省略 (如实标注).
+-- ====================================================================
+
+-- 机制 (a): 函数方程反射 — 零点在 s ↦ 1−s 下成对出现.
+--   由 riemannZeta_one_sub: ζ(1−s) = 2·(2π)^{−s}·Γ(s)·cos(πs/2)·ζ(s).
+--   若 ζ(s) = 0 且 s 非负整数 (使函数方程可用), 则右边 = 0, 故 ζ(1−s) = 0.
+theorem zero_reflects_under_one_sub {s : ℂ}
+    (hζ : riemannZeta s = 0) (hsn : ∀ n : ℕ, s ≠ -((n : ℕ) : ℂ)) (hs1 : s ≠ 1) :
+    riemannZeta (1 - s) = 0 := by
+  rw [riemannZeta_one_sub hsn hs1]
+  rw [hζ]
+  ring
+
+-- 机制 (b): 反射的包络坐标形式 = 反演 w ↦ e/w (e^{1−s} = e / e^s)
+theorem envelope_inversion_map (s : ℂ) :
+    Complex.exp (1 - s) = Complex.exp 1 / Complex.exp s := by
+  rw [Complex.exp_sub]
+
+-- 机制 (b): 反演不动圆 — 反演 w ↦ e/w 的不动点恰为圆周 |w| = √e.
+--   ‖e/w‖ = ‖w‖  ⟺  ‖w‖² = e  ⟺  ‖w‖ = √e.
+theorem envelope_inversion_fixed_circle (w : ℂ) (hw : w ≠ 0) :
+    ‖Complex.exp 1 / w‖ = ‖w‖ ↔ ‖w‖ = envelopeRadius := by
+  have hnw : ‖w‖ ≠ 0 := norm_ne_zero_iff.mpr hw
+  have hsplit : ‖Complex.exp 1 / w‖ = Real.exp 1 / ‖w‖ := by
+    rw [Complex.norm_div]
+    have : ‖Complex.exp (1 : ℂ)‖ = Real.exp 1 := by
+      simpa using Complex.norm_exp_ofReal (1 : ℝ)
+    rw [this]
+  rw [hsplit]
+  rw [envelopeRadius]
+  constructor
+  · intro h
+    -- e/‖w‖ = ‖w‖ ⟹ ‖w‖² = e ⟹ ‖w‖ = √e
+    have hsq : ‖w‖ ^ 2 = Real.exp 1 := by
+      calc
+        ‖w‖ ^ 2 = ‖w‖ * ‖w‖ := by rw [pow_two]
+        _ = Real.exp 1 / ‖w‖ * ‖w‖ := by nth_rw 1 [← h]
+        _ = Real.exp 1 := by rw [div_mul_cancel₀ _ hnw]
+    rw [← Real.sqrt_sq (norm_nonneg w), hsq]
+  · intro h
+    -- ‖w‖ = √e ⟹ ‖w‖² = e ⟹ e/‖w‖ = ‖w‖
+    calc
+      Real.exp 1 / ‖w‖ = ‖w‖ ^ 2 / ‖w‖ := by
+        congr 1
+        rw [h, Real.sq_sqrt (Real.exp_pos 1).le]
+      _ = ‖w‖ := by rw [pow_two]; exact mul_div_cancel_left₀ _ hnw
+
+-- 机制 (c): 全称机制定理 — 圆外无零点 + 反射闭合性 ⟹ 所有零点在圆上.
+--   hno: "圆外无零点" 的机制输入 (零点满足 Re s ≤ 1/2);
+--   反射使 1−s 也是零点, 对 1−s 再用 hno 得 Re s ≥ 1/2; 合起来 Re s = 1/2.
+--   (0 < Re s 是标准事实: 非平凡零点位于右半平面; 此处作为机制输入显式给出.)
+theorem zero_on_critical_line_of_no_zeros_outside_circle
+    (hno : ∀ s : ℂ, riemannZeta s = 0 → (∀ n : ℕ, s ≠ -((n : ℕ) : ℂ)) → s ≠ 1 →
+      0 < s.re → s.re ≤ 1 / 2)
+    {s : ℂ} (hζ : riemannZeta s = 0) (hsn : ∀ n : ℕ, s ≠ -((n : ℕ) : ℂ))
+    (hs1 : s ≠ 1) (hs0 : 0 < s.re) : s.re = 1 / 2 := by
+  have hle : s.re ≤ 1 / 2 := hno s hζ hsn hs1 hs0
+  -- 反射: 1−s 也是零点
+  have hζ' : riemannZeta (1 - s) = 0 := zero_reflects_under_one_sub hζ hsn hs1
+  -- 检查 1−s 满足 hno 的各个条件
+  have h1s1 : 1 - s ≠ 1 := by
+    intro h
+    have hs0' : s = 0 := by
+      calc s = 1 - (1 - s) := by ring
+        _ = 1 - 1 := by rw [h]
+        _ = 0 := by norm_num
+    have hsre0 : s.re = 0 := by rw [hs0']; simp
+    linarith
+  have h1s0 : 0 < (1 - s).re := by
+    rw [Complex.sub_re, Complex.one_re]
+    nlinarith [hle]
+  have h1sn : ∀ n : ℕ, 1 - s ≠ -((n : ℕ) : ℂ) := by
+    intro n h
+    have hre := congrArg Complex.re h
+    have hre' : 1 - s.re = -((n : ℕ) : ℝ) := by
+      simpa [Complex.sub_re, Complex.one_re, Complex.neg_re, Complex.ofReal_re] using hre
+    have hnneg : -((n : ℕ) : ℝ) ≤ 0 := neg_nonpos.mpr (Nat.cast_nonneg n)
+    have hge : (1 / 2 : ℝ) ≤ 1 - s.re := by nlinarith [hle]
+    linarith
+  -- 对 1−s 应用"圆外无零点" ⟹ 1 − s.re ≤ 1/2 ⟹ s.re ≥ 1/2
+  have hle' : (1 - s).re ≤ 1 / 2 := hno (1 - s) hζ' h1sn h1s1 h1s0
+  have hge : (1 / 2 : ℝ) ≤ s.re := by
+    rw [Complex.sub_re, Complex.one_re] at hle'
+    linarith
+  exact le_antisymm hle hge
+
+-- 机制 (d): 平凡零点在圆内 — w = e^{−2(n+1)}, |w| < 1 < √e.
+--   (配合 riemannZeta_neg_two_mul_nat_add_one: 圆内零点来源确知.)
+theorem trivialZero_inside_envelope_circle (n : ℕ) :
+    ‖Complex.exp (-2 * ((n + 1 : ℕ) : ℂ))‖ < envelopeRadius := by
+  have hcast : (-2 * ((n + 1 : ℕ) : ℂ)) = ((-2 * ((n + 1 : ℕ) : ℝ)) : ℂ) := by
+    norm_num [Complex.ofReal_natCast, Complex.ofReal_neg, Complex.ofReal_mul]
+  have hnorm : ‖Complex.exp (-2 * ((n + 1 : ℕ) : ℂ))‖ =
+      Real.exp (-2 * ((n + 1 : ℕ) : ℝ)) := by
+    convert Complex.norm_exp_ofReal (-2 * ((n + 1 : ℕ) : ℝ)) using 1
+    norm_num [Complex.ofReal_natCast, Complex.ofReal_neg, Complex.ofReal_mul]
+  rw [hnorm]
+  rw [envelopeRadius, ← exp_half_eq_sqrt_exp_one]
+  -- exp(−2(n+1)) < exp(1/2)  ⟺  −2(n+1) < 1/2  (exp 严格递增)
+  rw [Real.exp_lt_exp]
+  have hpos : (0 : ℝ) < (n + 1 : ℝ) := by exact_mod_cast Nat.succ_pos n
+  linarith
+
+-- 机制 (e): 圆上反演 = 共轭 — 在不动圆上, e/w = conj w.
+--   临界线/圆是"相位对齐"的自共轭结构: 镜像在圆上就是共轭反射.
+theorem envelope_inversion_eq_conj_on_circle {w : ℂ} (_hw : w ≠ 0)
+    (hr : ‖w‖ = envelopeRadius) :
+    Complex.exp 1 / w = conj w := by
+  have hE : (Real.exp 1 : ℂ) = Complex.exp (1 : ℂ) := by
+    exact Complex.ofReal_exp (1 : ℝ)
+  have hEne : (Real.exp 1 : ℂ) ≠ 0 := by
+    rw [hE]
+    exact Complex.exp_ne_zero (1 : ℂ)
+  have hsq : ‖w‖ ^ 2 = Real.exp 1 := by
+    rw [hr, envelopeRadius]
+    rw [Real.sq_sqrt (Real.exp_pos 1).le]
+  calc
+    Complex.exp 1 / w = (Real.exp 1 : ℂ) / w := by rw [hE]
+    _ = (Real.exp 1 : ℂ) * w⁻¹ := by rw [div_eq_mul_inv]
+    _ = (Real.exp 1 : ℂ) * (conj w * ((Complex.normSq w)⁻¹ : ℝ)) := by
+          rw [Complex.inv_def]
+    _ = (Real.exp 1 : ℂ) * (conj w * ((‖w‖ ^ 2)⁻¹ : ℝ)) := by
+          rw [Complex.normSq_eq_norm_sq]
+    _ = conj w := by
+      rw [hsq]
+      rw [Complex.ofReal_inv]
+      field_simp [hEne]
+
+-- 机制 (f): 螺旋线版本 — 机制定理在相位包络/螺旋面中的表述:
+--   在"圆外无零点"机制输入下, 任意零点 s (0 < Re s) 的包络像 w = e^s
+--   落在圆周 |w| = √e 上 — 零点在螺旋面上的"半径"被锁定为 √e.
+--   (即 ‖e^s‖ = e^{Re s} = e^{1/2} = √e.)
+theorem zero_envelope_on_circle_of_no_zeros_outside_circle
+    (hno : ∀ s : ℂ, riemannZeta s = 0 → (∀ n : ℕ, s ≠ -((n : ℕ) : ℂ)) → s ≠ 1 →
+      0 < s.re → s.re ≤ 1 / 2)
+    {s : ℂ} (hζ : riemannZeta s = 0) (hsn : ∀ n : ℕ, s ≠ -((n : ℕ) : ℂ))
+    (hs1 : s ≠ 1) (hs0 : 0 < s.re) : ‖Complex.exp s‖ = envelopeRadius := by
+  have hre : s.re = 1 / 2 := zero_on_critical_line_of_no_zeros_outside_circle hno hζ hsn hs1 hs0
+  -- ‖e^s‖ = e^{Re s} = e^{1/2} = √e
+  rw [Complex.norm_exp]
+  rw [hre]
+  exact exp_half_eq_sqrt_exp_one
 
 end RiemannHIBS.Analytic
