@@ -44,6 +44,10 @@ stage: current
 | phaseCancelRelation | §18 | 有限相位抵消: 有限整数组合 Σaᵢ·log(nᵢ) ∈ 2πℤ (360° 圆周回原点) |
 | phaseCancel_of_exp_one | §18 | 相位抵消 ⟹ exp(i·Σaᵢ·log(nᵢ)) = 1 (复指数/单位圆乘积取 1, 用 Complex.exp_eq_one_iff) |
 | phaseCancel_zero_iff_powProduct_one | §18 | 抵消回 0 度 ⟺ Π(nᵢ+1)^{aᵢ} = 1 (精确有限相位抵消 ⟺ 整数乘法结构, 不依赖超越性) |
+| eta_term_rotating_vector | §19 | η 第 n 项 = (−1)^n × 旋转向量 (复恒等式, `dirichlet_term_rotating_vector` 反向 rw + ring) |
+| eta_phase_alignment_condition | §19 | 缺口①桥 (Re>1): η(s)=0 ⟺ 交错旋转向量和=0 (镜像 §10, 换 η 交替符号) |
+| alignmentZero | §20 | 隐数对齐零点: s 的对齐零点 ⟺ 其交错旋转向量 (η 形态) 和为零 (零点=相位对齐的信息压缩表述) |
+| alignmentZero_iff_zeta_zero | §20 | Re>1 桥 (前提排斥因子≠0): alignmentZero s ⟺ riemannZeta s = 0 (经 eta_eq_mul_zeta); 隐数对齐投到经典零点 |
 
 ## 声明 (非证明)
 - RiemannHypothesisHidden / C / Phase: RH 的隐数翻译
@@ -57,6 +61,8 @@ stage: current
 - 幅角原理 (§16) 已构造为隐数坐标系内的机制原子 (相位缠绕=零点数), 但它是"电路"缺"电源": 无限零点的输出依赖 ζ 在围道边界的增长估计 (N(T)~T/2π·log(T/2π)) — 该输入是 ζ 的分析性质, 坐标变换翻译不掉, 非平凡零点无限多仍标注为边界
 - §17 增长分解: ζ(s)=compZ/Γℝ 的精确坐标读法已证 (gammaR_norm_decomposition / zeta_norm_in_envelope_coords, 纯代数), 但预言 P1–P3 (Stirling 渐近 + 完成ζ 有界性) mathlib 均未形式化 — "无限非平凡零点"唯一缺失的分析输入已被显式隔离为待形式化边界 (draft), 不代表证明取得进展
 - §18 有限相位抵消: 精确组合翻译已证 (有限整数组合抵消 ⟺ 整数幂关系, 纯代数/整数结构, 不依赖超越性); 但它只回答"哪些有限组合能抵消", 不回答"抵消 ⟹ 全部零点在临界线" (RH 核心仍缺); 路线 B 稠密性 (log 的 ℚ-无关) 依赖超越性, mathlib 未形式化, 如实标注阻塞
+- **缺口① (推导结论)**: `zeta_phase_alignment_condition` (§10) 用 `zeta_eq_tsum` 把 Re>1 的零点转成旋转向量和=0; 其旋转向量核 `dirichlet_term_rotating_vector` 是**复数恒等式且与 σ 无关** (可对任意 σ 用). 临界带 0<Re<1 的断路点在"级数换谐"(ζ 的 Dirichlet 展开) 而非相位机制. **正解 (已推明)**: 在临界带 `ζ(s)=0` 是良定义全纯函数取零 (`differentiableAt_riemannZeta`, s≠1), 不需级数和; "相位对齐判定" 的隐数语义 = 覆盖空间里 `expZeta_phase_principal` 把 `ζ̂(w)=ζ(log r+iθ)` — "对齐零点" 在隐数即此良定等式. 跨到经典: Re>0 用 η(交替)是 Abel 条件收敛, 排斥因子 `(1−2^{1−s})` 在临界带**恒非零** (2^{1−s}=1 只在 s=1+2πik/ln2, 实部=1, 不在 0<Re<1), 故 ζ=0⟺η=0 在临界带成立 (经典)。**真正缺口 = 条件收敛(η)+Abel/函数方程延拓 的 mathlib 工具缺失**, 非概念不可能; 落地建议 = 覆盖语义做"对齐零点"命题 + 临界带诚实标注未形式化. **状态 (2026-08-25)**: §19 已在 Re>1 落地可编译的 η 交错桥 (eta_term_rotating_vector + eta_phase_alignment_condition, 无 sorry); 临界带 0<Re<1 仍缺条件收敛 η + Abel/函数方程正则化工具, 如实标注为待形式化
+- **缺口② (增长→无限零点)**: 幅角原理 (§16) + 增长分解 (§17) 已把 "N(T)→∞" 隔离为唯一缺失分析输入 — 依赖 Stirling 渐近 + 完成 ζ 有界性 (P1–P3), 二者 mathlib 均未形式化; 即使完成也只证"无限多", 不等于 RH (临界带上) — 如实标注
 - 螺旋无限延伸 ≠ 全称证明: 舞台(覆盖)完备 ≠ 演员(零点)在台上
 - 非平凡零点存在性与无限性: 已证仅平凡零点无限 (§15); 非平凡部分需增长阶+因子分解/幅角原理, 已有机理皆"必要条件/缺增长"型, 不携带 ζ 的增长行为, 如实标注边界
 

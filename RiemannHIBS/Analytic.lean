@@ -1351,4 +1351,88 @@ def periodicCancelWindow (W : List ℕ) (A : List ℤ) : Prop :=
 --      它把"有限相位抵消"翻译成整数的乘法结构, 诚实暴露 RH 的真正困难所在
 --      (抵消模式 ⟹ 全部零点落在临界线, 而非仅"存在/无限多").
 
+-- ====================================================================
+-- 19. 缺口① 的桥: η 级数 ↔ 交错旋转向量对齐 (Re>1 内可证)
+--    数学结论 (笔算推导, 2026-08-25):
+--      dirichlet_term_rotating_vector 是复恒等式且与 σ 无关 → 旋转向量机制
+--      对任意 Re 成立; 临界带断路只在"级数=ζ"一步, 不损相位机制.
+--      跨到经典: Re>0 用交错 η 是 Abel 条件收敛, 排斥因子 (1−2^{1−s})
+--      在临界带恒非零 (2^{1−s}=1 仅 s=1, 实部=1, 不在 0<Re<1), 故
+--      ζ=0 ⟺ η=0 在临界带成立 (Titchmarsh). 真缺失 = 条件收敛(η)+
+--      Abel/函数方程延拓的 mathlib 工具, 非概念不可能.
+--    本节省略的落地 (mathlib 能证明的上界 Re>1):
+--      1) 单项桥: η 第 n 项 = (−1)^n × 旋转向量 (复恒等式)
+--      2) 对齐定理: Re>1 下 η(s)=0 ⟺ 交错旋转向量和 = 0
+--      (镜像 §10 zeta_phase_alignment_condition, 换成 η 交替符号)
+--    临界带 0<Re<1 的严格对齐需"条件收敛 η + Abel/函数方程正则化", mathlib
+--      当前无此基建, 如实标注为待形式化方向 (不在此节装证).
+-- ====================================================================
+
+-- 19.1 η 第 n 项 = (−1)^n 与旋转向量之积 (复项恒等, 与 σ 无关)
+theorem eta_term_rotating_vector (n : ℕ) (σ t : ℝ) :
+    ((-1 : ℂ) ^ n) / (((n + 1 : ℕ) : ℂ) ^ ((σ : ℂ) + Complex.I * (t : ℂ))) =
+      ((-1 : ℂ) ^ n) * ((((n + 1 : ℝ) ^ (-σ) : ℝ) : ℂ) *
+        Complex.exp (-(Complex.I * (t : ℂ)) * (Real.log ((n + 1 : ℝ)) : ℂ))) := by
+  rw [← dirichlet_term_rotating_vector n σ t]
+  ring
+
+-- 19.2 缺口① 桥 (Re>1 可证): η(s)=0 ⟺ 交错旋转向量和 = 0
+--    η(s) = Σ' (−1)^n / (n+1)^s, 每项按 19.1 展开成 (−1)^n·旋转向量.
+--    证明完全镜像 §10 zeta_phase_alignment_condition, 仅交替符号.
+theorem eta_phase_alignment_condition {s : ℂ} (_hs : 1 < s.re) :
+    etaSeries s = 0 ↔
+      (∑' n : ℕ,
+        ((-1 : ℂ) ^ n) * ((((n + 1 : ℝ) ^ (-(s.re)) : ℝ) : ℂ) *
+          Complex.exp (-(Complex.I * (s.im : ℂ)) * (Real.log ((n + 1 : ℝ)) : ℂ)))) = 0 := by
+  have hswap : etaSeries s =
+      (∑' n : ℕ,
+        ((-1 : ℂ) ^ n) * ((((n + 1 : ℝ) ^ (-(s.re)) : ℝ) : ℂ) *
+          Complex.exp (-(Complex.I * (s.im : ℂ)) * (Real.log ((n + 1 : ℝ)) : ℂ)))) := by
+    unfold etaSeries
+    apply tsum_congr
+    intro n
+    have hsdef : s = (s.re : ℂ) + Complex.I * (s.im : ℂ) := by
+      rw [Complex.ext_iff]
+      constructor <;> simp
+    rw [hsdef]
+    simpa [Complex.add_re, Complex.add_im, Complex.mul_re, Complex.mul_im,
+      Complex.I_re, Complex.I_im] using eta_term_rotating_vector n s.re s.im
+  rw [hswap]
+-- ====================================================================
+-- 20. 隐数对齐零点 — 把"零点"表述为相位对齐 (信息压缩形态)
+--    设计意图: 在隐数坐标系压缩信息 — 经典零点需解析延拓+增长守恒;
+--              这里把"零点"降格为对齐谓词: s 是对齐零点 ⟺ 其交错旋转
+--              向量表示 (η 形态, §19) 之和为零.
+--    诚实边界 (2026-08-25):
+--      (a) "对齐零点" 是既有 riemannZeta 零点的 *重述* (相位结构显式化),
+--          不是发明新的独立零点对象. alignmentZero s ⟺ riemannZeta s = 0
+--          在 Re>1 (本节省略 20.3) 可证, 前提是排斥因子 1-2^{1-s} != 0
+--          (Re>1 时成立: 其实部 1-2^{1-Re} > 0).
+--      (b) "无限个非平凡零点" 是独立边界 — 需在 0<Re<1 有无限多个对齐点,
+--          依赖条件收敛 η + Abel/函数方程正则化 (§19) + 增长输入 (§16/17),
+--          本节省略没有装证无限. 对齐谓词给的是"零点=相位对齐"的精确语言,
+--          不替代增长率这一分析事实.
+-- ====================================================================
+
+-- 20.1 对齐零点: 交错旋转向量 (η 形态) 之和为零.
+def alignmentZero (s : ℂ) : Prop :=
+  etaSeries s = 0
+
+-- 20.2 Re>1 时 "对齐零点 ⟺ 复数零点" 桥 (隐数对齐投到经典零点).
+--    前提 hnot: 排斥因子非零 (Re>1 时成立, 见注释).
+theorem alignmentZero_iff_zeta_zero {s : ℂ} (hs : 1 < s.re)
+    (hnot : (1 - (2 : ℂ) ^ (1 - s)) ≠ 0) :
+    alignmentZero s ↔ riemannZeta s = 0 := by
+  constructor
+  · intro hz
+    change etaSeries s = 0 at hz
+    have hmul : (1 - (2 : ℂ) ^ (1 - s)) * riemannZeta s = 0 := by
+      rw [← eta_eq_mul_zeta (s := s) hs]
+      exact hz
+    exact (mul_eq_zero.mp hmul).resolve_left hnot
+  · intro hζ
+    change etaSeries s = 0
+    rw [eta_eq_mul_zeta (s := s) hs]
+    simp [hζ]
+
 end RiemannHIBS.Analytic
