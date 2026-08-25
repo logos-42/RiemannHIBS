@@ -1105,4 +1105,38 @@ theorem nontrivial_zero_in_envelope_annulus {s : ℂ} (hζ : riemannZeta s = 0)
   · rw [Complex.norm_exp]
     exact Real.exp_lt_exp.mpr hstrip.2
 
+-- ====================================================================
+-- 15. 无限多个零点: 平凡零点部分已证, 非平凡部分的障碍
+--    回答: "能否用已有机理 (微积分/发散/取极限) 推出无限多个零点?"
+--      (i) 平凡零点无限多 — 已证 (本节省略):
+--            ζ(−2(n+1)) = 0 对所有 n, n ↦ −2(n+1) 单射 ⟹ 零点集合无限.
+--      (ii) 非平凡零点无限多 — 机制无法推出, 需要增长估计:
+--            所有已证机制都是"必要条件"型 (零点 ⟹ 性质), 不携带 ζ 的增长行为;
+--            "发散/取极限"思路 = 幅角原理方向, 但其输入是 ζ 在矩形边界上的估计
+--            (Riemann–von Mangoldt: N(T) ~ (T/2π)log(T/2π) − T/2π), 超出几何机制.
+--            经典: Hadamard 1893 (增长阶 + 因子分解), 如实标注为边界.
+-- ====================================================================
+
+-- 15.1 无限多个零点 (平凡零点): 零点集合为无限集.
+--   证明: 单射嵌入 n ↦ −2(n+1) (每个是 ζ 的零点), 由 infinite_of_injective_forall_mem.
+theorem infinitely_many_trivial_zeros :
+    Set.Infinite {s : ℂ | riemannZeta s = 0} := by
+  let f : ℕ → ℂ := fun n => -2 * ((n + 1 : ℕ) : ℂ)
+  -- f 单射: −2(a+1) = −2(b+1) ⟹ a = b
+  have hf : Function.Injective f := by
+    intro a b h
+    -- 消去 −2
+    have h' : ((a + 1 : ℕ) : ℂ) = ((b + 1 : ℕ) : ℂ) := by
+      have h2 : (-2 : ℂ) * ((a + 1 : ℕ) : ℂ) = (-2 : ℂ) * ((b + 1 : ℕ) : ℂ) := by
+        simpa [f] using h
+      exact mul_left_cancel₀ (by norm_num : (-2 : ℂ) ≠ 0) h2
+    -- (a+1:ℂ) = (b+1:ℂ) ⟹ a+1 = b+1 ⟹ a = b
+    have h'' : a + 1 = b + 1 := by exact_mod_cast h'
+    omega
+  -- 每个 f n 是零点: ζ(−2(n+1)) = 0
+  have hz : ∀ n : ℕ, f n ∈ {s : ℂ | riemannZeta s = 0} := by
+    intro n
+    simpa [f, Nat.cast_add] using riemannZeta_neg_two_mul_nat_add_one n
+  exact Set.infinite_of_injective_forall_mem hf hz
+
 end RiemannHIBS.Analytic

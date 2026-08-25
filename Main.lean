@@ -2,6 +2,9 @@
 
 import RiemannHIBS
 
+-- main 函数含大量 IO.println (do 序列右结合嵌套), 需提高解析深度上限
+set_option maxRecDepth 1000 in
+
 def main : IO Unit := do
   IO.println "══════════════════════════════════════════════════"
   IO.println "  RiemannHIBS — 隐数运算法则 × 黎曼 ζ/η 函数构造"
@@ -109,6 +112,11 @@ def main : IO Unit := do
   IO.println "  [mathlib]   ✓ nontrivial_zero_in_envelope_annulus: 非平凡零点 ⟹ 1 < ‖e^s‖ < e (圆环内)"
   IO.println "  结论: 零点分布规律(已证) = 非平凡零点全在圆环 1<|w|<e 内; 临界叶 |w|=√e 是圆环正中"
   IO.println "        RH ⟺ 零点从圆环塌缩到中间圆 (未证); '螺旋无限延伸⟹无限零点' 不成立 (如实标注)"
+  IO.println "■ 无限多个零点 (本次新增: 平凡零点部分已证, 非平凡部分边界)"
+  IO.println "  [mathlib]   ✓ infinitely_many_trivial_zeros: 零点集合为无限集"
+  IO.println "  [mathlib]   ✓ 平凡零点: ζ(−2(n+1))=0 对所有 n, 单射嵌入 n ↦ −2(n+1)"
+  IO.println "  注: 非平凡零点无限多 (Hadamard 1893) 需增长阶+因子分解/幅角原理, 机制不携带增长信息"
+  IO.println "  注: 发散/取极限 = 幅角原理方向 (Riemann-von Mangoldt), 如实标注边界"
   IO.println ""
   IO.println "解读: 隐数空间 S = ℤ×{S,R,iR} 是 ℂ 上的三叶覆盖 (离散包络);"
   IO.println "      连续化后 E = ℝ×Tag 是 ℝ³ 中的壳, 投影沿三轴包住复平面 (十字);"
