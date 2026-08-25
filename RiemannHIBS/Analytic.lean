@@ -758,4 +758,114 @@ theorem envelope_inversion_swaps_inside_outside (w : ℂ) (hw : w ≠ 0) :
       simpa [h1] using h2
     exact (div_lt_iff₀ hnwpos).mpr h'
 
+-- ====================================================================
+-- 11. 半径叶与缠绕 (旋转向量机制在隐数坐标系中的几何化)
+--    在覆盖空间坐标 ⟨r,θ⟩ (隐数坐标系的连续形式) 下:
+--      ζ̂(r,θ) = ζ(log r + iθ) = Σ (n+1)^{−log r} · e^{−iθ·log(n+1)}
+--    本节省略全部为已证定理:
+--      (a) 叶上项分解: 第 n 项 = (模长 (n+1)^{−log r}) · (相位 −θ·log(n+1))
+--      (b) 叶上模长: ‖第 n 项‖ = (n+1)^{−log r}  (半径叶决定模长)
+--      (c) 临界叶锁定: 在 r = √e 上, ‖第 n 项‖ = (n+1)^{−1/2}
+--          —— "长度维度锁定"的精确内容: 整片叶上模长被锁为 n^{−1/2}
+--      (d) 缠绕: θ 增加 2π 时第 n 项相位改变 −2π·log(n+1) = −2π·windingCount n,
+--          即每个自然数在圆上转 log(n+1) 圈 (缠绕圈数 = log(n+1)/2π)
+--      (e) 临界衰减分界: r > e (log r > 1) 时圆上级数绝对收敛 (圆外远处无零点机制)
+--      (f) 临界叶不绝对收敛: Σ (n+1)^{−1/2} 发散 — 临界叶是"绝对收敛⟷条件收敛"的分界
+--           (对齐机制的启动条件, 经典分析边界的几何表述)
+-- ====================================================================
+
+-- 引理: log(√e) = 1/2  (临界叶半径的对数)
+lemma log_sqrt_exp_one : Real.log (Real.sqrt (Real.exp 1)) = 1 / 2 := by
+  rw [Real.log_sqrt (Real.exp_pos 1).le]
+  rw [Real.log_exp]
+
+-- 机制 (a): 叶上项分解 — ζ̂(r,θ) 的第 n 项在半径叶 r 上的旋转向量形式.
+theorem leaf_term_decomposition (n : ℕ) (r θ : ℝ) :
+    (1 : ℂ) / (((n + 1 : ℕ) : ℂ) ^ ((Real.log r : ℂ) + Complex.I * (θ : ℂ))) =
+      (((n + 1 : ℝ) ^ (-(Real.log r)) : ℝ) : ℂ) *
+        Complex.exp (-(Complex.I * (θ : ℂ)) * (Real.log ((n + 1 : ℝ)) : ℂ)) := by
+  exact dirichlet_term_rotating_vector n (Real.log r) θ
+
+-- 机制 (b): 叶上模长 — 第 n 项在半径叶 r 上的模长 = (n+1)^{−log r}.
+theorem leaf_term_norm (n : ℕ) (r θ : ℝ) :
+    ‖(((n + 1 : ℝ) ^ (-(Real.log r)) : ℝ) : ℂ) *
+        Complex.exp (-(Complex.I * (θ : ℂ)) * (Real.log ((n + 1 : ℝ)) : ℂ))‖ =
+      (n + 1 : ℝ) ^ (-(Real.log r)) := by
+  rw [Complex.norm_mul]
+  -- 第一因子: ofReal 的模 = |·| = 自身 (因 (n+1)^{−log r} > 0)
+  have hpos : 0 < (n + 1 : ℝ) ^ (-(Real.log r)) :=
+    Real.rpow_pos_of_pos (by exact_mod_cast Nat.succ_pos n) (-(Real.log r))
+  have h1 : ‖(((n + 1 : ℝ) ^ (-(Real.log r)) : ℝ) : ℂ)‖ =
+      (n + 1 : ℝ) ^ (-(Real.log r)) := by
+    rw [Complex.norm_real, Real.norm_eq_abs]
+    rw [abs_of_pos hpos]
+  -- 第二因子: 纯虚指数的模 = 1
+  have h2 : ‖Complex.exp (-(Complex.I * (θ : ℂ)) * (Real.log ((n + 1 : ℝ)) : ℂ))‖ = 1 := by
+    have harg : -(Complex.I * (θ : ℂ)) * (Real.log ((n + 1 : ℝ)) : ℂ) =
+        ((Real.log ((n + 1 : ℝ)) * (-θ) : ℝ) : ℂ) * Complex.I := by
+      rw [Complex.ofReal_mul]
+      rw [Complex.ofReal_neg]
+      ring
+    rw [harg]
+    rw [Complex.norm_exp_ofReal_mul_I]
+  rw [h1, h2]
+  rw [mul_one]
+
+-- 机制 (c): 临界叶锁定 — 在 r = √e 上, 每项模长被锁为 (n+1)^{−1/2}.
+theorem critical_leaf_norm_locked (n : ℕ) (θ : ℝ) :
+    ‖(((n + 1 : ℝ) ^ (-(Real.log (Real.sqrt (Real.exp 1)))) : ℝ) : ℂ) *
+        Complex.exp (-(Complex.I * (θ : ℂ)) * (Real.log ((n + 1 : ℝ)) : ℂ))‖ =
+      (n + 1 : ℝ) ^ (-(1 / 2 : ℝ)) := by
+  have hlog : Real.log (Real.sqrt (Real.exp 1)) = 1 / 2 := log_sqrt_exp_one
+  simpa [hlog] using leaf_term_norm n (Real.sqrt (Real.exp 1)) θ
+
+-- 机制 (d): 缠绕 — 每个自然数的缠绕圈数 = log(n+1)/2π.
+--   定义: windingCount n := log(n+1)  (θ 增加 2π 时第 n 项转 windingCount n 圈)
+noncomputable def windingCount (n : ℕ) : ℝ := Real.log (n + 1)
+
+-- 相位增量: θ ↦ θ+2π 时, 第 n 项的相位改变 −2π·log(n+1) (即 −2π·windingCount n)
+theorem term_phase_shift_over_turn (n : ℕ) (θ : ℝ) :
+    -((θ + 2 * Real.pi) * Real.log (n + 1 : ℝ)) =
+      -(θ * Real.log (n + 1 : ℝ)) - 2 * Real.pi * windingCount n := by
+  unfold windingCount
+  ring
+
+-- 缠绕圈数: 第 n 项在一整圈上的圈数 = log(n+1)/(2π)
+theorem term_winding_number (n : ℕ) :
+    Real.log (n + 1 : ℝ) = 2 * Real.pi * (Real.log (n + 1 : ℝ) / (2 * Real.pi)) := by
+  field_simp [Real.pi_ne_zero]
+
+-- 机制 (e): 临界衰减分界 — 对 r > e (log r > 1), 圆上 Dirichlet 级数绝对收敛.
+--   Σ ‖第 n 项‖ = Σ (n+1)^{−log r} < ∞  (p-级数, p = log r > 1)
+theorem absolute_convergence_outside_critical_leaf (r : ℝ) (hr : Real.exp 1 < r) :
+    Summable (fun n : ℕ => ((n + 1 : ℝ) ^ (-(Real.log r)) : ℝ)) := by
+  -- log r > 1 (log 严格递增, log(exp 1) = 1)
+  have hlog : 1 < Real.log r := by
+    rw [← Real.log_exp (1 : ℝ)]
+    exact Real.log_lt_log (Real.exp_pos 1) hr
+  -- Σ (n:ℝ)^{−log r} 可和 (p-级数, p > 1): (n:ℝ)^(−log r) = ((n:ℝ)^(log r))⁻¹
+  have hsum : Summable (fun n : ℕ => ((n : ℝ) ^ (-(Real.log r)) : ℝ)) := by
+    have hs : Summable (fun n : ℕ => (((n : ℝ) ^ (Real.log r))⁻¹ : ℝ)) :=
+      Real.summable_nat_rpow_inv.mpr hlog
+    simpa [Real.rpow_neg] using hs
+  -- 平移 1: Σ (n+1)^{−log r}
+  simpa [Nat.cast_add, Nat.cast_one, add_comm, add_left_comm, add_assoc] using
+    (summable_nat_add_iff (f := fun n : ℕ => ((n : ℝ) ^ (-(Real.log r)) : ℝ)) 1).mpr hsum
+
+-- 机制 (f): 临界叶不绝对收敛 — Σ (n+1)^{−1/2} 发散.
+--   临界叶 r=√e 是"绝对收敛 ⟷ 条件收敛"的分界 (对齐机制的启动条件).
+theorem critical_leaf_not_absolutely_convergent :
+    ¬ Summable (fun n : ℕ => ((n + 1 : ℝ) ^ (-(1 / 2 : ℝ)) : ℝ)) := by
+  -- Σ n^{−1/2} 发散 (p = 1/2 ≤ 1)
+  have hdiv : ¬ Summable (fun n : ℕ => ((n : ℝ) ^ (-(1 / 2 : ℝ)) : ℝ)) := by
+    intro h
+    have h' : Summable (fun n : ℕ => (((n : ℝ) ^ (1 / 2 : ℝ))⁻¹ : ℝ)) := by
+      simpa [Real.rpow_neg] using h
+    have hp := (Real.summable_nat_rpow_inv (p := (1 / 2 : ℝ))).mp h'
+    norm_num at hp
+  intro h
+  -- 若 Σ (n+1)^{−1/2} 可和, 平移回来 Σ n^{−1/2} 可和, 矛盾
+  exact hdiv ((summable_nat_add_iff
+    (f := fun n : ℕ => ((n : ℝ) ^ (-(1 / 2 : ℝ)) : ℝ)) 1).mp (by simpa using h))
+
 end RiemannHIBS.Analytic
