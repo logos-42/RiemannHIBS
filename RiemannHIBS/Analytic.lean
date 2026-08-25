@@ -1107,6 +1107,150 @@ theorem nontrivial_zero_in_envelope_annulus {s : ℂ} (hζ : riemannZeta s = 0)
     exact Real.exp_lt_exp.mpr hstrip.2
 
 -- ====================================================================
+-- 14.5 存在性转换器 — 用隐数特有结构 (反演不动圆) 构建"圆环零点对"
+--    用户思路 (session 2026-08-25): 尚未建立的"非平凡零点存在性/无限性",
+--      能否用隐数坐标特有信息 (覆盖多叶 / 反演不动圆 / 圆环化) 来构建?
+--    本节省略给出可编译的"转换器":
+--      (a) 反演保圆环: 1<‖w‖<e ⟹ 1<‖e/w‖<e (纯代数, 反演在圆环内闭合).
+--      (b) 非平凡零点 ⟹ 反射对也在圆环内 (隐数坐标: 反射 = 反演 w↦e/w).
+--      (c) 非平凡零点对结构 NontrivialZeroPair: 一个零点 + 其反射 (圆环内一对).
+--      (d) 圆上零点 ⟹ 反演不动 (‖e^{1-s}‖ = ‖e^s‖ = √e, 不动圆).
+--    归约 (诚实标注): 这些把"存在性 + 无限性"归约为——
+--      "圆环 1<‖e^s‖<e 内至少存在一个非平凡零点" (聚焦缺口).
+--      一旦有第一个, 反射 + 反演保圆环自动给出一整对; 无限性仍需增长估计 (§17).
+--      转换器不证明该缺口 (不伪证), 只把问题精确钉住.
+-- ====================================================================
+
+-- 14.5.1 反演保圆环: 若 w 在圆环 1<‖w‖<e 内, 则 e/w 也在圆环内.
+--   ‖e/w‖ = e/‖w‖, 且 1<‖w‖<e ⟹ 1<e/‖w‖<e (代数).
+theorem inversion_preserves_annulus {w : ℂ} (hw : w ≠ 0)
+    (hlo : 1 < ‖w‖) (hhi : ‖w‖ < Real.exp 1) :
+    1 < ‖Complex.exp 1 / w‖ ∧ ‖Complex.exp 1 / w‖ < Real.exp 1 := by
+  have hsplit : ‖Complex.exp 1 / w‖ = Real.exp 1 / ‖w‖ := by
+    rw [Complex.norm_div]
+    congr 1
+    simpa using Complex.norm_exp_ofReal (1 : ℝ)
+  have hwpos : 0 < ‖w‖ := norm_pos_iff.mpr hw
+  constructor
+  · rw [hsplit]
+    exact one_lt_div_iff.mpr (Or.inl ⟨hwpos, hhi⟩)
+  · rw [hsplit]
+    rw [div_lt_iff₀ hwpos]
+    nlinarith [Real.exp_pos 1, hlo]
+
+-- 14.5.2 非平凡零点的反射对也在圆环内 (隐数坐标: 反射 s↦1−s = 反演 w↦e/w).
+--   证明: ζ(1−s)=0 (反射闭合, 已证) ⟹ 1−s 是非平凡零点 ⟹ 在圆环内.
+theorem nontrivial_zero_pair_in_annulus {s : ℂ} (hζ : riemannZeta s = 0)
+    (hsn : ∀ n : ℕ, s ≠ -((n : ℕ) : ℂ)) (hs1 : s ≠ 1) :
+    1 < ‖Complex.exp (1 - s)‖ ∧ ‖Complex.exp (1 - s)‖ < Real.exp 1 := by
+  rw [envelope_inversion_map]
+  exact inversion_preserves_annulus (Complex.exp_ne_zero s) (nontrivial_zero_in_envelope_annulus hζ hsn hs1).1
+    (nontrivial_zero_in_envelope_annulus hζ hsn hs1).2
+
+-- 14.5.3 圆环内非平凡零点对象.
+--   用临界带条件表达"非平凡", 同时保留隐数圆环坐标作为显式字段.
+structure AnnularNontrivialZero (s : ℂ) : Prop where
+  zero : riemannZeta s = 0
+  strip : 0 < s.re ∧ s.re < 1
+  annulus : 1 < ‖Complex.exp s‖ ∧ ‖Complex.exp s‖ < Real.exp 1
+
+-- 已知的非平凡零点可封装成圆环对象; 这里只是把 §14.3--14.4 组合起来.
+theorem annularNontrivialZero_of_zero {s : ℂ} (hζ : riemannZeta s = 0)
+    (hsn : ∀ n : ℕ, s ≠ -((n : ℕ) : ℂ)) (hs1 : s ≠ 1) :
+    AnnularNontrivialZero s := by
+  exact
+    { zero := hζ
+      strip := nontrivial_zero_in_critical_strip hζ hsn hs1
+      annulus := nontrivial_zero_in_envelope_annulus hζ hsn hs1 }
+
+-- 反射 s↦1−s 是 involution; 这里的"固定"是集合意义上的闭合,
+-- 不是说临界圆上的每个点都被点点固定.
+theorem reflection_involutive :
+    Function.Involutive (fun s : ℂ => 1 - s) := by
+  intro s
+  ring
+
+-- 一个圆环内非平凡零点反射为另一个圆环内非平凡零点.
+-- 注意: zero_reflects_under_one_sub 的非负整数排除条件由 strip 自动给出;
+-- 因而平凡负偶零点不会被错误地纳入本闭合定理.
+theorem annularNontrivialZero_reflects {s : ℂ}
+    (hs : AnnularNontrivialZero s) :
+    AnnularNontrivialZero (1 - s) := by
+  have hsn : ∀ n : ℕ, s ≠ -((n : ℕ) : ℂ) := by
+    intro n hneg
+    have hrel := congrArg Complex.re hneg
+    simp only [Complex.neg_re, Complex.natCast_re] at hrel
+    linarith [hs.strip.1]
+  have hs1 : s ≠ 1 := by
+    intro hone
+    have hrel := congrArg Complex.re hone
+    simp only [Complex.one_re] at hrel
+    linarith [hs.strip.2]
+  have hζ' : riemannZeta (1 - s) = 0 :=
+    zero_reflects_under_one_sub hs.zero hsn hs1
+  have hstrip' : 0 < (1 - s).re ∧ (1 - s).re < 1 := by
+    rw [Complex.sub_re, Complex.one_re]
+    constructor <;> linarith [hs.strip.1, hs.strip.2]
+  exact
+    { zero := hζ'
+      strip := hstrip'
+      annulus := nontrivial_zero_pair_in_annulus hs.zero hsn hs1 }
+
+-- 反射闭合可逆: 圆环内非平凡零点集合在 s↦1−s 下保持不变.
+theorem annularNontrivialZero_iff_reflects {s : ℂ} :
+    AnnularNontrivialZero s ↔ AnnularNontrivialZero (1 - s) := by
+  constructor
+  · exact annularNontrivialZero_reflects
+  · intro hs
+    simpa [sub_eq_add_neg, add_assoc] using
+      (annularNontrivialZero_reflects hs)
+
+-- 一个种子只产生一个反射轨道; 这不是无限性结论.
+theorem exists_annular_nontrivial_zero_pair
+    (h : ∃ s : ℂ, AnnularNontrivialZero s) :
+    ∃ s : ℂ, AnnularNontrivialZero s ∧ AnnularNontrivialZero (1 - s) := by
+  rcases h with ⟨s, hs⟩
+  exact ⟨s, hs, annularNontrivialZero_reflects hs⟩
+
+-- 兼容旧接口: 一个零点 + 其反射, 二者都在圆环内.
+structure NontrivialZeroPair (s : ℂ) : Prop where
+  zero_s : riemannZeta s = 0
+  zero_reflect : riemannZeta (1 - s) = 0
+  annulus_s : 1 < ‖Complex.exp s‖ ∧ ‖Complex.exp s‖ < Real.exp 1
+  annulus_reflect : 1 < ‖Complex.exp (1 - s)‖ ∧ ‖Complex.exp (1 - s)‖ < Real.exp 1
+
+-- 存在性转换器: 非平凡零点 ⟹ 存在零点对 (反射 + 反演自动补全另一半).
+theorem nontrivial_zero_has_pair {s : ℂ} (hζ : riemannZeta s = 0)
+    (hsn : ∀ n : ℕ, s ≠ -((n : ℕ) : ℂ)) (hs1 : s ≠ 1) :
+    NontrivialZeroPair s := by
+  constructor
+  · exact hζ
+  · exact zero_reflects_under_one_sub hζ hsn hs1
+  · exact nontrivial_zero_in_envelope_annulus hζ hsn hs1
+  · exact nontrivial_zero_pair_in_annulus hζ hsn hs1
+
+-- 14.5.4 临界叶/圆周保持 (集合不动, 非点点固定).
+--   若 ‖e^s‖ = √e, 则 ‖e^{1−s}‖ = √e; 这只是反演保持该圆周.
+theorem on_circle_reflects_on_circle {s : ℂ}
+    (hcirc : ‖Complex.exp s‖ = envelopeRadius) :
+    ‖Complex.exp (1 - s)‖ = envelopeRadius := by
+  rw [envelope_inversion_map]
+  have hsplit : ‖Complex.exp 1 / Complex.exp s‖ = Real.exp 1 / ‖Complex.exp s‖ := by
+    rw [Complex.norm_div]
+    congr 1
+    simpa using Complex.norm_exp_ofReal (1 : ℝ)
+  rw [hsplit, hcirc]
+  -- e/√e = √e: (√e)^2 / √e = √e
+  have hE : Real.exp 1 = (envelopeRadius) ^ 2 := by
+    rw [envelopeRadius]
+    exact (Real.sq_sqrt (Real.exp_pos 1).le).symm
+  have he : 0 < envelopeRadius := by
+    rw [envelopeRadius]
+    exact Real.sqrt_pos.2 (Real.exp_pos 1)
+  rw [hE]
+  field_simp [he]
+
+-- ====================================================================
 -- 15. 无限多个零点: 平凡零点部分已证, 非平凡部分的障碍
 --    回答: "能否用已有机理 (微积分/发散/取极限) 推出无限多个零点?"
 --      (i) 平凡零点无限多 — 已证 (本节省略):
@@ -1224,7 +1368,7 @@ theorem gammaR_norm_decomposition (s : ℂ) :
     rw [Complex.div_re]
     simp only [Complex.neg_re]
     norm_num
-    ring
+    ring_nf
   rw [hπ]
 
 -- 17.3 隐数坐标读法: 在覆盖坐标 s = log r + iθ (即 w = e^s, r=e^σ, θ=t) 下,

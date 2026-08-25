@@ -32,6 +32,12 @@ stage: current
 | zero_free_negative_side | §14 | 负侧无非平凡零点: Re(s)≤0 ⟹ ζ(s)≠0 (函数方程反射 + 14.1, 非负整数外) |
 | nontrivial_zero_in_critical_strip | §14 | 非平凡零点 ⟹ 0<Re(s)<1 (临界带): 由 14.1+14.2 排除两侧 |
 | nontrivial_zero_in_envelope_annulus | §14 | 非平凡零点 ⟹ 1<‖e^s‖<e (圆环内): ‖e^s‖=e^{Re s}, 临界叶√e 是圆环几何平均正中 |
+| inversion_preserves_annulus | §14.5 | 反演 w↦e/w 保持圆环 1<‖w‖<e |
+| AnnularNontrivialZero / annularNontrivialZero_of_zero | §14.5 | 将非平凡零点封装为“临界带 + 隐数圆环”对象 |
+| reflection_involutive | §14.5 | s↦1−s 是 involution |
+| annularNontrivialZero_reflects / _iff_reflects | §14.5 | 圆环内非平凡零点集合在反射下闭合且可逆；平凡负偶零点因前提排除不被误反射 |
+| on_circle_reflects_on_circle | §14.5 | 临界叶/圆周由反演保持；这是集合保持，不是圆上每一点的点点固定 |
+| exists_annular_nontrivial_zero_pair | §14.5 | 若已有一个圆环内非平凡零点，则可构造其反射对；不推出无限性 |
 | infinitely_many_trivial_zeros | §15 | 零点集合为无限集: 单射嵌入 n↦−2(n+1), 每个是平凡零点 ζ(−2(n+1))=0 |
 | argumentPrinciple_single_zero | §16 | 隐数坐标系幅角原理原子: ∮dz/(z−w)=2πi (w 在圆内, mathlib circleIntegral) |
 | envelope_circle_param | §16 | 圆 |z−c|=r 在相位包络坐标 = θ↦c+r·e^{iθ} (hEvalPhase 即圆参数化) |
@@ -61,6 +67,8 @@ stage: current
 - 幅角原理 (§16) 已构造为隐数坐标系内的机制原子 (相位缠绕=零点数), 但它是"电路"缺"电源": 无限零点的输出依赖 ζ 在围道边界的增长估计 (N(T)~T/2π·log(T/2π)) — 该输入是 ζ 的分析性质, 坐标变换翻译不掉, 非平凡零点无限多仍标注为边界
 - §17 增长分解: ζ(s)=compZ/Γℝ 的精确坐标读法已证 (gammaR_norm_decomposition / zeta_norm_in_envelope_coords, 纯代数), 但预言 P1–P3 (Stirling 渐近 + 完成ζ 有界性) mathlib 均未形式化 — "无限非平凡零点"唯一缺失的分析输入已被显式隔离为待形式化边界 (draft), 不代表证明取得进展
 - §18 有限相位抵消: 精确组合翻译已证 (有限整数组合抵消 ⟺ 整数幂关系, 纯代数/整数结构, 不依赖超越性); 但它只回答"哪些有限组合能抵消", 不回答"抵消 ⟹ 全部零点在临界线" (RH 核心仍缺); 路线 B 稠密性 (log 的 ℚ-无关) 依赖超越性, mathlib 未形式化, 如实标注阻塞
+- **无限非平凡零点 = 目标命题 G (2026-08-25 精确化)**: `Set.Infinite {s | riemannZeta s = 0 ∧ 非平凡 ∧ s ≠ 1}`. 关键概念区分(不能混淆): (i) 平凡零点无限(§15)靠**显式公式** ζ(−2(n+1))=0, 无需分析; (ii) 非平凡零点无限缺**存在性** — `alignmentZero`(§20) 是**谓词**(判定某 s 是否对齐), 不保证任何 s 存在, 更不保证无限多个互异 s. (iii) "逐项模长锁定 n^{−1/2}"(§11)≠"完成ζ整体有界"(§17 P2) — 后者(未证)才是幅角/零点计数输入. 所需组件: ①存在性(围道边界变号/幅角绕数非零, 需 differentiableAt+边界估计) ②无限性 N(T)→∞(完成ζ有界 P2 + 幅角计数, 均未形式化) ③翻回隐数螺旋坐标(θ→∞↔t→∞). 螺旋增长模式可先定义为对象(spiralGrowth 剖面), 把"统一证明"收敛为可攻坚缺口, 但**增长界本身未证, 不装证无限**
+- **隐数驱动的存在性构造 (候选路线, 非已证)**: 可在万有覆盖取有限高度的螺旋矩形/圆环扇区 `Ω_T`, 对提升函数 `ζ̂(s)=ζ(s)` 或完成函数建立“边界无零点 + 边界像绕数非零”的见证，再由幅角原理推出 `Ω_T` 内至少一个零点，并经 `w=e^s` 翻回包络圆环。要得到无限多个需构造无界序列 `T_j` 或证明 `N(T)→∞`. `critical_leaf_norm_locked`、`phaseCancelRelation`、`periodicCancelWindow` 单独不足以完成这一步：有限项抵消不等于带尾项控制的 ζ 零点，而且不同覆盖叶上的 ζ 值一般不周期重复。隐数坐标的真实贡献是把围道、反演、相位与叶结构组织成可验证的存在性见证，不是凭坐标变换凭空产生零点。
 - **缺口① (推导结论)**: `zeta_phase_alignment_condition` (§10) 用 `zeta_eq_tsum` 把 Re>1 的零点转成旋转向量和=0; 其旋转向量核 `dirichlet_term_rotating_vector` 是**复数恒等式且与 σ 无关** (可对任意 σ 用). 临界带 0<Re<1 的断路点在"级数换谐"(ζ 的 Dirichlet 展开) 而非相位机制. **正解 (已推明)**: 在临界带 `ζ(s)=0` 是良定义全纯函数取零 (`differentiableAt_riemannZeta`, s≠1), 不需级数和; "相位对齐判定" 的隐数语义 = 覆盖空间里 `expZeta_phase_principal` 把 `ζ̂(w)=ζ(log r+iθ)` — "对齐零点" 在隐数即此良定等式. 跨到经典: Re>0 用 η(交替)是 Abel 条件收敛, 排斥因子 `(1−2^{1−s})` 在临界带**恒非零** (2^{1−s}=1 只在 s=1+2πik/ln2, 实部=1, 不在 0<Re<1), 故 ζ=0⟺η=0 在临界带成立 (经典)。**真正缺口 = 条件收敛(η)+Abel/函数方程延拓 的 mathlib 工具缺失**, 非概念不可能; 落地建议 = 覆盖语义做"对齐零点"命题 + 临界带诚实标注未形式化. **状态 (2026-08-25)**: §19 已在 Re>1 落地可编译的 η 交错桥 (eta_term_rotating_vector + eta_phase_alignment_condition, 无 sorry); 临界带 0<Re<1 仍缺条件收敛 η + Abel/函数方程正则化工具, 如实标注为待形式化
 - **缺口② (增长→无限零点)**: 幅角原理 (§16) + 增长分解 (§17) 已把 "N(T)→∞" 隔离为唯一缺失分析输入 — 依赖 Stirling 渐近 + 完成 ζ 有界性 (P1–P3), 二者 mathlib 均未形式化; 即使完成也只证"无限多", 不等于 RH (临界带上) — 如实标注
 - 螺旋无限延伸 ≠ 全称证明: 舞台(覆盖)完备 ≠ 演员(零点)在台上
