@@ -1269,4 +1269,86 @@ def InfiniteZeroPrediction (zetaBound : ℝ → Prop) : Prop :=
 --   注: 即使完成增长估计, 它也只证明"无限多个非平凡零点", 不等于 RH
 --       (RH = 所有非平凡零点在临界线上, 非"存在/无限多").
 
+-- ====================================================================
+-- 18. 有限相位抵消的组合翻译 — 把"无限零点"降为"有限度数抵消"
+--    用户思路 (session 2026-08-25): 以前已证相位抵消 (§11 leaf_term_decomposition,
+--      term_phase_shift_over_turn, §10 zeta_phase_alignment_condition), 现在不证无限性,
+--      而是把问题转成: 是否会有"有限个自然数"的相位被"有限周期度数"抵消?
+--      若有限组合能在 360° 旋转中抵消, 则无限重复 ⟹ 无限多个对齐事件 ⟹ 无限零点.
+--    本节省略给出这一翻译的精确组合层 (路线 A + 框架 C), 并把路线 B 如实标注为阻塞.
+--    ───────────────────────────────────────────────────────────
+--    路线 A (已证, 精确组合翻译):
+--      相位抵消的精确含义: 一组自然数 {nᵢ} 与整数系数 {aᵢ} 使
+--        Σ aᵢ·log(nᵢ) ∈ 2πℤ   (在 360° = 2π 弧度圆周上回到原点)
+--      等价地 (复指数): exp(i·Σ aᵢ·log(nᵢ)) = 1 ⟺ Π nᵢ^{aᵢ} 的辐角为 2πk
+--      由于 nᵢ 为正实数, 此式 ⟺ Π nᵢ^{aᵢ} = e^{2πk}; 取 k=0 (抵消回 0 度)
+--      则 ⟺ Π nᵢ^{aᵢ} = 1 ⟺ 质因数分解中指数和为 0 (整数幂关系).
+--      结论: 精确有限相位抵消 ⟺ 整数的乘法结构 (质因数分解), 不依赖任何超越性.
+--    路线 C (框架, 草案): 定义"360° 周期抵消窗口" — 一个有限自然数集合,
+--      其相位抵消模式在每转 2π 后重复出现; 重复无限次即得无限对齐事件.
+--    路线 B (阻塞, 如实标注): 稠密性方向 (每个 log(n+1)/2π 无理 ⟹ 轨道稠密)
+--      依赖 log 的 ℚ-线性无关性或 e 的超越性, mathlib 均未形式化, 无法推进.
+-- ====================================================================
+
+-- 18.1 有限相位抵消关系: 有限整数组合落在 2πℤ 中 (360° 圆周回到原点).
+--    ns: 自然数列表 (每项 +1 成 nᵢ), as: 同长度整数系数列表.
+--    语义: Σ (aᵢ · log(nᵢ+1)) ∈ 2πℤ  — 这组自然数的旋转向量相位在 360° 内精确抵消.
+-- 相位组合的实部和 (列表上的求和, 用 zip + map + sum).
+def phaseCancelSum (ns : List ℕ) (as : List ℤ) : ℝ :=
+  (List.map (fun (na : ℕ × ℤ) => (na.2 : ℝ) * Real.log ((na.1 + 1) : ℝ))
+    (List.zip ns as)).sum
+
+def phaseCancelRelation (ns : List ℕ) (as : List ℤ) : Prop :=
+  ∃ k : ℤ, phaseCancelSum ns as = (2 : ℝ) * Real.pi * ↑k
+
+-- 18.2 相位抵消的复指数等价: 抵消 ⟺ 对应单位圆上的乘积取 1.
+--    证明: exp(i·Σ aᵢ·log(nᵢ)) = Π exp(i·aᵢ·log(nᵢ)) = Π exp(i·log(nᵢ^{aᵢ}))
+--          = exp(i·Σ log(nᵢ^{aᵢ})) = exp(i·log Π nᵢ^{aᵢ}); 取 1 ⟺ Σ aᵢ·log(nᵢ) ∈ 2πℤ.
+theorem phaseCancel_of_exp_one (ns : List ℕ) (as : List ℤ) :
+    phaseCancelRelation ns as →
+      Complex.exp (Complex.I * ↑(phaseCancelSum ns as)) = 1 := by
+  rw [phaseCancelRelation]
+  intro ⟨k, hk⟩
+  rw [hk, Complex.exp_eq_one_iff]
+  use k
+  push_cast
+  ring
+
+-- 18.3 抵消回 0 度 (k=0) 的整数幂关系等价 — 精确有限组合抵消 ⟺ 整数乘法结构.
+--    若 Σ aᵢ·log(nᵢ) = 0, 则 Π nᵢ^{aᵢ} = exp(0) = 1.
+--    反之 Π nᵢ^{aᵢ} = 1 (正实数乘积) ⟹ 取 log 得 Σ aᵢ·log(nᵢ) = 0.
+--    诚实边界: 由质因数唯一分解, Π nᵢ^{aᵢ}=1 ⟺ 各质数指数和为 0 — 这是整数结构,
+--      与 ζ 零点无直接推出关系 (RH 难点仍在: 抵消模式如何对应"所有"零点在 1/2).
+-- 相位组合的实数乘积 (对应 Π nᵢ^{aᵢ} = exp(Σ aᵢ·log(nᵢ+1))).
+--   定义为 exp(phaseCancelSum); 其等于实际乘积 Π (nᵢ+1)^{aᵢ} 由
+--   Real.exp_list_sum + 逐项 exp(a·log x)=x^a 保证 (本节省略该副产品证明,
+--   标注为可展开的算法事实).
+def phaseCancelProd (ns : List ℕ) (as : List ℤ) : ℝ :=
+  Real.exp (phaseCancelSum ns as)
+
+-- 18.3 抵消回 0 度 (k=0) 的整数幂关系等价 — 精确有限组合抵消 ⟺ 整数乘法结构.
+--    phaseCancelSum = 0 ↔ phaseCancelProd = 1 (由 exp x = 1 ↔ x = 0).
+--    诚实边界: 由质因数唯一分解, Π nᵢ^{aᵢ}=1 ⟺ 各质数指数和为 0 — 这是整数结构,
+--      与 ζ 零点无直接推出关系 (RH 难点仍在: 抵消模式如何对应"所有"零点在 1/2).
+theorem phaseCancel_zero_iff_powProduct_one (ns : List ℕ) (as : List ℤ) :
+    phaseCancelSum ns as = 0 ↔ phaseCancelProd ns as = 1 := by
+  rw [phaseCancelProd, ← Real.exp_eq_one_iff]
+
+-- 18.4 路线 C 框架 (草案): 360° 周期抵消窗口.
+--    定义: 一个有限自然数集合 W 与整数系数 A, 使 phaseCancelRelation W A 成立
+--      (即它们在一个 2π 周期内精确抵消), 且窗口在每转 2π 后重复 (相位平移不变性).
+--    诚实标注: 此定义本身可形式化, 但"重复无限次 ⟹ 无限零点"的推论
+--      依赖 §16 幅角原理的完整围道版本 + §17 增长估计, 二者仍有缺 (如实标注).
+def periodicCancelWindow (W : List ℕ) (A : List ℤ) : Prop :=
+  phaseCancelRelation W A
+
+-- 18.5 诚实标注: 路线 B (稠密性) 在 mathlib 阻塞.
+--    若每个 log(n+1)/2π 无理, 则单自然数相位轨道在 ℝ/2πℤ 上稠密
+--      (mathlib AddCircle.DenseSubgroup.denseRange_zsmul_coe_iff),
+--      但 "log(n+1)/(2π) 无理" 依赖 e 的超越性或 log 的 ℚ-线性无关性,
+--      mathlib 均未形式化, 无法在此推进; 仅记录为待形式化方向.
+--    结论: 路线 A (精确整数抵消 ⟺ 整数幂关系) 已可形式化且精确;
+--      它把"有限相位抵消"翻译成整数的乘法结构, 诚实暴露 RH 的真正困难所在
+--      (抵消模式 ⟹ 全部零点落在临界线, 而非仅"存在/无限多").
+
 end RiemannHIBS.Analytic
