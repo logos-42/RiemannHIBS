@@ -18,6 +18,7 @@
 --   5. 隐数黎曼猜想 (声明, 非 sorry): 隐数空间中的零点都在倍化临界线上
 
 import Mathlib.NumberTheory.LSeries.RiemannZeta
+import Mathlib.NumberTheory.LSeries.Nonvanishing
 import Mathlib.Topology.Algebra.InfiniteSum.NatInt
 import Mathlib.Analysis.SpecialFunctions.Pow.Complex
 import Mathlib.Analysis.Complex.Trigonometric
@@ -1037,5 +1038,71 @@ theorem mechanism_cycle_closed
    zerosOnEnvelopeCircle_of_zerosOnCircle,
    (fun hz => riemannHypothesis_of_zerosOnEnvelopeCircle hz h0),
    noZerosOutsideCircle_of_riemannHypothesis⟩
+
+-- ====================================================================
+-- 14. 零点分布: 临界带内 (已证) — "零点分布规律"的严格版本
+--    目标 1 的补全: 修正两个逻辑跳跃后, 圆外无零点的硬核部分可证.
+--      (i) 修正: "收敛分界(绝对收敛) ⟹ 无零点" 不成立 (绝对收敛级数和可为 0).
+--          真正原因 = 欧拉乘积: ζ(s) = ∏_p (1−p^{−s})⁻¹ 每因子非零
+--          (mathlib 已证: riemannZeta_ne_zero_of_one_le_re, Re(s) ≥ 1 无零点).
+--      (ii) 修正: "螺旋无限延伸 ⟹ 无限零点" 不成立 (候选时刻无限多 ≠ 零点存在).
+--           无限零点需振荡估计 (Hardy), 如实标注为边界.
+--    已证结论 (本节省略全部为已证定理, mathlib 欧拉乘积 + 函数方程反射):
+--      14.1 圆外远处无零点: Re(s) ≥ 1 ⟹ ζ(s) ≠ 0  (|w| ≥ e)
+--      14.2 负侧无非平凡零点: Re(s) ≤ 0 ⟹ ζ(s) ≠ 0  (非负整数外, |w| ≤ 1)
+--      14.3 零点在临界带: 非平凡零点 ⟹ 0 < Re(s) < 1
+--      14.4 隐数坐标翻译: 非平凡零点 ⟹ 1 < |w| < e (圆环内)
+--    结论: 零点分布规律 (已证) = 非平凡零点全部位于圆环 1 < |w| < e 内;
+--          临界叶 |w| = √e 是圆环的正中间 (几何平均);
+--          RH ⟺ 所有零点从圆环"塌缩"到中间圆 (未证, 如实标注).
+-- ====================================================================
+
+-- 14.1 圆外远处无零点: Re(s) ≥ 1 ⟹ ζ(s) ≠ 0  (欧拉乘积, mathlib)
+theorem zero_free_outside_envelope (s : ℂ) (hs : 1 ≤ s.re) : riemannZeta s ≠ 0 :=
+  riemannZeta_ne_zero_of_one_le_re hs
+
+-- 14.2 负侧无非平凡零点: Re(s) ≤ 0 ⟹ ζ(s) ≠ 0 (非负整数外)
+--   证明: 若 ζ(s)=0, 函数方程反射给 ζ(1−s)=0; 但 Re(1−s) = 1−Re(s) ≥ 1,
+--         由 14.1 得 ζ(1−s) ≠ 0, 矛盾.
+theorem zero_free_negative_side {s : ℂ} (hs : s.re ≤ 0)
+    (hsn : ∀ n : ℕ, s ≠ -((n : ℕ) : ℂ)) : riemannZeta s ≠ 0 := by
+  intro hζ
+  -- 反射: ζ(1−s) = 0
+  have hs1 : s ≠ 1 := by
+    intro h
+    have : s.re = 1 := by rw [h]; simp
+    linarith
+  have hζ' : riemannZeta (1 - s) = 0 := zero_reflects_under_one_sub hζ hsn hs1
+  -- 但 Re(1−s) = 1 − Re s ≥ 1 ⟹ ζ(1−s) ≠ 0
+  have hge : 1 ≤ (1 - s).re := by
+    rw [Complex.sub_re, Complex.one_re]
+    linarith
+  exact (riemannZeta_ne_zero_of_one_le_re hge) hζ'
+
+-- 14.3 零点在临界带: 非平凡零点 ⟹ 0 < Re(s) < 1
+--   证明: s.re < 1 由 14.1 (Re ≥ 1 无零点);
+--         0 < s.re 由 14.2 (Re ≤ 0 无零点, 非负整数外).
+theorem nontrivial_zero_in_critical_strip {s : ℂ} (hζ : riemannZeta s = 0)
+    (hsn : ∀ n : ℕ, s ≠ -((n : ℕ) : ℂ)) (_hs1 : s ≠ 1) : 0 < s.re ∧ s.re < 1 := by
+  constructor
+  · by_contra hle
+    have hz : riemannZeta s ≠ 0 := zero_free_negative_side (le_of_not_gt hle) hsn
+    exact hz hζ
+  · by_contra hge
+    have hz : riemannZeta s ≠ 0 := riemannZeta_ne_zero_of_one_le_re (le_of_not_gt hge)
+    exact hz hζ
+
+-- 14.4 隐数坐标翻译: 非平凡零点 ⟹ 1 < ‖e^s‖ < e (圆环内)
+--   ‖e^s‖ = e^{Re s}, 0 < Re s < 1 ⟹ 1 < e^{Re s} < e
+theorem nontrivial_zero_in_envelope_annulus {s : ℂ} (hζ : riemannZeta s = 0)
+    (hsn : ∀ n : ℕ, s ≠ -((n : ℕ) : ℂ)) (hs1 : s ≠ 1) :
+    1 < ‖Complex.exp s‖ ∧ ‖Complex.exp s‖ < Real.exp 1 := by
+  have hstrip := nontrivial_zero_in_critical_strip hζ hsn hs1
+  constructor
+  · rw [Complex.norm_exp]
+    rw [← Real.exp_zero]
+    exact Real.exp_lt_exp.mpr hstrip.1
+  · rw [Complex.norm_exp]
+    exact Real.exp_lt_exp.mpr hstrip.2
 
 end RiemannHIBS.Analytic
