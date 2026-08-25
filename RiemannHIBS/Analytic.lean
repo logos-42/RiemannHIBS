@@ -1912,4 +1912,228 @@ theorem infinite_nontrivial_zeros_of_zeroHeightSupply (h : ZeroHeightSupply) :
   infinite_nontrivial_zeros_of_hidden_height_growth
     (hiddenZeroHeightGrowth_of_zeroHeightSupply h)
 
+-- ====================================================================
+-- 23. 幅角原理核心原子 — 幂因子分解 ⟹ 绕数 2πi·重数 (无 sorry)
+--    地位: 这是"绕数非零 witness"(§21) 与"零点计数 N(T)"(§22 输入) 的共同
+--    复分析基建. 完整幅角原理 = 本原子 + 有限零点集枚举; Riemann–von
+--    Mangoldt 还需增长估计. 本节省略落地单零点证书的精确原子.
+--    ───────────────────────────────────────────────────────────
+--      23.1 一般函数版 Cauchy: 无零点解析 g 的 log 导数积分为零
+--      23.2 逐点代数: 幂因子的 log 导数 = m/(z−w) + g'/g
+--      23.3 绕数定理: f=(z−w)^m·g 于闭盘 ⟹ ∮f'/f = 2πi·m
+--      §24 ζ 单零点局部证书 ZetaSimpleZeroCertificate (开集上的代数分解)
+--        24.1 证书 ⟹ ∮ζ'/ζ = 2πi (deriv 局部相容 + 23.3)
+--        24.2 证书 ⟹ AnnulusZeroWitness (接 §21)
+--        24.3 证书(临界带内) ⟹ 反射对 (接 §21.5)
+--    ───────────────────────────────────────────────────────────
+--    诚实边界: 证书本身 (存在开集 U 与其上的单零点代数分解) 仍是分析输入,
+--      本节未提供实例. 它比 §21 的积分 witness 更具体 (纯代数分解),
+--      且与 Hardy 数值路线兼容: 一旦有严格数值零点证书即可实例化.
+-- ====================================================================
+
+-- 23.1 无零点解析函数的 log 导数围道积分为零 (Cauchy–Goursat, 一般函数版).
+theorem logDeriv_integral_eq_zero_of_analytic_ne_zero
+    {c : ℂ} {r : ℝ} (hr : 0 ≤ r)
+    {g : ℂ → ℂ}
+    (hga : ∀ z ∈ Metric.closedBall c r, AnalyticAt ℂ g z)
+    (hgne : ∀ z ∈ Metric.closedBall c r, g z ≠ 0) :
+    (∮ z in C(c, r), deriv g z / g z) = 0 := by
+  have hgdiff : ∀ z ∈ Metric.ball c r, DifferentiableAt ℂ
+      (fun x => deriv g x / g x) z := by
+    intro z hz
+    have ha := hga z (Metric.ball_subset_closedBall hz)
+    exact ((ha.deriv).differentiableAt).div ha.differentiableAt
+      (hgne z (Metric.ball_subset_closedBall hz))
+  have hgcont : ContinuousOn (fun x => deriv g x / g x)
+      (Metric.closedBall c r) := by
+    intro z hz
+    have ha := hga z hz
+    exact (((ha.deriv).continuousAt).div ha.continuousAt
+      (hgne z hz)).continuousWithinAt
+  have hgdiff' : ∀ z ∈ Metric.ball c r \ (∅ : Set ℂ),
+      DifferentiableAt ℂ (fun x => deriv g x / g x) z := by
+    intro z hz
+    exact hgdiff z hz.1
+  exact Complex.circleIntegral_eq_zero_of_differentiable_on_off_countable hr
+    Set.countable_empty hgcont hgdiff'
+
+-- 23.2 逐点代数恒等式: 幂因子函数的 log 导数 = m/(z−w) + g'/g.
+--   成立条件: z ≠ w 且 g z ≠ 0.
+theorem powFactor_logDeriv_eq (w : ℂ) {m : ℕ} {g : ℂ → ℂ} {z : ℂ}
+    (hz : z ≠ w) (hgne : g z ≠ 0)
+    (hd : DifferentiableAt ℂ g z) :
+    deriv (fun x => (x - w) ^ m * g x) z / ((z - w) ^ m * g z)
+      = m / (z - w) + deriv g z / g z := by
+  have hu : (z - w : ℂ) ≠ 0 := sub_ne_zero.mpr hz
+  have hum : ((z - w : ℂ) ^ m) ≠ 0 := pow_ne_zero _ hu
+  have hp : DifferentiableAt ℂ (fun x => (x - w) ^ m) z :=
+    (differentiableAt_id.sub_const w).pow m
+  have hdw1 : HasDerivAt (fun x : ℂ => x - w) 1 z := (hasDerivAt_id z).sub_const w
+  -- 幂函数的 log 导数经复合规则化到 m/(z−w)
+  have heq : (fun t : ℂ => t ^ m) ∘ (fun x : ℂ => x - w)
+      = fun x => (x - w) ^ m := rfl
+  have hcomp : logDeriv ((fun t : ℂ => t ^ m) ∘ (fun x : ℂ => x - w)) z
+      = logDeriv (fun t : ℂ => t ^ m) (z - w) * deriv (fun x : ℂ => x - w) z :=
+    logDeriv_comp (f := fun t : ℂ => t ^ m) (g := fun x : ℂ => x - w)
+      (differentiableAt_pow m) (differentiableAt_id.sub_const w)
+  rw [heq] at hcomp
+  calc deriv (fun x => (x - w) ^ m * g x) z / ((z - w) ^ m * g z)
+      = logDeriv (fun x => (x - w) ^ m * g x) z := rfl
+    _ = logDeriv (fun x => (x - w) ^ m) z + logDeriv g z :=
+          logDeriv_mul z hum hgne hp hd
+    _ = logDeriv (fun t : ℂ => t ^ m) (z - w) * deriv (fun x : ℂ => x - w) z
+          + logDeriv g z := by rw [hcomp]
+    _ = logDeriv (fun t : ℂ => t ^ m) (z - w) * 1 + logDeriv g z := by
+          rw [hdw1.deriv]
+    _ = m / (z - w) + deriv g z / g z := by
+          rw [logDeriv_pow, mul_one, logDeriv_apply]
+
+-- 23.3 幂因子分解 ⟹ 绕数 = 2πi·重数.
+--   f = (z−w)^m·g 于闭盘 (g 解析且处处非零, w 在开盘内):
+--     ∮_{|z−c|=r} f'/f = m·∮dz/(z−w) + ∮g'/g = m·2πi + 0.
+theorem winding_of_pow_factorization {c : ℂ} {r : ℝ} (hr : 0 < r)
+    {w : ℂ} (hw : w ∈ Metric.ball c r) {m : ℕ} {g : ℂ → ℂ}
+    (hga : ∀ z ∈ Metric.closedBall c r, AnalyticAt ℂ g z)
+    (hgne : ∀ z ∈ Metric.closedBall c r, g z ≠ 0) :
+    (∮ z in C(c, r), deriv (fun x => (x - w) ^ m * g x) z / ((z - w) ^ m * g z))
+      = (2 * Real.pi * Complex.I : ℂ) * m := by
+  -- 圆上一切点 ≠ w (w 在开盘内)
+  have hsphere : ∀ z ∈ Metric.sphere c r, z ≠ w := by
+    intro z hz hzw
+    rw [hzw] at hz
+    have hdist := Metric.mem_sphere.mp hz
+    have hball := Metric.mem_ball.mp hw
+    linarith
+  -- 被积函数在圆上逐点改写为 m/(z−w) + g'/g
+  have hcongr : Set.EqOn
+      (fun z => deriv (fun x => (x - w) ^ m * g x) z / ((z - w) ^ m * g z))
+      (fun z => m / (z - w) + deriv g z / g z) (Metric.sphere c r) := by
+    intro z hz
+    have hzcl : z ∈ Metric.closedBall c r := Metric.sphere_subset_closedBall hz
+    exact powFactor_logDeriv_eq w (hsphere z hz) (hgne z hzcl)
+      ((hga z hzcl).differentiableAt)
+  rw [circleIntegral.integral_congr hr.le hcongr]
+  -- 改写 m/(z−w) = m·(z−w)⁻¹
+  have hsplit : Set.EqOn (fun z => m / (z - w) + deriv g z / g z)
+      (fun z => (m : ℂ) * (z - w)⁻¹ + deriv g z / g z) (Metric.sphere c r) := by
+    intro z hz
+    have hzw : (z - w : ℂ) ≠ 0 := sub_ne_zero.mpr (hsphere z hz)
+    field_simp [hzw]
+  rw [circleIntegral.integral_congr hr.le hsplit]
+  -- 两分量均在圆上连续 ⟹ 可积
+  have hI1 : CircleIntegrable (fun z : ℂ => (m : ℂ) * (z - w)⁻¹) c r :=
+    ContinuousOn.circleIntegrable hr.le <|
+      continuousOn_const.mul ((ContinuousOn.sub continuousOn_id
+        continuousOn_const).inv₀ fun z hz => sub_ne_zero.mpr (hsphere z hz))
+  have hI2 : CircleIntegrable (fun z => deriv g z / g z) c r :=
+    ContinuousOn.circleIntegrable hr.le <| by
+      intro z hz
+      have ha := hga z (Metric.sphere_subset_closedBall hz)
+      exact (((ha.deriv).continuousAt).div ha.continuousAt
+        (hgne z (Metric.sphere_subset_closedBall hz))).continuousWithinAt
+  calc (∮ z in C(c, r), (m : ℂ) * (z - w)⁻¹ + deriv g z / g z)
+      = (∮ z in C(c, r), (m : ℂ) * (z - w)⁻¹)
+          + ∮ z in C(c, r), deriv g z / g z := circleIntegral.integral_add hI1 hI2
+    _ = (m : ℂ) * (∮ z in C(c, r), (z - w)⁻¹)
+          + ∮ z in C(c, r), deriv g z / g z := by
+        rw [circleIntegral.integral_const_mul]
+    _ = (m : ℂ) * (2 * Real.pi * Complex.I) + 0 := by
+        rw [argumentPrinciple_single_zero hw,
+          logDeriv_integral_eq_zero_of_analytic_ne_zero hr.le hga hgne, add_zero]
+    _ = (2 * Real.pi * Complex.I : ℂ) * m := by ring
+
+-- ====================================================================
+-- 24. ζ 单零点局部证书 — "第一个非平凡零点"的可验证见证对象
+--    设计: 三阶段路线的阶段① (局部存在性) 的 Lean 化形态.
+--    Hardy 数值路线 (Z(a)Z(b)<0 + IVT) 需要严格区间算术, mathlib 当前
+--    缺失该基建, 浮点不可作证明 — 如实标注阻塞. 本证书对象把数值路线
+--    的终点 (一个已验证的单零点邻域分解) 表达为纯代数谓词:
+--      开集 U 上 ζ(z) = (z − w)·g(z), g 全纯非零, w ∈ U, 1 ∉ U.
+--    一旦任何路线供给此证书 (Hardy 数值/Stirling 组装/其他), 全部下游
+--    结构 (§14.5 反射对, §21 witness, §22 计数链) 自动接通.
+-- ====================================================================
+
+--   参数化形态: 零点 w 与因子函数 g 作为显式参数, 使全部字段保持命题.
+structure ZetaSimpleZeroCertificate (U : Set ℂ) (w : ℂ) (g : ℂ → ℂ) : Prop where
+  isOpen : IsOpen U
+  zeroIn : w ∈ U
+  poleOut : (1 : ℂ) ∉ U
+  gAnalytic : ∀ z ∈ U, AnalyticAt ℂ g z
+  gNonzero : ∀ z ∈ U, g z ≠ 0
+  factorEq : ∀ z ∈ U, riemannZeta z = (z - w) * g z
+
+-- 证书的直接推论: 零点确实存在于 U 内 (取 factorEq 在 w 处).
+theorem certificate_gives_zero {U : Set ℂ} {w : ℂ} {g : ℂ → ℂ}
+    (cert : ZetaSimpleZeroCertificate U w g) :
+    riemannZeta w = 0 := by
+  rw [cert.factorEq w cert.zeroIn]
+  simp
+
+-- 24.1 证书 ⟹ 绕数积分 = 2πi.
+--   关键步骤: 分解只在 U 上给出, 而 deriv 需要邻域 — 用 U 开保证
+--   圆盘闭包 ⊆ U 后, 球面上每点的邻域含于 U, 由 Filter.EventuallyEq.deriv_eq
+--   把 ζ'/ζ 局部相容到 F'/F (F = (·−w)·g), 再套 23.3.
+theorem zeta_winding_eq_two_pi_i_of_certificate
+    {U : Set ℂ} {w : ℂ} {g : ℂ → ℂ} (cert : ZetaSimpleZeroCertificate U w g)
+    {c : ℂ} {r : ℝ} (hr : 0 < r)
+    (hdisk : Metric.closedBall c r ⊆ U)
+    (hzero : w ∈ Metric.ball c r) :
+    (∮ z in C(c, r), deriv riemannZeta z / riemannZeta z)
+      = (2 * Real.pi * Complex.I : ℂ) := by
+  set F : ℂ → ℂ := fun x => (x - w) * g x with hFdef
+  -- 球面每点的邻域内 ζ ≡ F (U 开)
+  have hsU : ∀ z ∈ Metric.sphere c r, riemannZeta =ᶠ[𝓝 z] F := by
+    intro z hz
+    have hzU : z ∈ U := hdisk (Metric.sphere_subset_closedBall hz)
+    filter_upwards [cert.isOpen.mem_nhds hzU] with x hx
+    exact cert.factorEq x hx
+  -- 被积函数在圆上与 F'/F 逐点相等 (值由 factorEq, 导数由邻域相容)
+  have hcongr : Set.EqOn (fun z => deriv riemannZeta z / riemannZeta z)
+      (fun z => deriv F z / F z) (Metric.sphere c r) := by
+    intro z hz
+    have hzU : z ∈ U := hdisk (Metric.sphere_subset_closedBall hz)
+    have hval : riemannZeta z = F z := cert.factorEq z hzU
+    have hder : deriv riemannZeta z = deriv F z := (hsU z hz).deriv_eq
+    show deriv riemannZeta z / riemannZeta z = deriv F z / F z
+    rw [hder, hval]
+  rw [circleIntegral.integral_congr hr.le hcongr]
+  -- 套用 §23.3 幂因子绕数定理 (m = 1): 其两参数是分解因子 g 的解析与非零
+  have hgA : ∀ z ∈ Metric.closedBall c r, AnalyticAt ℂ g z :=
+    fun z hz => cert.gAnalytic z (hdisk hz)
+  have hcore := winding_of_pow_factorization (m := 1) hr hzero hgA
+    (fun z hz => cert.gNonzero z (hdisk hz))
+  simpa [hFdef, pow_one] using hcore
+
+-- 24.2 证书 ⟹ AnnulusZeroWitness (接入 §21 witness 链).
+theorem annulusZeroWitness_of_zetaCertificate
+    {U : Set ℂ} {w : ℂ} {g : ℂ → ℂ} (cert : ZetaSimpleZeroCertificate U w g)
+    {c : ℂ} {r : ℝ} (hr : 0 < r)
+    (hdisk : Metric.closedBall c r ⊆ U)
+    (hzero : w ∈ Metric.ball c r) :
+    AnnulusZeroWitness c r where
+  posR := hr
+  avoidPole := by
+    intro z hz hz1
+    subst hz1
+    exact cert.poleOut (hdisk hz)
+  windingNonZero := by
+    intro hcon
+    rw [zeta_winding_eq_two_pi_i_of_certificate cert hr hdisk hzero] at hcon
+    exact mul_ne_zero
+      (mul_ne_zero (show (2 : ℂ) ≠ 0 by norm_num)
+        (show (Real.pi : ℂ) ≠ 0 by simpa using Real.pi_ne_zero))
+      Complex.I_ne_zero hcon
+
+-- 24.3 证书 (临界带内) ⟹ 圆环非平凡零点反射对 (全下游自动接通).
+theorem exists_annular_pair_of_zetaCertificate
+    {U : Set ℂ} {w : ℂ} {g : ℂ → ℂ} (cert : ZetaSimpleZeroCertificate U w g)
+    {c : ℂ} {r : ℝ} (hr : 0 < r)
+    (hdisk : Metric.closedBall c r ⊆ U)
+    (hzero : w ∈ Metric.ball c r)
+    (hstrip : ∀ z ∈ Metric.closedBall c r, 0 < z.re ∧ z.re < 1) :
+    ∃ s : ℂ, AnnularNontrivialZero s ∧ AnnularNontrivialZero (1 - s) :=
+  exists_annular_pair_of_criticalStripWitness
+    { toAnnulusZeroWitness := annulusZeroWitness_of_zetaCertificate cert hr hdisk hzero
+      inStrip := hstrip }
+
 end RiemannHIBS.Analytic

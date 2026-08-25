@@ -52,6 +52,12 @@ stage: current
 | ZeroHeightSupply | §22 | 显式的经典分析输入：任意高度 H 之上存在临界带零点；不是 axiom，也尚未被证明 |
 | hiddenZeroHeightGrowth_of_zeroHeightSupply | §22 | 高度供给 ⟹ 隐数覆盖中的零点高度无界 |
 | infinite_nontrivial_zeros_of_zeroHeightSupply | §22 | 高度供给 ⟹ 无限多个非平凡零点；完整证明仍依赖未实现的高度供给输入 |
+| logDeriv_integral_eq_zero_of_analytic_ne_zero | §23 | 一般函数版 Cauchy: 闭盘上解析且非零的 g, 其 log 导数围道积分为零 |
+| powFactor_logDeriv_eq / winding_of_pow_factorization | §23 | 幂因子分解核心原子: f=(z−w)^m·g ⟹ ∮f'/f = 2πi·m (logDeriv_mul/pow/comp 组合路线, 规避 nat 减法幂代数) |
+| ZetaSimpleZeroCertificate (U,w,g 参数化) | §24 | ζ 单零点局部证书: 开集 U 上 ζ(z)=(z−w)g(z), g 全纯非零; 零点 w 与因子 g 为显式参数使全部字段为命题 |
+| certificate_gives_zero | §24 | 证书直接推论: ζ(w)=0 (factorEq 在 w 处取值) |
+| zeta_winding_eq_two_pi_i_of_certificate | §24 | 证书 ⟹ ∮ζ'/ζ = 2πi (U 开保证 deriv 局部相容 + 23.3 套用) |
+| annulusZeroWitness_of_zetaCertificate / exists_annular_pair_of_zetaCertificate | §24 | 证书 ⟹ AnnulusZeroWitness (接§21) ⟹ 圆环零点反射对 (接§21.5), 全下游自动接通 |
 | infinitely_many_trivial_zeros | §15 | 零点集合为无限集: 单射嵌入 n↦−2(n+1), 每个是平凡零点 ζ(−2(n+1))=0 |
 | argumentPrinciple_single_zero | §16 | 隐数坐标系幅角原理原子: ∮dz/(z−w)=2πi (w 在圆内, mathlib circleIntegral) |
 | envelope_circle_param | §16 | 圆 |z−c|=r 在相位包络坐标 = θ↦c+r·e^{iθ} (hEvalPhase 即圆参数化) |
@@ -89,6 +95,8 @@ stage: current
 - **缺口② (增长→无限零点)**: 幅角原理 (§16) + 增长分解 (§17) 已把 "N(T)→∞" 隔离为唯一缺失分析输入 — 依赖 Stirling 渐近 + 完成 ζ 有界性 (P1–P3), 二者 mathlib 均未形式化; 即使完成也只证"无限多", 不等于 RH (临界带上) — 如实标注
 - **§21 存在性桥已完成但没有伪造见证**: `analyticAt_riemannZeta`、无零点时的 `logDeriv` 圆周积分为零，以及其逆否命题均已无 `sorry` 编译；`AnnulusZeroWitness` / `CriticalStripWitness` 把“积分非零”精确封装为唯一输入，但代码没有声称存在这样的见证
 - **§22 分阶段闭环已完成**: `ZeroHeightSupply` 是 `N(T)→∞` 的直接弱化接口；它可推出 `HiddenZeroHeightGrowth`，再推出无限非平凡零点。当前仍未完成的是从 completed ζ、Stirling 与完整幅角/零点计数证明 `ZeroHeightSupply`，因此项目尚未拥有无条件的无限非平凡零点证明
+- **阶段① 局部存在性的 Hardy 数值路线阻塞 (2026-08-25)**: 三阶段路线中"有限高度零点证书"(Z(a)Z(b)<0 + IVT ⟹ Z(t)=0 ⟹ ζ(1/2+it)=0) 需要严格区间算术验证数值不等式 — mathlib 当前无 interval arithmetic 基建, 浮点计算不可作 Lean 证明. 已落地替代接口: `ZetaSimpleZeroCertificate` 把数值路线终点表达为纯代数谓词, 任何供给路线 (Hardy 数值/Stirling 组装/Hadamard 无限性反推) 到手后全下游自动接通
+- **幅角原理完成度**: §23 已落地单零点幂因子绕数原子 (∮f'/f = 2πi·m); 完整幅角原理 = 该原子 + 有限零点集枚举 (多零点求和), Riemann–von Mangoldt 还需 Stirling 增长估计 — 后两者仍未形式化
 - 螺旋无限延伸 ≠ 全称证明: 舞台(覆盖)完备 ≠ 演员(零点)在台上
 - 非平凡零点存在性与无限性: 已证仅平凡零点无限 (§15); 非平凡部分需增长阶+因子分解/幅角原理, 已有机理皆"必要条件/缺增长"型, 不携带 ζ 的增长行为, 如实标注边界
 
