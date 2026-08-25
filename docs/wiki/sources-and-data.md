@@ -28,3 +28,10 @@ stage: current
 
 ## 注册 raw (manifests/raw_sources.csv)
 - README.md / README_zh-CN.md (项目双语文档)
+- 可视化图 (status=new, 全部已登记):
+  - experiments/: envelope_critical.png, envelope_plane.png, envelope_surface.png
+  - viz/: fig1_projection_cross / fig2_envelope_shell / fig3_critical_section /
+    fig4_phase_cover / fig5_covering_space / fig5_rollup / fig6_winding /
+    fig7_three_views / fig8_spiral_animation.gif / fig9_mobius_walk / fig10_zero_vibration
+- 说明: 14 个图均为项目可视化产物 (viz/*.py, experiments/envelope.py),
+  由 current-status.md §图 一节索引; 详见该页。

@@ -39,5 +39,20 @@ stage: current
 - 频率干涉: Z(t) ≈ 2Σ n^{-1/2}cos(θ−t·log n) (Riemann–Siegel, 数值验证)
 
 ## 图
-fig1 投影十字 / fig2 三维壳 / fig3 临界截面 / fig4 相位覆盖 / fig5 卷绕+覆盖空间 /
-fig6 绕数 / fig7 三视图 / fig8 螺旋动画 / fig9 Möbius 行走 / fig10 频率干涉
+全部 fig1–fig10 已登记于 `manifests/raw_sources.csv` (status=new)。
+
+- fig1 `viz/fig1_projection_cross.png` 投影十字 (S/R/iR 三标签 → 复平面)
+- fig2 `viz/fig2_envelope_shell.png` 三维包络壳
+- fig3 `viz/fig3_critical_section.png` 临界截面
+- fig4 `viz/fig4_phase_cover.png` 相位覆盖
+- fig5 `viz/fig5_covering_space.png` + `viz/fig5_rollup.png` 覆盖空间 / 卷绕成圆周 |w|=√e (零点编号对应)
+- fig6 `viz/fig6_winding.png` 绕数 (argument principle: 像曲线绕原点圈数 = 零点数)
+- fig7 `viz/fig7_three_views.png` 三视图
+- fig8 `viz/fig8_spiral_animation.gif` 螺旋动画 (万有覆盖螺旋柱面)
+- fig9 `viz/fig9_mobius_walk.png` Möbius 行走
+- fig10 `viz/fig10_zero_vibration.png` 频率干涉 Z(t)≈2Σn^{-1/2}cos(θ−t·log n) (Riemann–Siegel 数值)
+
+数值验证图 (experiments/):
+- `experiments/envelope_critical.png` 临界线圆周 |w|=√e 与零点共圆验证 (E1)
+- `experiments/envelope_plane.png` 复平面/包络平面视图
+- `experiments/envelope_surface.png` 包络曲面 w=log z (螺旋柱面/万有覆盖)

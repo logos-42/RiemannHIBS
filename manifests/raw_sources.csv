@@ -1,3 +1,17 @@
 source_id,company,vendor,kind,filename,raw_rel_path,status,compiled_into,notes
 src_9a04ccb3f2,,,document,README.md,README.md,new,,
 src_1438ac3820,,,document,README_zh-CN.md,README_zh-CN.md,new,,
+src_844602cca2,,,image,envelope_critical.png,experiments/envelope_critical.png,new,docs/wiki/current-status.md,临界线圆周 |w|=√e 与零点共圆验证 (E1, 1650x750)
+src_4fbf4c9cb1,,,image,envelope_plane.png,experiments/envelope_plane.png,new,docs/wiki/current-status.md,复平面/包络平面视图 (1200x1200)
+src_ce80aad1e0,,,image,envelope_surface.png,experiments/envelope_surface.png,new,docs/wiki/current-status.md,包络曲面 w=log z (螺旋柱面/万有覆盖, 1350x1200)
+src_9ea41d321b,,,image,fig10_zero_vibration.png,viz/fig10_zero_vibration.png,new,docs/wiki/current-status.md,fig10 频率干涉 Z(t)≈2Σn^{-1/2}cos(θ−t·log n) (Riemann–Siegel 数值, 2250x735)
+src_e38dad98ec,,,image,fig1_projection_cross.png,viz/fig1_projection_cross.png,new,docs/wiki/current-status.md,fig1 隐数投影十字 (S/R/iR 三标签 → 复平面, 980x980)
+src_b508cacaa6,,,image,fig2_envelope_shell.png,viz/fig2_envelope_shell.png,new,docs/wiki/current-status.md,fig2 三维包络壳 (1260x980)
+src_af3ec2827b,,,image,fig3_critical_section.png,viz/fig3_critical_section.png,new,docs/wiki/current-status.md,fig3 临界截面 (980x980)
+src_f1b8b99994,,,image,fig4_phase_cover.png,viz/fig4_phase_cover.png,new,docs/wiki/current-status.md,fig4 相位覆盖 (980x980)
+src_d1894249d5,,,image,fig5_covering_space.png,viz/fig5_covering_space.png,new,docs/wiki/current-status.md,fig5 覆盖空间 (临界线直线↔圆周 |w|=√e, 1680x840)
+src_e8918b5b8f,,,image,fig5_rollup.png,viz/fig5_rollup.png,new,docs/wiki/current-status.md,fig5 rollup 临界线卷绕成圆周 (零点编号对应, 1800x840)
+src_e07af3f456,,,image,fig6_winding.png,viz/fig6_winding.png,new,docs/wiki/current-status.md,fig6 绕数 (argument principle: 像曲线绕原点圈数=零点数, 1800x840)
+src_392daaaee0,,,image,fig7_three_views.png,viz/fig7_three_views.png,new,docs/wiki/current-status.md,fig7 三视图 (2250x780)
+src_43fe8f9db9,,,image,fig8_spiral_animation.gif,viz/fig8_spiral_animation.gif,new,docs/wiki/current-status.md,fig8 螺旋动画 (万有覆盖螺旋柱面, 1250x560)
+src_1c51b5fdbc,,,image,fig9_mobius_walk.png,viz/fig9_mobius_walk.png,new,docs/wiki/current-status.md,fig9 Möbius 行走 (1950x780)
