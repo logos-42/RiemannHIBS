@@ -28,7 +28,15 @@ stage: current
 | zetaCoverIsomorphism | §12 | 覆盖↔复平面同构结构: covers(覆盖双射)+radial(径向单射)+zeta_eq(ζ 值一致)+branch(螺旋延续)+periodic(多叶折叠) — 全部由已证定理构成, 无 sorry |
 | helix_continuation | §12 | 螺旋线延续: 每个 w≠0 的每圈 k 都有主支相位原像 (把"螺旋无限延伸"与"可数多叶"接起来) |
 | mechanism_cycle_closed | §13 | 机制完备环 A⟹B⟹C⟹D⟹A 四方向全证 (A 圆外无零点⟹B 零点在圆上⟹C 包络半径锁定‖e^s‖=√e⟹D 经典 RH⟹A), 输入 h0: 0<Re s |
+| zero_free_outside_envelope | §14 | 圆外远处无零点: Re(s)≥1 ⟹ ζ(s)≠0 (欧拉乘积每因子非零, mathlib riemannZeta_ne_zero_of_one_le_re) |
+| zero_free_negative_side | §14 | 负侧无非平凡零点: Re(s)≤0 ⟹ ζ(s)≠0 (函数方程反射 + 14.1, 非负整数外) |
+| nontrivial_zero_in_critical_strip | §14 | 非平凡零点 ⟹ 0<Re(s)<1 (临界带): 由 14.1+14.2 排除两侧 |
+| nontrivial_zero_in_envelope_annulus | §14 | 非平凡零点 ⟹ 1<‖e^s‖<e (圆环内): ‖e^s‖=e^{Re s}, 临界叶√e 是圆环几何平均正中 |
 | infinitely_many_trivial_zeros | §15 | 零点集合为无限集: 单射嵌入 n↦−2(n+1), 每个是平凡零点 ζ(−2(n+1))=0 |
+| argumentPrinciple_single_zero | §16 | 隐数坐标系幅角原理原子: ∮dz/(z−w)=2πi (w 在圆内, mathlib circleIntegral) |
+| envelope_circle_param | §16 | 圆 |z−c|=r 在相位包络坐标 = θ↦c+r·e^{iθ} (hEvalPhase 即圆参数化) |
+| phase_winding_equals_zero_count | §16 | 相位缠绕 = 零点数×2πi (logDeriv 表述: 绕零点一圈相位变化 2π) |
+| zeroCount_normalized | §16 | (2πi)⁻¹·∮dz/(z−w)=1 (幅角原理归一化: 除以 2πi 得零点数) |
 
 ## 声明 (非证明)
 - RiemannHypothesisHidden / C / Phase: RH 的隐数翻译
@@ -37,16 +45,18 @@ stage: current
 - 非平凡零点无限多 (Hadamard 1893): 已证仅覆盖平凡零点 (§15); 非平凡部分需增长阶 + 因子分解/幅角原理; 已有机理皆"必要条件/缺增长"型, 不携带 ζ 的增长行为, 如实标注边界
 
 ## 诚实边界 (核心!)
-- 机制链最后一步"圆外无零点" = RH 本身, 被当前提, 未证明
-- zero_envelope_circle 的 hζ 参数未使用 → "零点定理"实为纯几何恒等式
-- 螺旋无限延伸 ≠ 全称证明: 舞台(覆盖)完备 ≠ 演员(零点)在台上
+- 圆外远处无零点已证 (Re≥1, §14 欧拉乘积); 但 1/2<Re<1 的圆外部分 (=RH 核心未解区) 仍未被覆盖 — 机制链"圆外无零点"现在分两段: 远处已证, 临界带内仍是 RH
 - 机制完备环 (§13) 是"四方式等价"而非"零点真在圆上"的证明: 输入 h0 (`0 < Re s`, 零点在右半平面) 为显式机制假设 (经典事实但尚未在形式化层实现); D = `RiemannHypothesis` (mathlib 声明) 仍为被设对象 — 环的含义是"**若 RH 成立则四种说法一致**", 环本身不给 RH 真值。A⟹B 已证 (§9), 但 D⟹A 借 RH 声明, 闭环仍赖 RH 真值。
+- 幅角原理 (§16) 已构造为隐数坐标系内的机制原子 (相位缠绕=零点数), 但它是"电路"缺"电源": 无限零点的输出依赖 ζ 在围道边界的增长估计 (N(T)~T/2π·log(T/2π)) — 该输入是 ζ 的分析性质, 坐标变换翻译不掉, 非平凡零点无限多仍标注为边界
+- 螺旋无限延伸 ≠ 全称证明: 舞台(覆盖)完备 ≠ 演员(零点)在台上
+- 非平凡零点存在性与无限性: 已证仅平凡零点无限 (§15); 非平凡部分需增长阶+因子分解/幅角原理, 已有机理皆"必要条件/缺增长"型, 不携带 ζ 的增长行为, 如实标注边界
 
 ## 候选机制 (等价/直觉, 非力迫)
-- 欧拉乘积正性 → Re s ≥ 1 无零点 (已证)
+- 欧拉乘积正性 → Re s ≥ 1 无零点: 已在 §14 形式化 (zero_free_outside_envelope, mathlib riemannZeta_ne_zero_of_one_le_re)
 - Bohr–Landau/Selberg → 几乎所有零点在临界线附近 (密度)
 - Möbius 平方根界: RH ⟺ M(x) = O(x^{1/2+ε}) (等价)
 - 机制完备环 (§13): 圆外无零点⟺零点在圆上⟺包络半径锁定⟺RH (四方向等价 — 属等价规范而非真值证明)
+- 隐数坐标系幅角原理 (§16): 相位缠绕=零点数 已证为机制原子; 完整无限零点需增长估计输入
 - Berry–Keating xp 量子化 (speculative)
 - 频率干涉: Z(t) ≈ 2Σ n^{-1/2}cos(θ−t·log n) (Riemann–Siegel, 数值验证)
 
