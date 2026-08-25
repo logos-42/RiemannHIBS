@@ -9,3 +9,4 @@
 | 2026-08-25 | research | 无限多个零点 (§15): 平凡零点无限多已证 (infinitely_many_trivial_zeros, 单射嵌入 n↦−2(n+1)); 非平凡部分如实标注边界 (Hadamard 1893 需增长阶+因子分解/幅角原理, 已有机理不携带 ζ 增长行为) |
 | 2026-08-25 | research | 零点分布规律 (§14): 修正两跳跃 — 圆外远处无零点已证 (Re≥1 欧拉乘积, mathlib), 负侧无零点 (函数方程反射), 非平凡零点 ⟹ 0<Re<1 ⟹ 圆环 1<‖e^s‖<e 内; 临界叶√e 是圆环几何平均正中 |
 | 2026-08-25 | feat | 隐数坐标系幅角原理 (§16, 局部版): argumentPrinciple_single_zero (∮dz/(z−w)=2πi 单零点原子) + envelope_circle_param (圆参数化) + phase_winding_equals_zero_count (相位缠绕=零点数) + zeroCount_normalized ((2πi)⁻¹∮=1); 诚实标注: 幅角原理为"电路"缺"电源", 无限零点仍赖增长估计输入 |
+| 2026-08-25 | research | 无限幅角原理的增长分解 (§17): zeta_growth_decomposition (ζ=compZ/Γℝ) + gammaR_norm_decomposition (\|Γℝ\|=π^(−Re s/2)·\|Γ(s/2)\|) + gammaR_norm_in_envelope_coords / zeta_norm_in_envelope_coords (隐数坐标精确读法, 纯代数已证); 预言 P1–P3 (Stirling + 完成ζ有界) 明确标注为 mathlib 缺失, 把"增长估计"隔离为唯一待形式化边界 |

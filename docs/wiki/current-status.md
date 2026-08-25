@@ -37,6 +37,10 @@ stage: current
 | envelope_circle_param | §16 | 圆 |z−c|=r 在相位包络坐标 = θ↦c+r·e^{iθ} (hEvalPhase 即圆参数化) |
 | phase_winding_equals_zero_count | §16 | 相位缠绕 = 零点数×2πi (logDeriv 表述: 绕零点一圈相位变化 2π) |
 | zeroCount_normalized | §16 | (2πi)⁻¹·∮dz/(z−w)=1 (幅角原理归一化: 除以 2πi 得零点数) |
+| zeta_growth_decomposition | §17 | ζ(s) = completedRiemannZeta(s) / Γℝ(s) (mathlib 已证, 坐标无关增长分解) |
+| gammaR_norm_decomposition | §17 | \|Γℝ(s)\| = π^(−Re s/2)·\|Γ(s/2)\| (Gammaℝ 模长坐标读法, 纯代数) |
+| gammaR_norm_in_envelope_coords | §17 | 临界叶 \|w\|=√e 上 \|Γℝ\| = π^(−1/4)·\|Γ((log√e+iθ)/2)\| (隐数坐标精确表达式) |
+| zeta_norm_in_envelope_coords | §17 | 覆盖坐标 \|ζ(log r+iθ)\| = \|compZ\| / (π^(−log r/2)·\|Γ((log r+iθ)/2)\|) (增长起点) |
 
 ## 声明 (非证明)
 - RiemannHypothesisHidden / C / Phase: RH 的隐数翻译
@@ -48,6 +52,7 @@ stage: current
 - 圆外远处无零点已证 (Re≥1, §14 欧拉乘积); 但 1/2<Re<1 的圆外部分 (=RH 核心未解区) 仍未被覆盖 — 机制链"圆外无零点"现在分两段: 远处已证, 临界带内仍是 RH
 - 机制完备环 (§13) 是"四方式等价"而非"零点真在圆上"的证明: 输入 h0 (`0 < Re s`, 零点在右半平面) 为显式机制假设 (经典事实但尚未在形式化层实现); D = `RiemannHypothesis` (mathlib 声明) 仍为被设对象 — 环的含义是"**若 RH 成立则四种说法一致**", 环本身不给 RH 真值。A⟹B 已证 (§9), 但 D⟹A 借 RH 声明, 闭环仍赖 RH 真值。
 - 幅角原理 (§16) 已构造为隐数坐标系内的机制原子 (相位缠绕=零点数), 但它是"电路"缺"电源": 无限零点的输出依赖 ζ 在围道边界的增长估计 (N(T)~T/2π·log(T/2π)) — 该输入是 ζ 的分析性质, 坐标变换翻译不掉, 非平凡零点无限多仍标注为边界
+- §17 增长分解: ζ(s)=compZ/Γℝ 的精确坐标读法已证 (gammaR_norm_decomposition / zeta_norm_in_envelope_coords, 纯代数), 但预言 P1–P3 (Stirling 渐近 + 完成ζ 有界性) mathlib 均未形式化 — "无限非平凡零点"唯一缺失的分析输入已被显式隔离为待形式化边界 (draft), 不代表证明取得进展
 - 螺旋无限延伸 ≠ 全称证明: 舞台(覆盖)完备 ≠ 演员(零点)在台上
 - 非平凡零点存在性与无限性: 已证仅平凡零点无限 (§15); 非平凡部分需增长阶+因子分解/幅角原理, 已有机理皆"必要条件/缺增长"型, 不携带 ζ 的增长行为, 如实标注边界
 

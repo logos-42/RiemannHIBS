@@ -1180,4 +1180,93 @@ theorem zeroCount_normalized {c w : ℂ} {r : ℝ} (hw : w ∈ Metric.ball c r) 
     (2 * Real.pi * Complex.I : ℂ)⁻¹ * (∮ z in C(c, r), (z - w : ℂ)⁻¹) = 1 := by
   rw [argumentPrinciple_single_zero hw]
   field_simp [Complex.I_ne_zero, mul_ne_zero (by norm_num : (2 : ℂ) ≠ 0) Complex.I_ne_zero]
+
+-- ====================================================================
+-- 17. 隐数坐标系中的增长分解与无限零点预言
+--    用户探索方向: 从隐数坐标看 ζ 的增长速度, 给预言, 完善"无限幅角原理".
+--    核心分解 (mathlib 已证, 纯代数): ζ(s) = completedRiemannZeta(s) / Gammaℝ(s)
+--      Gammaℝ(s) = π^(-s/2)·Γ(s/2)  (Deligne 因子)
+--    在覆盖坐标 w = e^s (即 ⟨r,θ⟩, r=e^σ, θ=t) 下:
+--      |ζ(s)| = |completedRiemannZeta(s)| / |Gammaℝ(s)|
+--      |Gammaℝ(σ+it)| = π^(-σ/2)·|Γ((σ+it)/2)|
+--    本节省略已证定理: 增长分解的精确坐标读法 (不含任何 Stirling/界估计).
+--    ───────────────────────────────────────────────────────────
+--    预言 (PREDICTION, 非证明, 明确标注):
+--      (P1) Stirling 渐近下 |Γ((1/2+it)/2)| ≈ |t|^(1/4)·e^{-π|t|/4};
+--           故临界叶 |w|=√e 上 |Gammaℝ| ≈ π^(-1/4)·|t|^(1/4)·e^{-π|t|/4} (指数衰减).
+--      (P2) 完成 ζ 因子在临界带内有界 (经典), 故 |ζ(1/2+it)| 由 Γ 因子反向放大;
+--           边界积分 ∮ ζ'/ζ 随 T 增长 ~ (T/2π)·log(T/2π) (Riemann–von Mangoldt).
+--      (P3) 在隐数坐标: 圆弧 |w|=√e, 角度 θ∈[-T,T] 包住的零点数 N(T)
+--           ≈ (T/2π)·log(T/2π) → ∞ 当 T→∞.
+--    诚实边界: (P1)-(P3) 依赖 Stirling 渐近 + 完成 ζ 有界性 — 二者 mathlib 均
+--       未形式化 (无 Γ 的 Stirling 界, 无 completedRiemannZeta 有界性). 因此
+--       "无限非平凡零点" 仍未被证明; 本节省略给出坐标层的精确分解 + 预言框架,
+--       把"增长估计"这一唯一真分析输入显式隔离为待形式化边界 (draft).
+-- ====================================================================
+
+-- 17.1 增长分解: ζ(s) = completedRiemannZeta(s) / Gammaℝ(s) (mathlib 已证, 坐标无关).
+theorem zeta_growth_decomposition {s : ℂ} (hs : s ≠ 0) :
+    riemannZeta s = completedRiemannZeta s / Complex.Gammaℝ s :=
+  riemannZeta_def_of_ne_zero hs
+
+-- 17.2 Complex.Gammaℝ 的模长分解: |Gammaℝ(s)| = π^(-Re s/2)·|Γ(s/2)| (坐标读法).
+--   证明: Gammaℝ(s) = π^(-s/2)·Γ(s/2); 取模得 π^(-Re s/2)·|Γ(s/2)|.
+theorem gammaR_norm_decomposition (s : ℂ) :
+    ‖Complex.Gammaℝ s‖ = (Real.pi : ℝ) ^ (-(s.re / 2)) * ‖Complex.Gamma (s / 2)‖ := by
+  rw [Complex.Gammaℝ_def]
+  rw [Complex.norm_mul]
+  -- ‖π^(-s/2)‖ = π^(-Re s/2): π 为正实数, arg=0, 故纯模长.
+  have hπ : ‖(Real.pi : ℂ) ^ (-s / 2)‖ = (Real.pi : ℝ) ^ (-(s.re / 2)) := by
+    rw [Complex.norm_cpow_of_ne_zero (Complex.ofReal_ne_zero.mpr Real.pi_ne_zero)]
+    rw [Complex.norm_real, Real.norm_of_nonneg (Real.pi_pos.le),
+      Complex.arg_ofReal_of_nonneg (Real.pi_pos.le)]
+    rw [zero_mul, Real.exp_zero, div_one]
+    rw [Complex.div_re]
+    simp only [Complex.neg_re]
+    norm_num
+    ring
+  rw [hπ]
+
+-- 17.3 隐数坐标读法: 在覆盖坐标 s = log r + iθ (即 w = e^s, r=e^σ, θ=t) 下,
+--     |Gammaℝ| = π^(-(log r)/2)·|Γ((log r + iθ)/2)|.
+--   这是临界叶 |w|=√e (r=√e, log r=1/2) 上 Γ 因子的精确坐标表达式.
+theorem gammaR_norm_in_envelope_coords (r θ : ℝ) :
+    ‖Complex.Gammaℝ ((Real.log r : ℂ) + Complex.I * (θ : ℂ))‖ =
+      (Real.pi : ℝ) ^ (-(Real.log r / 2)) *
+        ‖Complex.Gamma (((Real.log r : ℂ) + Complex.I * (θ : ℂ)) / 2)‖ := by
+  rw [gammaR_norm_decomposition]
+  simp only [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+    Complex.ofReal_re, Complex.ofReal_im, mul_zero, zero_mul, add_zero, sub_zero]
+
+-- 17.4 ζ 模长的坐标分解 (已证定理的组合): 在覆盖坐标下
+--    |ζ(log r + iθ)| = |completedRiemannZeta(log r + iθ)| /
+--                      (π^(-(log r)/2)·|Γ((log r+iθ)/2)|)
+--   这是"隐数坐标看增长速度"的精确数学起点 (不含任何界估计).
+theorem zeta_norm_in_envelope_coords {r θ : ℂ}
+    (hs : Complex.log r + Complex.I * θ ≠ 0) :
+    ‖riemannZeta (Complex.log r + Complex.I * θ)‖ =
+      ‖completedRiemannZeta (Complex.log r + Complex.I * θ)‖ /
+        ((Real.pi : ℝ) ^
+          (-((Complex.log r + Complex.I * θ).re / 2)) *
+         ‖Complex.Gamma ((Complex.log r + Complex.I * θ) / 2)‖) := by
+  set s : ℂ := Complex.log r + Complex.I * θ
+  have hg : ‖Complex.Gammaℝ s‖ =
+      (Real.pi : ℝ) ^ (-(s.re / 2)) * ‖Complex.Gamma (s / 2)‖ :=
+    gammaR_norm_decomposition s
+  have hζ : riemannZeta s = completedRiemannZeta s / Complex.Gammaℝ s :=
+    riemannZeta_def_of_ne_zero hs
+  rw [hζ, Complex.norm_div, hg]
+
+-- 17.5 预言框架: 无限零点计数 = 幅角原理 + 增长估计 (明确标注为 PREDICTION).
+--   形式化"如果"增长估计成立, 则 N(T)→∞ 在隐数坐标下的读法.
+def InfiniteZeroPrediction (zetaBound : ℝ → Prop) : Prop :=
+  ∀ T : ℝ, 0 < T → ∃ N : ℕ, N = Nat.ceil (T / (2 * Real.pi) * Real.log (T / (2 * Real.pi))) ∧
+    zetaBound T
+
+-- 17.6 诚实标注: 增长估计 (Stirling + 完成 ζ 有界) 在 mathlib 缺失,
+--   故 "N(T)→∞" 与 "无限非平凡零点" 仍未被证明.
+--   本节省略给出坐标层分解 (17.1-17.4) 作为未来形式化增长估计的精确起点.
+--   注: 即使完成增长估计, 它也只证明"无限多个非平凡零点", 不等于 RH
+--       (RH = 所有非平凡零点在临界线上, 非"存在/无限多").
+
 end RiemannHIBS.Analytic
