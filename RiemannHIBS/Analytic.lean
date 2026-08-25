@@ -23,6 +23,9 @@ import Mathlib.Topology.Algebra.InfiniteSum.NatInt
 import Mathlib.Analysis.SpecialFunctions.Pow.Complex
 import Mathlib.Analysis.Complex.Trigonometric
 import Mathlib.MeasureTheory.Integral.CircleIntegral
+import Mathlib.Analysis.Complex.CauchyIntegral
+import Mathlib.Analysis.Complex.RemovableSingularity
+import Mathlib.Analysis.Calculus.FDeriv.Analytic
 import RiemannHIBS.EnvelopeC
 
 noncomputable section
@@ -1212,6 +1215,169 @@ theorem exists_annular_nontrivial_zero_pair
   rcases h with ⟨s, hs⟩
   exact ⟨s, hs, annularNontrivialZero_reflects hs⟩
 
+-- 14.5.5 覆盖空间中的有限高度提升矩形.
+--   s 的虚部就是覆盖角度 θ; 这里保留 θ 而不折叠到 w 平面,
+--   以便后续用围道/绕数处理不同叶上的零点.
+def hiddenStripWindow (T : ℝ) : Set ℂ :=
+  {s | 0 < s.re ∧ s.re < 1 ∧ |s.im| < T}
+
+theorem hiddenStripWindow_mem_annulus {T : ℝ} {s : ℂ}
+    (hs : s ∈ hiddenStripWindow T) :
+    1 < ‖Complex.exp s‖ ∧ ‖Complex.exp s‖ < Real.exp 1 := by
+  rcases hs with ⟨hs0, hs1, _⟩
+  constructor
+  · rw [Complex.norm_exp, ← Real.exp_zero]
+    exact Real.exp_lt_exp.mpr hs0
+  · rw [Complex.norm_exp]
+    exact Real.exp_lt_exp.mpr hs1
+
+-- 提升矩形的闭包: 左右边界对称于临界线, 上下边界位于覆盖高度 ±T.
+def hiddenLiftRectangle (σ T : ℝ) : Set ℂ :=
+  Complex.Rectangle ((σ : ℂ) - (T : ℂ) * Complex.I)
+    (((1 - σ : ℝ) : ℂ) + (T : ℂ) * Complex.I)
+
+-- 矩形边界积分的隐数坐标写法, 顺序为下边、上边、右边、左边.
+def hiddenRectangleBoundaryIntegral (f : ℂ → ℂ) (σ T : ℝ) : ℂ :=
+    (∫ x : ℝ in σ..(1 - σ),
+        f ((x : ℂ) - (T : ℂ) * Complex.I))
+      - (∫ x : ℝ in σ..(1 - σ),
+        f ((x : ℂ) + (T : ℂ) * Complex.I))
+      + Complex.I • (∫ y : ℝ in (-T)..T,
+        f (((1 - σ : ℝ) : ℂ) + (y : ℂ) * Complex.I))
+      - Complex.I • (∫ y : ℝ in (-T)..T,
+        f ((σ : ℂ) + (y : ℂ) * Complex.I))
+
+-- 已知的 Cauchy–Goursat 矩形原子: 全纯函数在提升矩形边界上的积分为零.
+-- 后续对 logDeriv 使用时, 正是要替换为“零点数/绕数”版本.
+theorem hiddenRectangleBoundaryIntegral_eq_zero_of_differentiableOn
+    {f : ℂ → ℂ} {σ T : ℝ}
+    (hf : DifferentiableOn ℂ f (hiddenLiftRectangle σ T)) :
+    hiddenRectangleBoundaryIntegral f σ T = 0 := by
+  simpa [hiddenRectangleBoundaryIntegral, hiddenLiftRectangle, Complex.Rectangle,
+    Complex.sub_re, Complex.sub_im, Complex.add_re, Complex.add_im,
+    Complex.mul_re, Complex.mul_im, Complex.I_re, Complex.I_im] using
+    (Complex.integral_boundary_rect_eq_zero_of_differentiableOn f
+      ((σ : ℂ) - (T : ℂ) * Complex.I)
+      (((1 - σ : ℝ) : ℂ) + (T : ℂ) * Complex.I) hf)
+
+-- 覆盖高度: |θ| = |Im s|. 这是把“螺旋向上无界”翻译成实数无界集.
+def hiddenNontrivialZeroHeights : Set ℝ :=
+  (fun s : ℂ => |s.im|) '' {s | AnnularNontrivialZero s}
+
+def HiddenZeroHeightGrowth : Prop :=
+  ¬ BddAbove hiddenNontrivialZeroHeights
+
+-- 有限高度窗口中的隐数零点集合与计数 N_hidden(T).
+def hiddenNontrivialZeroWindow (T : ℝ) : Set ℂ :=
+  {s | AnnularNontrivialZero s ∧ |s.im| ≤ T}
+
+def hiddenZeroCount (T : ℝ) : ℕ∞ :=
+  (hiddenNontrivialZeroWindow T).encard
+
+-- 零点计数的分析输入接口: 对任意 N, 某个有限高度窗口至少容纳 N 个零点.
+-- 这是 Riemann–von Mangoldt 下界的抽象形式, 目前不声明其成立.
+def HiddenZeroCountGrowth : Prop :=
+  ∀ N : ℕ, ∃ T : ℝ, (N : ℕ∞) ≤ hiddenZeroCount T
+
+-- 经典临界带中的非平凡零点谓词, 用于计数定理向隐数坐标传递.
+def ClassicalNontrivialZero (s : ℂ) : Prop :=
+  riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1
+
+theorem annularNontrivialZero_iff_classicalNontrivialZero {s : ℂ} :
+    AnnularNontrivialZero s ↔ ClassicalNontrivialZero s := by
+  constructor
+  · intro hs
+    exact ⟨hs.zero, hs.strip.1, hs.strip.2⟩
+  · intro hs
+    have hsn : ∀ n : ℕ, s ≠ -((n : ℕ) : ℂ) := by
+      intro n hneg
+      have hrel := congrArg Complex.re hneg
+      simp only [Complex.neg_re, Complex.natCast_re] at hrel
+      linarith [hs.2.1]
+    have hs1 : s ≠ 1 := by
+      intro hone
+      have hrel := congrArg Complex.re hone
+      simp only [Complex.one_re] at hrel
+      linarith [hs.2.2]
+    exact annularNontrivialZero_of_zero hs.1 hsn hs1
+
+def classicalNontrivialZeroWindow (T : ℝ) : Set ℂ :=
+  {s | ClassicalNontrivialZero s ∧ |s.im| ≤ T}
+
+def classicalZeroCount (T : ℝ) : ℕ∞ :=
+  (classicalNontrivialZeroWindow T).encard
+
+theorem hiddenZeroCount_eq_classicalZeroCount (T : ℝ) :
+    hiddenZeroCount T = classicalZeroCount T := by
+  unfold hiddenZeroCount classicalZeroCount
+  congr 1
+  ext s
+  rw [hiddenNontrivialZeroWindow, classicalNontrivialZeroWindow]
+  simp only [Set.mem_setOf_eq]
+  rw [annularNontrivialZero_iff_classicalNontrivialZero]
+
+-- 经典计数增长接口传递到隐数计数增长接口.
+def ClassicalZeroCountGrowth : Prop :=
+  ∀ N : ℕ, ∃ T : ℝ, (N : ℕ∞) ≤ classicalZeroCount T
+
+theorem classicalZeroCountGrowth_implies_hiddenZeroCountGrowth
+    (h : ClassicalZeroCountGrowth) : HiddenZeroCountGrowth := by
+  intro N
+  rcases h N with ⟨T, hT⟩
+  exact ⟨T, by simpa [hiddenZeroCount_eq_classicalZeroCount T] using hT⟩
+
+-- 若隐数覆盖中的非平凡零点高度无界, 则圆环内非平凡零点必为无限集.
+-- 这是存在性/增长证明与集合无限性的严格接口, 不引入任何分析公理.
+theorem infinite_annular_nontrivial_zeros_of_height_growth
+    (h : HiddenZeroHeightGrowth) :
+    Set.Infinite {s : ℂ | AnnularNontrivialZero s} := by
+  intro hfinite
+  apply h
+  unfold hiddenNontrivialZeroHeights
+  exact (hfinite.image (fun s : ℂ => |s.im|)).bddAbove
+
+-- 零点计数无界也直接推出无限性; 这是计数公式接入隐数层的第一座桥.
+theorem infinite_annular_nontrivial_zeros_of_count_growth
+    (h : HiddenZeroCountGrowth) :
+    Set.Infinite {s : ℂ | AnnularNontrivialZero s} := by
+  intro hfinite
+  obtain ⟨n, hn⟩ := hfinite.exists_encard_eq_coe
+  obtain ⟨T, hT⟩ := h (n + 1)
+  have hsubset : hiddenNontrivialZeroWindow T ⊆ {s : ℂ | AnnularNontrivialZero s} := by
+    intro s hs
+    exact hs.1
+  have hle : hiddenZeroCount T ≤ ({s : ℂ | AnnularNontrivialZero s}).encard := by
+    exact Set.encard_mono hsubset
+  have hcontra : ((n + 1 : ℕ) : ℕ∞) ≤ (n : ℕ∞) := by
+    calc
+      ((n + 1 : ℕ) : ℕ∞) ≤ hiddenZeroCount T := hT
+      _ ≤ ({s : ℂ | AnnularNontrivialZero s}).encard := hle
+      _ = (n : ℕ∞) := hn
+  exact (Nat.not_succ_le_self n) ((ENat.coe_le_coe.mp hcontra))
+
+theorem infinite_classical_nontrivial_zeros_of_classical_count_growth
+    (h : ClassicalZeroCountGrowth) :
+    Set.Infinite {s : ℂ | ClassicalNontrivialZero s} := by
+  have hhidden : Set.Infinite {s : ℂ | AnnularNontrivialZero s} :=
+    infinite_annular_nontrivial_zeros_of_count_growth
+      (classicalZeroCountGrowth_implies_hiddenZeroCountGrowth h)
+  apply Set.Infinite.mono (s := {s : ℂ | AnnularNontrivialZero s})
+    (t := {s : ℂ | ClassicalNontrivialZero s})
+  · intro s hs
+    exact annularNontrivialZero_iff_classicalNontrivialZero.mp hs
+  · exact hhidden
+
+-- 同一接口直接落回经典临界带表述.
+theorem infinite_nontrivial_zeros_of_hidden_height_growth
+    (h : HiddenZeroHeightGrowth) :
+    Set.Infinite {s : ℂ |
+      riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1} := by
+  apply Set.Infinite.mono (s := {s : ℂ | AnnularNontrivialZero s})
+    (t := {s : ℂ | riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1})
+  · intro s hs
+    exact ⟨hs.zero, hs.strip.1, hs.strip.2⟩
+  · exact infinite_annular_nontrivial_zeros_of_height_growth h
+
 -- 兼容旧接口: 一个零点 + 其反射, 二者都在圆环内.
 structure NontrivialZeroPair (s : ℂ) : Prop where
   zero_s : riemannZeta s = 0
@@ -1578,5 +1744,172 @@ theorem alignmentZero_iff_zeta_zero {s : ℂ} (hs : 1 < s.re)
     change etaSeries s = 0
     rw [eta_eq_mul_zeta (s := s) hs]
     simp [hζ]
+
+-- ====================================================================
+-- 21. 存在性供给 — "绕数非零 ⟹ 零点存在" 的可编译逆否桥 (无 sorry)
+--    缺口精确化: §14.5 转换器把无限性归约为 "圆环内至少一个非平凡零点";
+--    本节把该缺口再钉成单一分析命题 — 存在一个有限圆盘, 其 log 导数
+--    围道积分非零. 全部组装逻辑真证, 唯一分析输入被显式隔离.
+--    ───────────────────────────────────────────────────────────
+--      21.1 ζ 在 s≠1 处解析 (可去奇点引理, 从 differentiableAt 升格)
+--      21.2 无零点 ⟹ logDeriv 围道积分为零 (Cauchy–Goursat, mathlib)
+--      21.3 积分非零 ⟹ 闭盘内存在零点 (21.2 的逆否)
+--      21.4 见证对象 AnnulusZeroWitness: 缺口的单一谓词形态
+--      21.5 临界带见证 ⟹ 圆环非平凡零点反射对 (接上 §14.5)
+--    ───────────────────────────────────────────────────────────
+--    诚实边界: witness 谓词本身 (积分非零) 是分析输入, 本节未提供任何实例;
+--      经典上由幅角原理 + 增长估计给出. 隐数覆盖坐标读法: 圆盘 D(c,R) 在
+--      w=e^s 下是圆环扇区 e^{Re c − R} < |w| < e^{Re c + R}; 临界带见证即
+--      扇区整体落在 (1,e) 内. 坐标翻译不产生新信息, 只是几何组织.
+-- ====================================================================
+
+-- 21.1 ζ 在 s ≠ 1 处解析: 去心邻域内可微 + 该点连续 ⟹ 解析.
+--   取半径 dist(s,1)/2 的球避开唯一奇点 s=1, 球内一切点可微.
+theorem analyticAt_riemannZeta {s : ℂ} (hs : s ≠ 1) : AnalyticAt ℂ riemannZeta s := by
+  refine Complex.analyticAt_of_differentiable_on_punctured_nhds_of_continuousAt ?_
+    (differentiableAt_riemannZeta hs).continuousAt
+  have hpos : 0 < dist s 1 := dist_pos.mpr hs
+  have hball : Metric.ball s (dist s 1 / 2) ∈ 𝓝 s :=
+    Metric.isOpen_ball.mem_nhds (Metric.mem_ball_self (by linarith))
+  have hball' : Metric.ball s (dist s 1 / 2) ∈ 𝓝[≠] s :=
+    mem_nhdsWithin_of_mem_nhds hball
+  filter_upwards [hball'] with z hz
+  have hz1 : z ≠ 1 := by
+    intro h
+    rw [h] at hz
+    have hd : dist (1 : ℂ) s < dist s 1 / 2 :=
+      Metric.mem_ball.mp hz
+    rw [dist_comm] at hd
+    linarith
+  exact differentiableAt_riemannZeta hz1
+
+-- 21.2 无零点 ⟹ log 导数围道积分为零 (Cauchy–Goursat).
+--   g := ζ'/ζ: ζ ≠ 1 保证 ζ 可微 (由 21.1), ζ ≠ 0 保证商良定且可微连续.
+theorem logDeriv_circle_integral_eq_zero_of_zero_free
+    {c : ℂ} {R : ℝ} (hR : 0 ≤ R)
+    (hone : ∀ z ∈ Metric.closedBall c R, z ≠ 1)
+    (hfree : ∀ z ∈ Metric.closedBall c R, riemannZeta z ≠ 0) :
+    (∮ z in C(c, R), deriv riemannZeta z / riemannZeta z) = 0 := by
+  have hgdiff : ∀ z ∈ Metric.ball c R, DifferentiableAt ℂ
+      (fun w => deriv riemannZeta w / riemannZeta w) z := by
+    intro z hz
+    have ha := analyticAt_riemannZeta (hone z (Metric.ball_subset_closedBall hz))
+    exact ((ha.deriv).differentiableAt).div ha.differentiableAt
+      (hfree z (Metric.ball_subset_closedBall hz))
+  have hgcont : ContinuousOn (fun w => deriv riemannZeta w / riemannZeta w)
+      (Metric.closedBall c R) := by
+    intro z hz
+    have ha := analyticAt_riemannZeta (hone z hz)
+    exact (((ha.deriv).continuousAt).div ha.continuousAt
+      (hfree z hz)).continuousWithinAt
+  have hgdiff' : ∀ z ∈ Metric.ball c R \ (∅ : Set ℂ),
+      DifferentiableAt ℂ (fun w => deriv riemannZeta w / riemannZeta w) z := by
+    intro z hz
+    exact hgdiff z hz.1
+  exact Complex.circleIntegral_eq_zero_of_differentiable_on_off_countable hR
+    Set.countable_empty hgcont hgdiff'
+
+-- 21.3 存在性供给主桥 (逆否): 围道积分非零 ⟹ 闭盘内存在零点.
+theorem exists_closedBall_zero_of_logDeriv_integral_ne_zero
+    {c : ℂ} {R : ℝ} (hR : 0 ≤ R)
+    (hone : ∀ z ∈ Metric.closedBall c R, z ≠ 1)
+    (hwit : (∮ z in C(c, R), deriv riemannZeta z / riemannZeta z) ≠ 0) :
+    ∃ z ∈ Metric.closedBall c R, riemannZeta z = 0 := by
+  by_contra hcon
+  apply hwit
+  refine logDeriv_circle_integral_eq_zero_of_zero_free hR hone ?_
+  intro z hz hzero
+  exact hcon ⟨z, hz, hzero⟩
+
+-- 21.4 存在性供给见证: 把缺口钉成一个谓词 — "有限圆盘 + 积分非零".
+structure AnnulusZeroWitness (c : ℂ) (R : ℝ) : Prop where
+  posR : 0 < R
+  avoidPole : ∀ z ∈ Metric.closedBall c R, z ≠ 1
+  windingNonZero :
+    (∮ z in C(c, R), deriv riemannZeta z / riemannZeta z) ≠ 0
+
+theorem exists_closedBall_zero_of_annulusZeroWitness {c : ℂ} {R : ℝ}
+    (w : AnnulusZeroWitness c R) :
+    ∃ z ∈ Metric.closedBall c R, riemannZeta z = 0 :=
+  exists_closedBall_zero_of_logDeriv_integral_ne_zero w.posR.le w.avoidPole
+    w.windingNonZero
+
+-- 21.5 临界带见证: witness 圆盘整体落在临界带 0<Re<1 内
+--   (隐数坐标: 反演扇区 e^{Re c ± R} 整体落在圆环 1<|w|<e 内).
+structure CriticalStripWitness (c : ℂ) (R : ℝ) : Prop extends AnnulusZeroWitness c R where
+  inStrip : ∀ z ∈ Metric.closedBall c R, 0 < z.re ∧ z.re < 1
+
+-- 临界带见证 ⟹ 圆环非平凡零点反射对 (接上 §14.5 存在性转换器):
+--   见证给闭盘内一个零点 z; 盘在临界带内 ⟹ z 非平凡 ⟹ 圆环对象 + 反射对.
+theorem exists_annular_pair_of_criticalStripWitness {c : ℂ} {R : ℝ}
+    (w : CriticalStripWitness c R) :
+    ∃ s : ℂ, AnnularNontrivialZero s ∧ AnnularNontrivialZero (1 - s) := by
+  obtain ⟨z, hzmem, hzero⟩ :=
+    exists_closedBall_zero_of_annulusZeroWitness w.toAnnulusZeroWitness
+  have hstrip := w.inStrip z hzmem
+  have hsn : ∀ n : ℕ, z ≠ -((n : ℕ) : ℂ) := by
+    intro n hn
+    have hre := congrArg Complex.re hn
+    simp only [Complex.neg_re, Complex.natCast_re] at hre
+    linarith [hstrip.1]
+  have hs1 : z ≠ 1 := by
+    intro h1
+    have hre := congrArg Complex.re h1
+    simp only [Complex.one_re] at hre
+    linarith [hstrip.2]
+  have hAnn : AnnularNontrivialZero z :=
+    annularNontrivialZero_of_zero hzero hsn hs1
+  exact ⟨z, hAnn, annularNontrivialZero_reflects hAnn⟩
+
+-- ====================================================================
+-- 22. 零点计数输入接口 — 唯一未完成的经典分析引理 (显式条件前提, 非 axiom)
+--    分阶段形式化架构 (2026-08-25):
+--      层 1 覆盖坐标层 (已证): §14.4/§14.5/§15.2 — w=e^s 把临界带映入圆环,
+--           反射 s↦1−s 对应反演 w↦e/w, 高度集合 hiddenNontrivialZeroHeights.
+--      层 2 分析供给层 (唯一缺口): Riemann–von Mangoldt 公式
+--             N(T) = (T/2π)·log(T/2π) − T/2π + O(log T),
+--           其证明需要 Stirling 渐近 + 完成ζ有界 + 完整幅角原理 + 计数公式,
+--           mathlib 均未形式化. 本节把它弱化为显式输入谓词 ZeroHeightSupply
+--           ("任意高度之上都有临界带零点"), 以普通假设参数传递, 不引入 axiom,
+--           从而"哪些结论依赖哪个分析输入"完全透明.
+--      层 3 坐标传递层 (已证): ZeroHeightSupply ⟹ HiddenZeroHeightGrowth
+--           ⟹ 隐数圆环无限 ⟺ 经典临界带无限 (§15.2 已证的下半段接口).
+-- ====================================================================
+
+-- 22.1 输入谓词: 对任意高度 H, 存在高度严格大于 H 的临界带零点.
+--   这是 N(T)→∞ 的直接坐标翻译 (弱化形态, 不含渐近公式本身).
+def ZeroHeightSupply : Prop :=
+  ∀ H : ℝ, ∃ s : ℂ,
+    riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1 ∧ H < |s.im|
+
+-- 22.2 坐标传递 (上半段): 高度供给 ⟹ 覆盖高度无界.
+--   经典零点经 annularNontrivialZero_of_zero 升格为圆环对象后进入高度集.
+theorem hiddenZeroHeightGrowth_of_zeroHeightSupply (h : ZeroHeightSupply) :
+    HiddenZeroHeightGrowth := by
+  intro hbdd
+  obtain ⟨M, hM⟩ := hbdd
+  obtain ⟨s, hsζ, hs0, hs1, him⟩ := h M
+  have hsn : ∀ n : ℕ, s ≠ -((n : ℕ) : ℂ) := by
+    intro n hn
+    have hre := congrArg Complex.re hn
+    simp only [Complex.neg_re, Complex.natCast_re] at hre
+    linarith [hs0]
+  have hsne : s ≠ 1 := by
+    intro h1
+    have hre := congrArg Complex.re h1
+    simp only [Complex.one_re] at hre
+    linarith [hs1]
+  have hmem : |s.im| ∈ hiddenNontrivialZeroHeights := by
+    refine ⟨s, annularNontrivialZero_of_zero hsζ hsn hsne, rfl⟩
+  exact absurd (hM hmem) (not_le.mpr him)
+
+-- 22.3 全链闭环: 高度供给 ⟹ 经典临界带非平凡零点无限.
+--   组装 22.2 (上半段) 与 §15.2 infinite_nontrivial_zeros_of_hidden_height_growth
+--   (下半段). 至此证明树仅剩一个黑盒输入 ZeroHeightSupply (层 2).
+theorem infinite_nontrivial_zeros_of_zeroHeightSupply (h : ZeroHeightSupply) :
+    Set.Infinite {s : ℂ |
+      riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1} :=
+  infinite_nontrivial_zeros_of_hidden_height_growth
+    (hiddenZeroHeightGrowth_of_zeroHeightSupply h)
 
 end RiemannHIBS.Analytic

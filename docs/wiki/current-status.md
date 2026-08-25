@@ -38,6 +38,20 @@ stage: current
 | annularNontrivialZero_reflects / _iff_reflects | §14.5 | 圆环内非平凡零点集合在反射下闭合且可逆；平凡负偶零点因前提排除不被误反射 |
 | on_circle_reflects_on_circle | §14.5 | 临界叶/圆周由反演保持；这是集合保持，不是圆上每一点的点点固定 |
 | exists_annular_nontrivial_zero_pair | §14.5 | 若已有一个圆环内非平凡零点，则可构造其反射对；不推出无限性 |
+| hiddenStripWindow | §14.5 | 覆盖空间中的有限高度提升矩形：0<Re(s)<1 且 |Im(s)|<T，保留螺旋角度而不折叠 |
+| hiddenNontrivialZeroHeights / HiddenZeroHeightGrowth | §14.5 | 将圆环非平凡零点映到覆盖高度 |Im(s)|；定义高度无界的精确分析接口 |
+| infinite_annular_nontrivial_zeros_of_height_growth | §14.5 | 高度集合无界 ⟹ 圆环内非平凡零点集合无限（纯集合论桥） |
+| infinite_nontrivial_zeros_of_hidden_height_growth | §14.5 | 同一高度增长接口 ⟹ 经典临界带中的非平凡零点集合无限 |
+| hiddenLiftRectangle | §14.5 | 覆盖空间中的对称有限高度矩形，保留 θ=Im(s) 叶坐标 |
+| hiddenRectangleBoundaryIntegral | §14.5 | 将提升矩形四条边写成隐数坐标的边界积分 |
+| hiddenRectangleBoundaryIntegral_eq_zero_of_differentiableOn | §14.5 | 全纯函数在提升矩形边界上的积分为零（调用 mathlib Cauchy–Goursat 矩形原子） |
+| analyticAt_riemannZeta | §21 | 对每个 s≠1，利用去心邻域可微与连续性证明 ζ 在 s 处解析 |
+| logDeriv_circle_integral_eq_zero_of_zero_free | §21 | 圆盘无极点且无零点时，ζ 的对数导数圆周积分为零 |
+| exists_closedBall_zero_of_logDeriv_integral_ne_zero | §21 | 对数导数圆周积分非零 ⟹ 闭圆盘内存在 ζ 零点（无零点结论的逆否） |
+| AnnulusZeroWitness / CriticalStripWitness | §21 | 将“有限圆盘 + 非零绕数”及其临界带约束封装为可验证的存在性见证 |
+| ZeroHeightSupply | §22 | 显式的经典分析输入：任意高度 H 之上存在临界带零点；不是 axiom，也尚未被证明 |
+| hiddenZeroHeightGrowth_of_zeroHeightSupply | §22 | 高度供给 ⟹ 隐数覆盖中的零点高度无界 |
+| infinite_nontrivial_zeros_of_zeroHeightSupply | §22 | 高度供给 ⟹ 无限多个非平凡零点；完整证明仍依赖未实现的高度供给输入 |
 | infinitely_many_trivial_zeros | §15 | 零点集合为无限集: 单射嵌入 n↦−2(n+1), 每个是平凡零点 ζ(−2(n+1))=0 |
 | argumentPrinciple_single_zero | §16 | 隐数坐标系幅角原理原子: ∮dz/(z−w)=2πi (w 在圆内, mathlib circleIntegral) |
 | envelope_circle_param | §16 | 圆 |z−c|=r 在相位包络坐标 = θ↦c+r·e^{iθ} (hEvalPhase 即圆参数化) |
@@ -69,8 +83,12 @@ stage: current
 - §18 有限相位抵消: 精确组合翻译已证 (有限整数组合抵消 ⟺ 整数幂关系, 纯代数/整数结构, 不依赖超越性); 但它只回答"哪些有限组合能抵消", 不回答"抵消 ⟹ 全部零点在临界线" (RH 核心仍缺); 路线 B 稠密性 (log 的 ℚ-无关) 依赖超越性, mathlib 未形式化, 如实标注阻塞
 - **无限非平凡零点 = 目标命题 G (2026-08-25 精确化)**: `Set.Infinite {s | riemannZeta s = 0 ∧ 非平凡 ∧ s ≠ 1}`. 关键概念区分(不能混淆): (i) 平凡零点无限(§15)靠**显式公式** ζ(−2(n+1))=0, 无需分析; (ii) 非平凡零点无限缺**存在性** — `alignmentZero`(§20) 是**谓词**(判定某 s 是否对齐), 不保证任何 s 存在, 更不保证无限多个互异 s. (iii) "逐项模长锁定 n^{−1/2}"(§11)≠"完成ζ整体有界"(§17 P2) — 后者(未证)才是幅角/零点计数输入. 所需组件: ①存在性(围道边界变号/幅角绕数非零, 需 differentiableAt+边界估计) ②无限性 N(T)→∞(完成ζ有界 P2 + 幅角计数, 均未形式化) ③翻回隐数螺旋坐标(θ→∞↔t→∞). 螺旋增长模式可先定义为对象(spiralGrowth 剖面), 把"统一证明"收敛为可攻坚缺口, 但**增长界本身未证, 不装证无限**
 - **隐数驱动的存在性构造 (候选路线, 非已证)**: 可在万有覆盖取有限高度的螺旋矩形/圆环扇区 `Ω_T`, 对提升函数 `ζ̂(s)=ζ(s)` 或完成函数建立“边界无零点 + 边界像绕数非零”的见证，再由幅角原理推出 `Ω_T` 内至少一个零点，并经 `w=e^s` 翻回包络圆环。要得到无限多个需构造无界序列 `T_j` 或证明 `N(T)→∞`. `critical_leaf_norm_locked`、`phaseCancelRelation`、`periodicCancelWindow` 单独不足以完成这一步：有限项抵消不等于带尾项控制的 ζ 零点，而且不同覆盖叶上的 ζ 值一般不周期重复。隐数坐标的真实贡献是把围道、反演、相位与叶结构组织成可验证的存在性见证，不是凭坐标变换凭空产生零点。
+- **§14.5 高度接口已落地但输入未证**: `hiddenStripWindow` 保留覆盖角度 `θ=Im(s)`；`HiddenZeroHeightGrowth` 精确定义“圆环非平凡零点高度无界”，并已证明它推出无限非平凡零点。尚未证明 `HiddenZeroHeightGrowth` 本身；下一分析输入应是完成 ζ 在有限高度提升矩形边界上的非零绕数/零点计数增长。
+- **围道/存在性桥已分层落地**: `hiddenLiftRectangle` 与 `hiddenRectangleBoundaryIntegral` 已接入矩形 Cauchy–Goursat；§21 另已证明圆盘内 ζ 无零点时 `logDeriv` 圆周积分为零，并给出其逆否存在性桥。尚未完成的是一般矩形 `logDeriv` 零点计数、边界绕数见证，以及完成 ζ 的增长输入。
 - **缺口① (推导结论)**: `zeta_phase_alignment_condition` (§10) 用 `zeta_eq_tsum` 把 Re>1 的零点转成旋转向量和=0; 其旋转向量核 `dirichlet_term_rotating_vector` 是**复数恒等式且与 σ 无关** (可对任意 σ 用). 临界带 0<Re<1 的断路点在"级数换谐"(ζ 的 Dirichlet 展开) 而非相位机制. **正解 (已推明)**: 在临界带 `ζ(s)=0` 是良定义全纯函数取零 (`differentiableAt_riemannZeta`, s≠1), 不需级数和; "相位对齐判定" 的隐数语义 = 覆盖空间里 `expZeta_phase_principal` 把 `ζ̂(w)=ζ(log r+iθ)` — "对齐零点" 在隐数即此良定等式. 跨到经典: Re>0 用 η(交替)是 Abel 条件收敛, 排斥因子 `(1−2^{1−s})` 在临界带**恒非零** (2^{1−s}=1 只在 s=1+2πik/ln2, 实部=1, 不在 0<Re<1), 故 ζ=0⟺η=0 在临界带成立 (经典)。**真正缺口 = 条件收敛(η)+Abel/函数方程延拓 的 mathlib 工具缺失**, 非概念不可能; 落地建议 = 覆盖语义做"对齐零点"命题 + 临界带诚实标注未形式化. **状态 (2026-08-25)**: §19 已在 Re>1 落地可编译的 η 交错桥 (eta_term_rotating_vector + eta_phase_alignment_condition, 无 sorry); 临界带 0<Re<1 仍缺条件收敛 η + Abel/函数方程正则化工具, 如实标注为待形式化
 - **缺口② (增长→无限零点)**: 幅角原理 (§16) + 增长分解 (§17) 已把 "N(T)→∞" 隔离为唯一缺失分析输入 — 依赖 Stirling 渐近 + 完成 ζ 有界性 (P1–P3), 二者 mathlib 均未形式化; 即使完成也只证"无限多", 不等于 RH (临界带上) — 如实标注
+- **§21 存在性桥已完成但没有伪造见证**: `analyticAt_riemannZeta`、无零点时的 `logDeriv` 圆周积分为零，以及其逆否命题均已无 `sorry` 编译；`AnnulusZeroWitness` / `CriticalStripWitness` 把“积分非零”精确封装为唯一输入，但代码没有声称存在这样的见证
+- **§22 分阶段闭环已完成**: `ZeroHeightSupply` 是 `N(T)→∞` 的直接弱化接口；它可推出 `HiddenZeroHeightGrowth`，再推出无限非平凡零点。当前仍未完成的是从 completed ζ、Stirling 与完整幅角/零点计数证明 `ZeroHeightSupply`，因此项目尚未拥有无条件的无限非平凡零点证明
 - 螺旋无限延伸 ≠ 全称证明: 舞台(覆盖)完备 ≠ 演员(零点)在台上
 - 非平凡零点存在性与无限性: 已证仅平凡零点无限 (§15); 非平凡部分需增长阶+因子分解/幅角原理, 已有机理皆"必要条件/缺增长"型, 不携带 ζ 的增长行为, 如实标注边界
 
