@@ -1,0 +1,50 @@
+{
+  "files": {
+    "README.md": {
+      "change_summary": [],
+      "content_hash": "9a04ccb3f281c872",
+      "duplicate_of": null,
+      "filename": "README.md",
+      "kind": "document",
+      "metadata": {
+        "preview": "RiemannHIBS \u2014 Hidden-Number Arithmetic \u00d7 the Riemann \u03b6/\u03b7 Construction"
+      },
+      "modified_at": "2026-08-25T02:43:30+00:00",
+      "parser": "text-local",
+      "previous_content_hash": "",
+      "size_bytes": 14053,
+      "source_id": "src_9a04ccb3f2",
+      "summary": "RiemannHIBS \u2014 Hidden-Number Arithmetic \u00d7 the Riemann \u03b6/\u03b7 Construction"
+    },
+    "README_zh-CN.md": {
+      "change_summary": [],
+      "content_hash": "1438ac3820139a96",
+      "duplicate_of": null,
+      "filename": "README_zh-CN.md",
+      "kind": "document",
+      "metadata": {
+        "preview": "RiemannHIBS \u2014 \u9690\u6570\u8fd0\u7b97\u6cd5\u5219 \u00d7 \u9ece\u66fc \u03b6/\u03b7 \u51fd\u6570\u6784\u9020"
+      },
+      "modified_at": "2026-08-25T02:43:30+00:00",
+      "parser": "text-local",
+      "previous_content_hash": "",
+      "size_bytes": 12302,
+      "source_id": "src_1438ac3820",
+      "summary": "RiemannHIBS \u2014 \u9690\u6570\u8fd0\u7b97\u6cd5\u5219 \u00d7 \u9ece\u66fc \u03b6/\u03b7 \u51fd\u6570\u6784\u9020"
+    }
+  },
+  "generated_at": "2026-08-25T02:43:30+00:00",
+  "llm_wiki_version": "1.2.2",
+  "raw_root": "/Users/apple/Downloads/lean/riemannhibs_raw",
+  "summary": {
+    "archived": 0,
+    "changed": 0,
+    "duplicates": 0,
+    "kinds": {
+      "document": 2
+    },
+    "manifest_rows": 2,
+    "new": 2,
+    "tracked_files": 2
+  }
+}
