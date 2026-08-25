@@ -24,6 +24,7 @@ import Mathlib.Analysis.SpecialFunctions.Pow.Complex
 import Mathlib.Analysis.Complex.Trigonometric
 import Mathlib.MeasureTheory.Integral.CircleIntegral
 import Mathlib.Analysis.Complex.CauchyIntegral
+import Mathlib.Analysis.Complex.AbsMax
 import Mathlib.Analysis.Complex.RemovableSingularity
 import Mathlib.Analysis.Calculus.FDeriv.Analytic
 import RiemannHIBS.EnvelopeC
@@ -455,7 +456,7 @@ theorem phase_periodic (r : ℝ) (θ : ℝ) (k : ℕ) :
           Complex.exp (x * Complex.I) := by
         rw [add_mul, Complex.exp_add]
         have h2 : Complex.exp (2 * (Real.pi : ℂ) * Complex.I) = 1 := by
-          simpa using Complex.exp_two_pi_mul_I
+          simp [Complex.exp_two_pi_mul_I]
         rw [h2, mul_one]
       -- θ + 2π(k+1) = (θ + 2πk) + 2π  (ℝ 层)
       rw [show θ + 2 * Real.pi * ((k + 1 : ℕ) : ℝ) =
@@ -2121,7 +2122,7 @@ theorem annulusZeroWitness_of_zetaCertificate
     rw [zeta_winding_eq_two_pi_i_of_certificate cert hr hdisk hzero] at hcon
     exact mul_ne_zero
       (mul_ne_zero (show (2 : ℂ) ≠ 0 by norm_num)
-        (show (Real.pi : ℂ) ≠ 0 by simpa using Real.pi_ne_zero))
+        (Complex.ofReal_ne_zero.mpr Real.pi_ne_zero))
       Complex.I_ne_zero hcon
 
 -- 24.3 证书 (临界带内) ⟹ 圆环非平凡零点反射对 (全下游自动接通).
@@ -2136,4 +2137,168 @@ theorem exists_annular_pair_of_zetaCertificate
     { toAnnulusZeroWitness := annulusZeroWitness_of_zetaCertificate cert hr hdisk hzero
       inStrip := hstrip }
 
+-- ====================================================================
+-- 25. 证书族 → 高度供给 → 计数增长 (三阶段路线第二/三步闭环, 无 sorry)
+--    第一步接口 ZeroHeightSupply (§22) 保持为唯一分析输入;
+--    本节把 §24 的单点证书升级为无界证书族, 并接通计数增长.
+--    ───────────────────────────────────────────────────────────
+--      25.1 UnboundedZetaCertificateAssumption: 任意高度之上都有临界带内
+--           单零点证书实例 (用户指定形态, 参数化适配 §24 结构).
+--      25.2 zeroHeightSupply_of_certificateFamily: 证书族 ⟹ 高度供给
+--           (factorEq 在 w 处取值给零点; 盘在临界带内给 0<Re<1).
+--      25.3 classicalZeroCountGrowth_of_zeroHeightSupply: 高度供给 ⟹
+--           经典计数增长 (无限集含任意基数有限子集, 高度上确界定窗).
+--    ───────────────────────────────────────────────────────────
+--    至此下游链条全部闭合:
+--      CertificateFamily ⟹ ZeroHeightSupply ⟹ HiddenZeroHeightGrowth
+--        ⟹ 无限非平凡零点 (§22.3)
+--      CertificateFamily ⟹ ZeroHeightSupply ⟹ ClassicalZeroCountGrowth
+--        ⟹ HiddenZeroCountGrowth ⟹ 无限非平凡零点 (§15.x 计数桥)
+--    唯一缺口仍是第四步: 用 Hardy / Riemann–von Mangoldt 实例化证书族.
+-- ====================================================================
+
+-- 25.1 无界单零点证书族 (外部分析输入声明).
+--   ┌─────────────────────────────────────────────────────────────────┐
+--   │ ⚠ 外部假设标注: 本谓词是 def 形态的条件前提 (非 axiom, 非已证),   │
+--   │ 它精确陈述"第四步分析供给"需要交付的内容. 当前无任何构造实例;      │
+--   │ 实例化它 = 完成 Hardy / Riemann–von Mangoldt 层的分析工作.        │
+--   └─────────────────────────────────────────────────────────────────┘
+--   语义: 对任意高度 H, 存在高度严格大于 H 的临界带零点连同其邻域分解证书.
+def UnboundedZetaCertificateAssumption : Prop :=
+  ∀ H : ℝ, ∃ U : Set ℂ, ∃ w : ℂ, ∃ g : ℂ → ℂ, ∃ c : ℂ, ∃ r : ℝ,
+    ZetaSimpleZeroCertificate U w g ∧
+    0 < r ∧
+    Metric.closedBall c r ⊆ U ∧
+    w ∈ Metric.ball c r ∧
+    (∀ z ∈ Metric.closedBall c r, 0 < z.re ∧ z.re < 1) ∧
+    H < |w.im|
+
+-- 25.2 第二步主桥: 证书族 ⟹ 高度供给.
+--   证书的 factorEq 在 w 处取值给 ζ(w)=0 (§24 certificate_gives_zero);
+--   盘整体落在临界带内给出 0<Re(w)<1; 族的无界条件直接给高度项.
+theorem zeroHeightSupply_of_certificateFamily
+    (hfam : UnboundedZetaCertificateAssumption) : ZeroHeightSupply := by
+  intro H
+  obtain ⟨U, w, g, c, r, hcert, hr, hdisk, hwball, hstrip, him⟩ := hfam H
+  have hwmem : w ∈ Metric.closedBall c r := Metric.ball_subset_closedBall hwball
+  exact ⟨w, certificate_gives_zero hcert, (hstrip w hwmem).1,
+    (hstrip w hwmem).2, him⟩
+
+-- 25.3 第三步补桥: 高度供给 ⟹ 经典计数增长.
+--   无限集包含任意基数的有限子集; 取子集高度的像最大值 +1 为窗口高度 T,
+--   则该子集整个落入窗口, encard 单调给出计数下界.
+theorem classicalZeroCountGrowth_of_zeroHeightSupply
+    (h : ZeroHeightSupply) : ClassicalZeroCountGrowth := by
+  intro N
+  obtain ⟨t, htsub, htcard⟩ :=
+    (infinite_nontrivial_zeros_of_zeroHeightSupply h).exists_subset_card_eq (N + 1)
+  have htpos : 0 < t.card := htcard ▸ Nat.succ_pos N
+  obtain ⟨s₀, hs₀⟩ := Finset.card_pos.mp htpos
+  have hImne : (t.image (fun s : ℂ => |s.im|)).Nonempty :=
+    ⟨|s₀.im|, Finset.mem_image.mpr ⟨s₀, hs₀, rfl⟩⟩
+  set T : ℝ := (t.image (fun s : ℂ => |s.im|)).max' hImne + 1 with hTdef
+  refine ⟨T, ?_⟩
+  -- 有限子集整体落入窗口
+  have hsubwin : (↑t : Set ℂ) ⊆ classicalNontrivialZeroWindow T := by
+    intro s hs
+    have hmem : s ∈ t := Finset.mem_coe.mp hs
+    have hz := htsub hs
+    refine ⟨⟨hz.1, hz.2.1, hz.2.2⟩, ?_⟩
+    have himg : |s.im| ∈ t.image (fun s : ℂ => |s.im|) :=
+      Finset.mem_image.mpr ⟨s, hmem, rfl⟩
+    have hle : |s.im| ≤ (t.image (fun s : ℂ => |s.im|)).max' hImne :=
+      Finset.le_max' _ _ himg
+    rw [hTdef]
+    linarith
+  -- encard 链: N < N+1 = #(↑t) ≤ #(window T) = classicalZeroCount T
+  calc ((N : ℕ) : ℕ∞) ≤ ((N + 1 : ℕ) : ℕ∞) := by
+        exact_mod_cast Nat.le_succ N
+    _ = Set.encard (↑t : Set ℂ) := by
+        simp only [Set.encard_coe_eq_coe_finsetCard]
+        exact_mod_cast htcard.symm
+    _ ≤ (classicalNontrivialZeroWindow T).encard := Set.encard_mono hsubwin
+    _ = classicalZeroCount T := rfl
+
+-- ====================================================================
+-- 26. 零点隔离工具 I — 无零点稳定性 (Rouché 排除半边, 最大模原理路线)
+--    地位: 这是"严格零点隔离"的第一块可编译基建 — 排除半边:
+--      主项 g 在闭盘解析且无零点, 扰动 h 在圆周上被 g 一致压制
+--      (‖h/g‖ ≤ q < 1) ⟹ g+h 在整个开盘内无零点.
+--    证明路线: u := h/g 于闭盘全纯; 最大模原理
+--      (Complex.norm_le_of_forall_mem_frontier_norm_le) 把边界压制约
+--      传到内部; 若 (g+h)(z₀)=0 则 ‖u z₀‖ = 1 与 ‖u z₀‖ ≤ q < 1 矛盾.
+--    ───────────────────────────────────────────────────────────
+--    诚实边界 (存在性半边): 完整 Rouché 定理的"存在半边" (主导线性项
+--      ⟹ 盘内恰一个零点) 需要"围道积分对参数连续 + 整数值则常值"
+--      的绕数不变性论证, mathlib 当前无 winding number 理论 (已侦察),
+--      故本节只落地排除半边. 排除半边的直接应用 (26.2): 取 g ≡ 1,
+--      h := ζ−1, 即得"圆周上 |ζ−1|<1 ⟹ 盘内 ζ 无零点"的严格排除判据 —
+--      它是数值路线验证"证书圆盘边界安全"所需的定理形态.
+-- ====================================================================
+
+-- 26.1 无零点稳定性: 边界一致压制下的扰动不产生新零点.
+theorem no_zero_of_boundary_dominance
+    {c : ℂ} {r : ℝ} (hr : 0 < r)
+    {g h : ℂ → ℂ}
+    (hga : ∀ z ∈ Metric.closedBall c r, AnalyticAt ℂ g z)
+    (hgne : ∀ z ∈ Metric.closedBall c r, g z ≠ 0)
+    (hha : ∀ z ∈ Metric.closedBall c r, AnalyticAt ℂ h z)
+    (hq : ∃ q : ℝ, q < 1 ∧ ∀ z ∈ Metric.sphere c r, ‖h z / g z‖ ≤ q) :
+    ∀ z ∈ Metric.ball c r, (fun x => g x + h x) z ≠ 0 := by
+  obtain ⟨q, hqlt, hbnd⟩ := hq
+  intro z₀ hz₀ hzero
+  -- u := h/g 于闭盘上逐点解析 ⟹ DifferentiableOn 闭盘
+  have hudiff : DifferentiableOn ℂ (fun x => h x / g x)
+      (Metric.closedBall c r) := by
+    intro z hz
+    exact (((hha z hz).differentiableAt).div ((hga z hz).differentiableAt)
+      (hgne z hz)).differentiableWithinAt
+  -- 闭盘是闭集: DiffContOnCl 由 DifferentiableOn 构造
+  have hclosed : IsClosed (Metric.closedBall c r) := Metric.isClosed_closedBall
+  have hdcl : DiffContOnCl ℂ (fun x => h x / g x) (Metric.closedBall c r) :=
+    hclosed.diffContOnCl_iff.mpr hudiff
+  have hbdd : Bornology.IsBounded (Metric.closedBall c r) :=
+    (isCompact_closedBall c r).isBounded
+  -- frontier (closedBall) ⊆ sphere: 边界压制条件传递给最大模原理
+  have hC : ∀ z ∈ frontier (Metric.closedBall c r), ‖h z / g z‖ ≤ q := fun z hz =>
+    hbnd z (Metric.frontier_closedBall_subset_sphere hz)
+  -- 最大模原理: 压制传入闭盘全部点
+  have hzclos : z₀ ∈ closure (Metric.closedBall c r) := by
+    rw [Metric.isClosed_closedBall.closure_eq]
+    exact Metric.ball_subset_closedBall hz₀
+  have hmmp := Complex.norm_le_of_forall_mem_frontier_norm_le hbdd hdcl hC hzclos
+  -- 反证收尾: (g+h)(z₀)=0 ⟹ h(z₀)/g(z₀) = -1 ⟹ ‖u z₀‖ = 1 > q ≥ ‖u z₀‖
+  have hg0 : g z₀ = -(h z₀) := eq_neg_iff_add_eq_zero.mpr hzero
+  have h₂ : h z₀ ≠ 0 := by
+    intro h1
+    exact hgne z₀ (Metric.ball_subset_closedBall hz₀) (by rw [hg0, h1]; simp)
+  have hnorm1 : ‖h z₀ / g z₀‖ = 1 := by
+    have hEq : h z₀ / g z₀ = (-1 : ℂ) := by
+      rw [hg0]
+      field_simp [h₂]
+    rw [hEq]
+    norm_num
+  have hunorm2 : (1 : ℝ) ≤ q := by
+    rw [← hnorm1]
+    exact hmmp
+  linarith
+
+-- 26.2 ζ 推除判据: 圆周上 |ζ−1| 一致 < 1 且盘避开极点 ⟹ 盘内 ζ 无零点.
+--   应用 26.1 于 g ≡ 1 (解析且处处非零), h := ζ − 1 (盘上解析因避 s=1).
+theorem zeta_ne_zero_of_boundary_unit_bound
+    {c : ℂ} {r : ℝ} (hr : 0 < r)
+    (hone : ∀ z ∈ Metric.closedBall c r, z ≠ 1)
+    (hbnd : ∃ q : ℝ, q < 1 ∧ ∀ z ∈ Metric.sphere c r, ‖riemannZeta z - 1‖ ≤ q) :
+    ∀ z ∈ Metric.ball c r, riemannZeta z ≠ 0 := by
+  obtain ⟨q, hqlt, hb⟩ := hbnd
+  have hdelta : ∀ z ∈ Metric.sphere c r, ‖(riemannZeta z - 1) / (1 : ℂ)‖ ≤ q := by
+    intro z hz
+    simpa using hb z hz
+  intro z hz hzero
+  have hres := no_zero_of_boundary_dominance hr
+    (g := fun _ => (1 : ℂ)) (h := fun x => riemannZeta x - 1)
+    (fun zh zhmem => analyticAt_const) (fun _ _ => one_ne_zero)
+    (fun zh zhmem => (analyticAt_riemannZeta (hone zh zhmem)).sub analyticAt_const)
+    ⟨q, hqlt, hdelta⟩
+  exact hres z hz (by simpa using hzero)
 end RiemannHIBS.Analytic

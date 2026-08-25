@@ -58,6 +58,11 @@ stage: current
 | certificate_gives_zero | §24 | 证书直接推论: ζ(w)=0 (factorEq 在 w 处取值) |
 | zeta_winding_eq_two_pi_i_of_certificate | §24 | 证书 ⟹ ∮ζ'/ζ = 2πi (U 开保证 deriv 局部相容 + 23.3 套用) |
 | annulusZeroWitness_of_zetaCertificate / exists_annular_pair_of_zetaCertificate | §24 | 证书 ⟹ AnnulusZeroWitness (接§21) ⟹ 圆环零点反射对 (接§21.5), 全下游自动接通 |
+| UnboundedZetaCertificateAssumption | §25 | 无界证书族 (外部分析输入声明, def 形态非 axiom): 任意高度之上都有临界带内单零点证书实例 |
+| zeroHeightSupply_of_certificateFamily | §25 | 第二步主桥: 证书族 ⟹ ZeroHeightSupply (certificate_gives_zero + 盘在临界带内) |
+| classicalZeroCountGrowth_of_zeroHeightSupply | §25 | 第三步补桥: 高度供给 ⟹ 经典计数增长 (无限集取 N+1 有限子集, 高度像最大值定窗, encard 单调) |
+| no_zero_of_boundary_dominance | §26 | 零点隔离工具 I (排除半边): g 解析无零点 + ‖h/g‖≤q<1 于圆周 ⟹ g+h 开盘内无零点 (最大模原理路线) |
+| zeta_ne_zero_of_boundary_unit_bound | §26 | ζ 排除判据: 圆周上 |ζ−1| 一致 <1 且盘避开 s=1 ⟹ 盘内 ζ≠0 (数值路线边界安全验证形态) |
 | infinitely_many_trivial_zeros | §15 | 零点集合为无限集: 单射嵌入 n↦−2(n+1), 每个是平凡零点 ζ(−2(n+1))=0 |
 | argumentPrinciple_single_zero | §16 | 隐数坐标系幅角原理原子: ∮dz/(z−w)=2πi (w 在圆内, mathlib circleIntegral) |
 | envelope_circle_param | §16 | 圆 |z−c|=r 在相位包络坐标 = θ↦c+r·e^{iθ} (hEvalPhase 即圆参数化) |
@@ -97,6 +102,8 @@ stage: current
 - **§22 分阶段闭环已完成**: `ZeroHeightSupply` 是 `N(T)→∞` 的直接弱化接口；它可推出 `HiddenZeroHeightGrowth`，再推出无限非平凡零点。当前仍未完成的是从 completed ζ、Stirling 与完整幅角/零点计数证明 `ZeroHeightSupply`，因此项目尚未拥有无条件的无限非平凡零点证明
 - **阶段① 局部存在性的 Hardy 数值路线阻塞 (2026-08-25)**: 三阶段路线中"有限高度零点证书"(Z(a)Z(b)<0 + IVT ⟹ Z(t)=0 ⟹ ζ(1/2+it)=0) 需要严格区间算术验证数值不等式 — mathlib 当前无 interval arithmetic 基建, 浮点计算不可作 Lean 证明. 已落地替代接口: `ZetaSimpleZeroCertificate` 把数值路线终点表达为纯代数谓词, 任何供给路线 (Hardy 数值/Stirling 组装/Hadamard 无限性反推) 到手后全下游自动接通
 - **幅角原理完成度**: §23 已落地单零点幂因子绕数原子 (∮f'/f = 2πi·m); 完整幅角原理 = 该原子 + 有限零点集枚举 (多零点求和), Riemann–von Mangoldt 还需 Stirling 增长估计 — 后两者仍未形式化
+- **§25 语义澄清 (2026-08-25)**: `UnboundedZetaCertificateAssumption` 是外部分析输入的条件谓词 (def 形态, 非 axiom 非已证) — §25 真正证明的是"若任意高处都能提供严格单零点证书, 则非平凡零点无限多", 尚未证明"任意高处的证书存在"; 后者仍需 Hardy / Riemann–von Mangoldt / 严格数值隔离. 当前全链: CertificateFamily ⟹ Supply ⟹ HeightGrowth ⟹ 无限; CertificateFamily ⟹ Supply ⟹ CountGrowth ⟹ HiddenCountGrowth ⟹ 无限
+- **零点隔离完成度 (§26)**: 排除半边已落地 (`no_zero_of_boundary_dominance` 最大模原理路线); 存在半边 (主导线性项 ⟹ 恰一个零点) 需要 winding number 整数性/同伦不变性 — mathlib 缺失该理论 (已侦察确认), 完整 Rouché 待基建
 - 螺旋无限延伸 ≠ 全称证明: 舞台(覆盖)完备 ≠ 演员(零点)在台上
 - 非平凡零点存在性与无限性: 已证仅平凡零点无限 (§15); 非平凡部分需增长阶+因子分解/幅角原理, 已有机理皆"必要条件/缺增长"型, 不携带 ζ 的增长行为, 如实标注边界
 
