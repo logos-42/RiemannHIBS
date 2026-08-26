@@ -248,6 +248,14 @@ stage: current
   E(T)/主项 → 0.5 (单侧对角 = (T/2)log(T/2π), 主项半), 交叉上界/主项
   → 0 (截断使交叉 O(√T·log T) 次主导于 T·log T) — 交叉相消机制确认;
   完整双和估计 (Hardy–Littlewood 型) 未形式化, 如实标注
+
+- B3 隐数均值定理 (猜想 + 数值 + 部分 Lean): 单侧截断能量
+  E(T) = (T/2)(log(T/2π)−1) + γ·T + o(T)
+  — diagonal_integral (对角精确积分, Lean 已证, 无 Stirling) +
+    harmonic_log_tendsto_euler (γ 项: 调和和 − log(N+1) → γ, Lean 已证,
+    来自欧拉常数非 ζ!) + 交叉次主导 (B1) — 组装双侧重现 Hardy–Littlewood
+    完整展开 T·log(T/2π) + (2γ−1)T + o(T) — 数值: E/主项 → 0.5,
+    余项/T → γ ≈ 0.58 (fig13 v2)
 - 诚实: 能量发散 ⟹ 零点无限 (Hardy 1914, 经典已证); 能量发散 ⟹ 丰度
   (von Mangoldt, 已证); 能量发散 ⟹ RH (位置全称) — 不能, 能量只约束
   临界线上的值大小, 不排除线外零点
