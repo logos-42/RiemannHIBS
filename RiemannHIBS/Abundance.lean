@@ -23,8 +23,13 @@ import Mathlib.Analysis.Analytic.IsolatedZeros
 import Mathlib.Analysis.Normed.Module.Connected
 import Mathlib.LinearAlgebra.Complex.FiniteDimensional
 import Mathlib.Analysis.Complex.CauchyIntegral
+import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
+import Mathlib.Analysis.Complex.Trigonometric
+import Mathlib.Analysis.SpecialFunctions.Complex.Log
+import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
 
 open scoped Topology
+open scoped ComplexConjugate
 open Set
 
 namespace RiemannHIBS.Abundance
@@ -325,6 +330,195 @@ structure FrequencyMechanismAssumptions where
   -- 桥: 三条外部估计 ⟹ 频率机制完备
   --   (间距 = 带宽倒数, 计数 = 频率积分 — 机制声明, 外部估计成立时成立)
   mechanism : mean_spacing_one → count_formula → angle_uniform → Prop
+
+-- ============================================================
+-- B 桥独立验证: 临界叶能量展开 (Abundance §12 候选)
+--   旋转向量 v_n(t) = (√(n+1))⁻¹ · e^{i·log(n+1)·t} (临界叶 σ=1/2)
+--   能量 ∫|Σv_n|² = 对角 (调和) + 交叉 (旋转积分)
+-- ============================================================
+
+-- 12.1 临界叶旋转向量 (模长锁定 (n+1)^{-1/2})
+noncomputable def rotatingVec (n : ℕ) (t : ℝ) : ℂ :=
+  ((Real.sqrt ((n + 1 : ℕ) : ℝ) : ℂ))⁻¹ * Complex.exp (Complex.I * ((Real.log ((n + 1 : ℕ) : ℝ) : ℂ) * (t : ℂ)))
+
+-- 12.2 旋转积分原子: ∫_{−T}^{T} e^{iΔx} dx = (e^{iΔT} − e^{−iΔT})/(iΔ)
+theorem rotating_integral_atom (T Δ : ℝ) (hΔ : Δ ≠ 0) :
+    (∫ x in (-T)..T, Complex.exp ((Complex.I * Δ) * (x : ℂ)))
+      = (Complex.exp (Complex.I * (Δ * T))
+        - Complex.exp (-(Complex.I * (Δ * T)))) / (Complex.I * Δ) := by
+  have hc : (Complex.I * Δ) ≠ 0 := by
+    intro hz
+    apply hΔ
+    have h5 : (Complex.I)⁻¹ * (Complex.I * Δ) = Δ :=
+      inv_mul_cancel_left₀ Complex.I_ne_zero Δ
+    rw [hz] at h5
+    apply Complex.ofReal_injective
+    rw [h5.symm]
+    simp
+  have hd : ∀ x ∈ Set.uIcc (-T) T,
+      HasDerivAt (fun y : ℝ =>
+          Complex.exp ((Complex.I * Δ) * ((y : ℝ) : ℂ))
+            / (Complex.I * Δ))
+        (Complex.exp ((Complex.I * Δ) * ((x : ℝ) : ℂ))) x := by
+    intro x _hx
+    have hin : HasDerivAt (fun w : ℂ => (Complex.I * Δ) * w)
+        (Complex.I * Δ) ((x : ℝ) : ℂ) := by
+      convert HasDerivAt.const_mul _ (hasDerivAt_id ((x : ℝ) : ℂ)) using 1
+      simp
+    have hcomp1 := (Complex.hasDerivAt_exp
+      ((Complex.I * Δ) * ((x : ℝ) : ℂ))).comp _ hin
+    have hdiv := hcomp1.div_const (Complex.I * Δ)
+    simp only [Function.comp_apply, mul_one] at hdiv
+    rw [mul_div_cancel_right₀ _ hc] at hdiv
+    exact hdiv.comp_ofReal
+  have hcfun : Continuous (fun x : ℝ =>
+      Complex.exp ((Complex.I * Δ) * ((x : ℝ) : ℂ))) :=
+    Complex.continuous_exp.comp
+      (Continuous.mul continuous_const Complex.continuous_ofReal)
+  rw [intervalIntegral.integral_eq_sub_of_hasDerivAt hd
+    (hcfun.intervalIntegrable (-T) T)]
+  rw [sub_div]
+  congr 1
+  · rw [show ((Complex.I * Δ) * (T : ℝ)) = Complex.I * (Δ * T) from by ring]
+  · have h2 : ((Complex.I * Δ) * (((-T : ℝ) : ℂ)))
+        = -(Complex.I * (Δ * T)) := by
+      push_cast [mul_assoc]
+      ring
+    rw [h2]
+
+-- 12.3 交叉项上界: |∫e^{iΔt}| ≤ 2/|Δ| (频率越远, 干涉越弱 — 内禀机制)
+theorem rotating_integral_bound (T Δ : ℝ) (hΔ : Δ ≠ 0) :
+    ‖∫ x in (-T)..T, Complex.exp ((Complex.I * Δ) * (x : ℂ))‖ ≤ 2 / ‖Δ‖ := by
+  rw [rotating_integral_atom T Δ hΔ]
+  rw [norm_div]
+  have hnorm : ‖Complex.I * Δ‖ = ‖Δ‖ := by
+    simpa [Complex.norm_mul, Complex.norm_I, RCLike.norm_ofReal]
+  rw [hnorm]
+  have hsub : ‖Complex.exp (Complex.I * (Δ * T)) - Complex.exp (-(Complex.I * (Δ * T)))‖ ≤ 2 := by
+    have h1 : ‖Complex.exp (Complex.I * (Δ * T))‖ = 1 := by
+      simpa [Complex.ofReal_mul, mul_comm, mul_assoc, mul_left_comm]
+        using Complex.norm_exp_ofReal_mul_I (Δ * T)
+    have h2 : ‖Complex.exp (-(Complex.I * (Δ * T)))‖ = 1 := by
+      simpa [Complex.ofReal_mul, mul_comm, mul_assoc, mul_left_comm]
+        using Complex.norm_exp_ofReal_mul_I (-(Δ * T))
+    calc
+      ‖Complex.exp (Complex.I * (Δ * T)) - Complex.exp (-(Complex.I * (Δ * T)))‖
+          ≤ ‖Complex.exp (Complex.I * (Δ * T))‖ + ‖Complex.exp (-(Complex.I * (Δ * T)))‖ :=
+            norm_sub_le _ _
+      _ = 1 + 1 := by rw [h1, h2]
+      _ = 2 := by norm_num
+  calc
+    ‖Complex.exp (Complex.I * (Δ * T)) - Complex.exp (-(Complex.I * (Δ * T)))‖ / ‖Δ‖
+        ≤ 2 / ‖Δ‖ := by
+          exact div_le_div_of_nonneg_right hsub (norm_nonneg Δ)
+    _ = 2 / ‖Δ‖ := rfl
+
+-- 12.4 对角能量: ∫_{−T}^{T} ‖v_n‖² dt = 2T·(n+1)⁻¹ (调和 — 能量种子)
+theorem diagonal_energy (n : ℕ) (T : ℝ) :
+    (∫ x in (-T)..T, ‖rotatingVec n x‖ ^ 2) = 2 * T * ((n + 1 : ℕ) : ℝ)⁻¹ := by
+  -- 被积函数逐点恒等: ‖v_n x‖² = (n+1)⁻¹
+  have hpt : ∀ x ∈ Set.uIcc (-T) T, ‖rotatingVec n x‖ ^ 2 = ((n + 1 : ℕ) : ℝ)⁻¹ := by
+    intro x hx
+    unfold rotatingVec
+    rw [norm_mul]
+    have hnorm1 : ‖((Real.sqrt ((n + 1 : ℕ) : ℝ) : ℂ))⁻¹‖ = (Real.sqrt ((n + 1 : ℕ) : ℝ))⁻¹ := by
+      rw [norm_inv]
+      simpa [RCLike.norm_ofReal, Real.sqrt_nonneg]
+    have hnorm2 : ‖Complex.exp (Complex.I * ((Real.log ((n + 1 : ℕ) : ℝ) : ℂ) * (x : ℂ)))‖ = 1 := by
+      rw [show Complex.I * ((Real.log ((n + 1 : ℕ) : ℝ) : ℂ) * (x : ℂ)) =
+            ((Real.log ((n + 1 : ℕ) : ℝ) * x : ℝ) : ℂ) * Complex.I by
+          push_cast; ring]
+      exact Complex.norm_exp_ofReal_mul_I (Real.log ((n + 1 : ℕ) : ℝ) * x)
+    rw [hnorm1, hnorm2, mul_one]
+    rw [inv_pow]
+    rw [Real.sq_sqrt (by positivity : 0 ≤ ((n + 1 : ℕ) : ℝ))]
+  rw [intervalIntegral.integral_congr hpt]
+  rw [intervalIntegral.integral_const]
+  rw [smul_eq_mul]
+  ring
+
+#check rotatingVec
+#check rotating_integral_atom
+#check rotating_integral_bound
+#check diagonal_energy
+
+-- 12.5 有限部分和
+noncomputable def rotatingPartialSum (N : ℕ) (t : ℝ) : ℂ :=
+  ∑ n ∈ Finset.range N, rotatingVec n t
+
+-- 12.6 交叉项结构: v_m · conj(v_n) = (√(m+1)√(n+1))⁻¹ · e^{i·(log(m+1)−log(n+1))·t}
+--     (频率差 Δ = log(m+1) − log(n+1) 完全决定交叉项的相位 — 频率坐标的核心角色)
+theorem cross_energy (m n : ℕ) (t : ℝ) :
+    rotatingVec m t * conj (rotatingVec n t) =
+      ((Real.sqrt ((m + 1 : ℕ) : ℝ) : ℂ))⁻¹ * ((Real.sqrt ((n + 1 : ℕ) : ℝ) : ℂ))⁻¹ *
+        Complex.exp (Complex.I * ((Real.log ((m + 1 : ℕ) : ℝ) - Real.log ((n + 1 : ℕ) : ℝ) : ℝ) : ℂ) * (t : ℂ)) := by
+  unfold rotatingVec
+  simp [Complex.conj_ofReal, ← Complex.exp_conj, Complex.conj_I]
+  have hexp : Complex.exp (Complex.I * ((Real.log (((m : ℕ) : ℝ) + 1) : ℂ) * (t : ℂ))) *
+        Complex.exp (-(Complex.I * ((Real.log (((n : ℕ) : ℝ) + 1) : ℂ) * (t : ℂ)))) =
+      Complex.exp (Complex.I * ((Real.log (((m : ℕ) : ℝ) + 1) : ℂ) - (Real.log (((n : ℕ) : ℝ) + 1) : ℂ)) * (t : ℂ)) := by
+    rw [Complex.exp_neg, ← div_eq_mul_inv, ← Complex.exp_sub]
+    congr 1
+    push_cast
+    ring
+  rw [← hexp]
+  ring
+
+-- 12.7 交叉项上界: ‖∫v_m conj v_n‖ ≤ (√(m+1)√(n+1))⁻¹ · 2/|log(m+1)−log(n+1)|
+--     (m≠n: 频率分离 Δ ≠ 0; 频率越远, 干涉越弱 — 旋转积分原子的内禀解读)
+theorem cross_energy_bound (m n : ℕ) (hmn : m ≠ n) (T : ℝ) :
+    ‖∫ x in (-T)..T, rotatingVec m x * conj (rotatingVec n x)‖ ≤
+      2 / ‖Real.log ((m + 1 : ℕ) : ℝ) - Real.log ((n + 1 : ℕ) : ℝ)‖ *
+        ‖((Real.sqrt ((m + 1 : ℕ) : ℝ) : ℂ))⁻¹‖ * ‖((Real.sqrt ((n + 1 : ℕ) : ℝ) : ℂ))⁻¹‖ := by
+  have hΔ : Real.log ((m + 1 : ℕ) : ℝ) - Real.log ((n + 1 : ℕ) : ℝ) ≠ 0 := by
+    intro hz
+    apply hmn
+    have hlog : Real.log ((m + 1 : ℕ) : ℝ) = Real.log ((n + 1 : ℕ) : ℝ) := by
+      linarith
+    have hinj := Real.log_injOn_pos (by positivity : 0 < ((m + 1 : ℕ) : ℝ))
+      (by positivity : 0 < ((n + 1 : ℕ) : ℝ)) hlog
+    have hm1 : m + 1 = n + 1 := by exact_mod_cast hinj
+    omega
+  have hpt : ∀ x ∈ Set.uIcc (-T) T,
+      rotatingVec m x * conj (rotatingVec n x) =
+        ((Real.sqrt ((m + 1 : ℕ) : ℝ) : ℂ))⁻¹ * ((Real.sqrt ((n + 1 : ℕ) : ℝ) : ℂ))⁻¹ *
+          Complex.exp (Complex.I * ((Real.log ((m + 1 : ℕ) : ℝ) - Real.log ((n + 1 : ℕ) : ℝ) : ℝ) : ℂ) * (x : ℂ)) := by
+    intro x hx
+    exact cross_energy m n x
+  rw [intervalIntegral.integral_congr hpt]
+  -- 常数提出: ∫ A_m·A_n·e = A_m·A_n·∫e
+  rw [intervalIntegral.integral_const_mul]
+  rw [norm_mul]
+  rw [norm_mul]
+  have hb := rotating_integral_bound T (Real.log ((m + 1 : ℕ) : ℝ) - Real.log ((n + 1 : ℕ) : ℝ)) hΔ
+  have hb' : ‖∫ x in (-T)..T, Complex.exp (Complex.I * ((Real.log ((m + 1 : ℕ) : ℝ) - Real.log ((n + 1 : ℕ) : ℝ) : ℝ) : ℂ) * (x : ℂ))‖ ≤
+      2 / ‖Real.log ((m + 1 : ℕ) : ℝ) - Real.log ((n + 1 : ℕ) : ℝ)‖ := by
+    simpa [Complex.ofReal_sub, mul_assoc] using hb
+  have hnonneg1 : 0 ≤ ‖((Real.sqrt ((m + 1 : ℕ) : ℝ) : ℂ))⁻¹‖ := norm_nonneg _
+  have hnonneg2 : 0 ≤ ‖((Real.sqrt ((n + 1 : ℕ) : ℝ) : ℂ))⁻¹‖ := norm_nonneg _
+  calc
+    (‖((Real.sqrt ((m + 1 : ℕ) : ℝ) : ℂ))⁻¹‖ * ‖((Real.sqrt ((n + 1 : ℕ) : ℝ) : ℂ))⁻¹‖) *
+        ‖∫ x in (-T)..T, Complex.exp (Complex.I * ((Real.log ((m + 1 : ℕ) : ℝ) - Real.log ((n + 1 : ℕ) : ℝ) : ℝ) : ℂ) * (x : ℂ))‖
+        ≤ (‖((Real.sqrt ((m + 1 : ℕ) : ℝ) : ℂ))⁻¹‖ * ‖((Real.sqrt ((n + 1 : ℕ) : ℝ) : ℂ))⁻¹‖) *
+          (2 / ‖Real.log ((m + 1 : ℕ) : ℝ) - Real.log ((n + 1 : ℕ) : ℝ)‖) := by
+          exact mul_le_mul_of_nonneg_left hb' (mul_nonneg hnonneg1 hnonneg2)
+    _ = 2 / ‖Real.log ((m + 1 : ℕ) : ℝ) - Real.log ((n + 1 : ℕ) : ℝ)‖ *
+          ‖((Real.sqrt ((m + 1 : ℕ) : ℝ) : ℂ))⁻¹‖ * ‖((Real.sqrt ((n + 1 : ℕ) : ℝ) : ℂ))⁻¹‖ := by
+          ring
+
+#check cross_energy
+#check cross_energy_bound
+
+-- 12.8 B 桥声明: 能量 ⟹ 对齐 (AlignmentEnergyBridge)
+structure AlignmentEnergyBridge where
+  -- 内禀能量无界 (基于已证原子 12.3/12.4/12.7; 组合定理 energy_lower_bound 待形式化)
+  energy_unbounded : Prop
+  -- 外部反证输入 (经典 Hardy 反证): 对齐有限 ⟹ 能量有界
+  bounded_energy_of_finite_alignments : Prop
+  -- 结论: 能量无界 + 反证 ⟹ 对齐事件 (零点) 无限
+  infinite_alignments : Prop
+  bridge : energy_unbounded → bounded_energy_of_finite_alignments → infinite_alignments
+
 
 end RiemannHIBS.Abundance
 
