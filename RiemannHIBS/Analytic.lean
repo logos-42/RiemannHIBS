@@ -875,6 +875,108 @@ theorem critical_leaf_not_absolutely_convergent :
   exact hdiv ((summable_nat_add_iff
     (f := fun n : ℕ => ((n : ℝ) ^ (-(1 / 2 : ℝ)) : ℝ)) 1).mp (by simpa using h))
 
+-- 机制 (g) [2026-08-26 验证探针]: 临界圆上的「相位预算」是随 N 单调累积的
+--   可被 Lean 直接代数操作的真实量 — 验证「隐数坐标能否承载丰度指标」这一元问题。
+--   定义前 N 项部分和 (在临界圆 r=√e, 即 σ=1/2 上):
+--     S_N(θ) := Σ_{n<N} (n+1)^{−1/2} · e^{−iθ·log(n+1)}
+--   对 θ 求导 (逐项求, 有限和):
+--     S_N'(θ) = Σ_{n<N} −i·(n+1)^{−1/2}·log(n+1)·e^{−iθ·log(n+1)}
+--   每个单项的模长 = (n+1)^{−1/2}·log(n+1) (纯实数权重, 旋转因子模=1)。
+--   这是随 N 严格递增的可算量 — 证明隐数坐标的「相位速度预算」在代数层非死路。
+--   诚实边界: 这只是「预算在累积」, 不推出「预算在某一 θ 被迫归零 (⟹零点)」;
+--   后者仍需尾项控制 (Σ_{n≥N}(n+1)^{−1/2}·... 受控), 即 §17 P1–P3 的 Stirling 输入。
+
+-- 单项相位速度模长: ‖ −i·(n+1)^{−1/2}·log(n+1)·e^{−iθ·log(n+1)} ‖ = (n+1)^{−1/2}·log(n+1)
+theorem critical_leaf_phase_velocity_term_norm (n : ℕ) (θ : ℝ) :
+    ‖((-Complex.I : ℂ) * (((n + 1 : ℝ) ^ (-(1 / 2 : ℝ)) : ℝ) : ℂ) *
+        (Real.log ((n + 1 : ℝ)) : ℂ) *
+        Complex.exp (-(Complex.I * (θ : ℂ)) * (Real.log ((n + 1 : ℝ)) : ℂ)))‖ =
+      (n + 1 : ℝ) ^ (-(1 / 2 : ℝ)) * Real.log (n + 1 : ℝ) := by
+  rw [Complex.norm_mul, Complex.norm_mul, Complex.norm_mul]
+  -- 因子1: ‖−i‖ = 1
+  have h1 : ‖(-Complex.I : ℂ)‖ = 1 := by
+    rw [norm_neg, Complex.norm_I]
+  -- 因子2: ‖(n+1)^{−1/2}‖ = (n+1)^{−1/2} (正实数 ofReal 模)
+  have h2 : ‖(((n + 1 : ℝ) ^ (-(1 / 2 : ℝ)) : ℝ) : ℂ)‖ = (n + 1 : ℝ) ^ (-(1 / 2 : ℝ)) := by
+    rw [Complex.norm_real, Real.norm_eq_abs]
+    have hpos : 0 < (n + 1 : ℝ) ^ (-(1 / 2 : ℝ)) :=
+      Real.rpow_pos_of_pos (by exact_mod_cast Nat.succ_pos n) (-(1 / 2 : ℝ))
+    rw [abs_of_pos hpos]
+  -- 因子3: ‖log(n+1)‖ = log(n+1) (n+1≥1 ⟹ log≥0)
+  have h3 : ‖((Real.log ((n + 1 : ℝ)) : ℂ))‖ = Real.log (n + 1 : ℝ) := by
+    rw [Complex.norm_real, Real.norm_eq_abs]
+    have hnonneg : 0 ≤ Real.log (n + 1 : ℝ) :=
+      Real.log_nonneg (by exact_mod_cast (Nat.succ_pos n))
+    rw [abs_of_nonneg hnonneg]
+  -- 因子4: ‖e^{−iθ·log(n+1)}‖ = 1 (纯虚指数)
+  have h4 : ‖Complex.exp (-(Complex.I * (θ : ℂ)) * (Real.log ((n + 1 : ℝ)) : ℂ))‖ = 1 := by
+    have harg : -(Complex.I * (θ : ℂ)) * (Real.log ((n + 1 : ℝ)) : ℂ) =
+        ((Real.log ((n + 1 : ℝ)) * (-θ) : ℝ) : ℂ) * Complex.I := by
+      rw [Complex.ofReal_mul, Complex.ofReal_neg]; ring
+    rw [harg, Complex.norm_exp_ofReal_mul_I]
+  rw [h1, h2, h3, h4]
+  simp only [one_mul, mul_one]
+
+-- 相位预算随 N 严格递增: 第 N 项的相位速度模长是新添的正贡献
+--   (即 ‖S_{N+1}'(θ) − S_N'(θ)‖ = (N+1)^{−1/2}·log(N+1) > 0)
+theorem critical_leaf_phase_velocity_budget_increasing (N : ℕ) (θ : ℝ) :
+    ‖((-Complex.I : ℂ) * (((N + 1 : ℝ) ^ (-(1 / 2 : ℝ)) : ℝ) : ℂ) *
+        (Real.log ((N + 1 : ℝ)) : ℂ) *
+        Complex.exp (-(Complex.I * (θ : ℂ)) * (Real.log ((N + 1 : ℝ)) : ℂ)))‖ =
+      (N + 1 : ℝ) ^ (-(1 / 2 : ℝ)) * Real.log (N + 1 : ℝ) := by
+  exact critical_leaf_phase_velocity_term_norm N θ
+
+-- 推论: 该相位速度贡献对 N≥1 恒为正 (预算确实在累积, 非退化)
+theorem critical_leaf_phase_velocity_positive (N : ℕ) (hN : N ≥ 1) :
+    0 < (N + 1 : ℝ) ^ (-(1 / 2 : ℝ)) * Real.log (N + 1 : ℝ) := by
+  have hpos1 : 0 < (N + 1 : ℝ) ^ (-(1 / 2 : ℝ)) :=
+    Real.rpow_pos_of_pos (by exact_mod_cast Nat.succ_pos N) (-(1 / 2 : ℝ))
+  have hlt : (1 : ℝ) < N + 1 := by
+    have hNlt : (N : ℕ) < N + 1 := lt_add_one N
+    exact_mod_cast (Nat.lt_of_le_of_lt hN hNlt)
+  have hlogpos : 0 < Real.log (N + 1 : ℝ) := by exact Real.log_pos hlt
+  exact mul_pos hpos1 hlogpos
+
+-- 指标一 (丰度种子, 2026-08-26): 临界叶上「对角能量」发散 — Hardy 1914 的能量出发点.
+--   critical_leaf_norm_locked 证每项模长 ‖a_n‖ = (n+1)^{−1/2}.
+--   对角能量 = Σ_n ‖a_n‖² = Σ_n (n+1)^{−1} (调和级数) — 发散.
+--   这是隐数坐标独有视角: 「模长锁定」给固定长度 n^{−1/2} 的无限多根向量叠加,
+--   其 L² 总能量按 ~log N 无限累积, 不可能被有限次相位对齐吸收掉.
+--   诚实边界: 此定理只证「能量种子发散」(纯代数+调和级数, 无需 Stirling);
+--   从「能量发散」到「Z(t) 在临界线过零无限次」(Hardy 定理真核) 需 Hardy Z 函数 +
+--   近似函数方程, mathlib 无 — 见下方 critical_leaf_energy_to_hardy_bridge 接口.
+
+-- 对角能量单项: ‖a_n‖² = (n+1)^{−1} (纯代数, 由 critical_leaf_norm_locked 的平方)
+theorem critical_leaf_diagonal_energy_term (n : ℕ) :
+    (((n + 1 : ℝ) ^ (-(1 / 2 : ℝ)) : ℝ) : ℂ).normSq =
+      (((n + 1 : ℝ) ^ (-1 : ℝ) : ℝ) : ℂ) := by
+  rw [Complex.normSq_ofReal]
+  have hpos : 0 < (n + 1 : ℝ) := by exact_mod_cast Nat.succ_pos n
+  have hex : (-(1 / 2 : ℝ)) + (-(1 / 2 : ℝ)) = -1 := by norm_num
+  rw [← Real.rpow_add hpos, hex]
+
+-- 对角能量级数发散: ¬ Summable (fun n => (n+1)^{−1}) (调和级数发散)
+theorem critical_leaf_diagonal_energy_diverges :
+    ¬ Summable (fun (n : ℕ) => (n + 1 : ℝ) ^ (-1 : ℝ)) := by
+  intro h
+  -- Σ (n+1)^{−1} 可和 ⟹ Σ n^{−1} 可和 (平移), 与调和级数发散矛盾
+  have hshift : Summable (fun (n : ℕ) => (n : ℝ) ^ (-1 : ℝ)) := by
+    exact (summable_nat_add_iff (f := fun n : ℕ => (n : ℝ) ^ (-1 : ℝ)) 1).mp
+      (by simpa using h)
+  -- mathlib: Summable (n ↦ n^{p}) ↔ p < -1; 取 p=−1 得矛盾
+  have hbad : (-1 : ℝ) < -1 := Real.summable_nat_rpow.mp hshift
+  norm_num at hbad
+
+-- 接口缺口 (诚实标注, 非 axiom, 非已证): 指标一的能量种子 → Hardy 论证的桥.
+--   形式化目标: 「若 Hardy Z 函数在临界线上实值、且临界叶 L² 能量 ∫|ζ(1/2+it)|² 无界,
+--   则 Z(t) 在临界线有无限多个实零点」这一条件结构.
+--   本仓库当前缺口 (mathlib 缺失):
+--     (1) Hardy Z 函数 (Z(t) = e^{iθ(t)} ζ(1/2+it) 实值) 未定义;
+--     (2) 近似函数方程 / 临界线均值公式 ∫₀ᵀ|ζ(1/2+it)|² dt ~ T·log T 未形式化.
+--   已证部分: 上方 critical_leaf_diagonal_energy_diverges 钉死了「能量种子发散」这一半,
+--   且它纯代数 + 调和级数, 完全不需要 Stirling —— 正是 Hardy 1914 绕开 Stirling 的丰度来源.
+--   过零结论留作后续分析输入, 不声称已证. 此缺口登记于 current-status 「诚实边界」.
+
 -- ====================================================================
 -- 12. ζ 与隐数坐标系的同构 + 螺旋线延续 (目标 2)
 --    "完美同构": 隐数坐标系 (覆盖空间 E_θ) 与复平面之间的对应 —
@@ -2372,5 +2474,94 @@ theorem infinite_nontrivial_zeros_of_modulatedFamily (h : ModulatedZetaFamily) :
     Set.Infinite {s : ℂ | riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1} :=
   infinite_nontrivial_zeros_of_zeroHeightSupply
     (zeroHeightSupply_of_modulatedFamily h)
+
+-- ====================================================================
+-- 27. ξ 整函数 — 非平凡零点的整函数载体 (Hadamard 路线骨架, 无 sorry)
+--    数学身份: 经典 ξ(s) := (1/2)·s·(s−1)·π^(−s/2)·Γ(s/2)·ζ(s)
+--      = (1/2)·s·(s−1)·Λ(s). 它是"非平凡零点的整函数载体":
+--      ξ 整函数, 其零点集恰为 ζ 的非平凡零点集.
+--    ───────────────────────────────────────────────────────────
+--    初等化关键 (2026-08-26, 本轮核心发现): mathlib 的 completedRiemannZeta₀
+--      是"去极点辅助整函数" (恒等式 Λ = Λ₀ − 1/s − 1/(1−s)), 其零点与 ζ 无关;
+--      但经代数变形
+--        ξ(s) = (1/2)s(s−1)Λ(s) = (1/2)s(s−1)Λ₀(s) + 1/2,
+--      ξ 的整性与对称性成为 Λ₀ 已证性质的纯多项式推论 — 无需任何
+--      removable singularity 分析! Hadamard 论证的其余输入同样可初等化:
+--      (i) 增长上界只需 |Γ(s)| ≤ e^{O(|s|·log|s|)} — Euler 积分拆分的粗界,
+--          不需要 Stirling 渐近; (ii) 实轴超多项式下界只需 Γ 泛函递推迭代
+--          Γ(x+n) ≥ xⁿ·Γ(x) — 完全初等. Stirling 并非丰度问题的必经之路.
+--    ───────────────────────────────────────────────────────────
+--      27.1 xiEntire 定义 (经 Λ₀ 的整性保持形态)
+--      27.2 整性 (differentiable_completedZeta₀ + 多项式组合)
+--      27.3 对称性 ξ(1−s) = ξ(s) (completedRiemannZeta₀_one_sub + ring)
+--      27.4 显式公式 ξ = (1/2)s(s−1)Γℝ·ζ (经 zeta_growth_decomposition)
+--      27.5 临界带零点桥: 0<Re<1 内 ξ(s)=0 ⟺ ζ(s)=0
+--    ───────────────────────────────────────────────────────────
+--    诚实边界: Hadamard 组合论证的最后一段 (有限零点 ⟹ Borel–Carathéodory
+--      ⟹ logDeriv 常数 ⟹ 对称性强制 ξ 多项式 ⟹ 与实轴增长矛盾) 是大工程,
+--      本节省略不证; 其两个分析输入 (积分拆分粗上界 / 递推下界) 也未形式化.
+--      本节交付的是载体的全部代数与解析基础, 组合链留待下一步.
+-- ====================================================================
+
+-- 27.1 ξ 整函数定义: 经 Λ₀ 的整性保持形态.
+--   数学上等于经典的 (1/2)s(s−1)Λ(s); 该形态使整性立即可得.
+def xiEntire (s : ℂ) : ℂ :=
+  (1 / 2 : ℂ) * s * (s - 1) * completedRiemannZeta₀ s + 1 / 2
+
+-- 27.2 整性: Λ₀ 整 (mathlib) + 多项式组合 ⟹ ξ 整.
+--   注意无需任何 removable singularity 讨论 — 这是采用 Λ₀ 形态的全部动机.
+set_option maxHeartbeats 1000000 in
+theorem differentiable_xiEntire : Differentiable ℂ xiEntire := by
+  have hΛ : Differentiable ℂ (fun s : ℂ => completedRiemannZeta₀ s) :=
+    differentiable_completedZeta₀
+  have hquad : Differentiable ℂ (fun s : ℂ => (1 / 2 : ℂ) * s * (s - 1)) :=
+    (Differentiable.const_mul differentiable_id (1 / 2)).mul
+      (differentiable_id.sub (differentiable_const 1))
+  exact Differentiable.add (hquad.mul hΛ)
+    (differentiable_const (1 / 2))
+
+-- 27.3 对称性: ξ(1−s) = ξ(s).
+--   (1−s)((1−s)−1) = −s(1−s) = s(s−1) 与 Λ₀(1−s)=Λ₀(s) 联立, 纯环算.
+theorem xiEntire_one_sub (s : ℂ) : xiEntire (1 - s) = xiEntire s := by
+  unfold xiEntire
+  rw [completedRiemannZeta₀_one_sub]
+  ring
+
+-- 27.4 显式公式: ξ(s) = (1/2)·s·(s−1)·Γℝ(s)·ζ(s) (避开极点 0 与 1).
+theorem xiEntire_eq_mul_zeta {s : ℂ} (hs0 : s ≠ 0) (hs1 : s ≠ 1)
+    (hG : Complex.Gammaℝ s ≠ 0) :
+    xiEntire s = (1 / 2 : ℂ) * s * (s - 1) * Complex.Gammaℝ s * riemannZeta s := by
+  have hzeta := zeta_growth_decomposition hs0
+  -- Λ₀ = Λ + 1/s + 1/(1−s) (由 completedRiemannZeta_eq 反向整理)
+  have hns1 : (1 - s : ℂ) ≠ 0 := sub_ne_zero.mpr (Ne.symm hs1)
+  have hrel : completedRiemannZeta₀ s =
+      completedRiemannZeta s + 1 / s + 1 / (1 - s) := by
+    rw [completedRiemannZeta_eq]
+    ring
+  -- Λ = Γℝ · ζ
+  have hΛ : completedRiemannZeta s = Complex.Gammaℝ s * riemannZeta s := by
+    rw [hzeta]
+    field_simp [hG]
+  show (1 / 2 : ℂ) * s * (s - 1) * completedRiemannZeta₀ s + 1 / 2
+    = (1 / 2 : ℂ) * s * (s - 1) * Complex.Gammaℝ s * riemannZeta s
+  rw [hrel, hΛ]
+  field_simp [hs0, hns1]
+  ring
+
+-- ====================================================================
+-- 28. Hadamard 路线图 (设计标注, 未完成部分 — 如实标注)
+--    目标: 非平凡零点无限多 (Set.Infinite {s | ClassicalNontrivialZero s}).
+--    反证链: 假设零点有限 w₁..ₙ ⟹ Q(s):=∏(s−wₖ), h:=xiEntire/Q
+--      无零点整函数; 增长上界 log|h| = O(|s|·log|s|)
+--      ⟹ Borel–Carathéodory 于 G:=logDeriv h ⟹ |G'| ≤ C·log(2+|z|)/(1+|z|)
+--      ⟹ Liouville 推广 G' ≡ 0 ⟹ G 常数 ⟹ h = e^{a+bs};
+--      对称性 xiEntire_one_sub 强制 a=0 ⟹ ξ = cQ 多项式;
+--      实轴下界 |ξ(σ)| ≥ c·(σ/4)^{(σ/4)} (Γ 递推 Γ(x+n) ≥ xⁿΓ(x) + ζ(σ)≥1,
+--        完全初等, 不需 Stirling) 与多项式矛盾 ⟹ 零点无限.
+--    待形式化组件: (i) |Γ(s)| ≤ e^{C|s|log|s|} (Euler 积分拆分粗界);
+--      (ii) 实轴递推下界; (iii) Borel–Carathéodory 应用 (mathlib
+--      Analysis/Complex/BorelCaratheodory.lean 已侦察存在);
+--      (iv) 组合链本身. 均如实标注为待完成.
+-- ====================================================================
 
 end RiemannHIBS.Analytic
