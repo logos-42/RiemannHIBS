@@ -224,7 +224,12 @@ stage: current
   zeta_analyticAt (ζ 在 s≠1 解析) / zeta_two_ne_zero (ζ(2)≠0) /
   zeta_zero_isolated (非平凡零点孤立: identity theorem + ℂ∖{1} 连通 +
   ζ(2)≠0 排除恒零 — 零点↔ℕ 一一对应的孤立侧已证)
-- draft: 零点可数/排序 (第二可数空间孤立集可数, mathlib 无现成引理)
+- 零点可枚举性完整形式化 (无 sorry): zero_set_countable (孤立 ⟹ 离散子空间
+  ⟹ 第二可数 ⟹ 遗传 Lindelöf ⟹ 可数) + zero_enumeration_of_infinite
+  (可数+无限 ⟹ ℕ≃zeroSet 双射, Denumerable.eqv)
+- draft 全部清理: §10 HardyBridgeAssumptions (均值定理=外部输入结构体) +
+  §11 FrequencyMechanismAssumptions (Riemann–Siegel 连续极限=外部输入结构体)
+  + Analytic §12.4/12.5 多值 log 单值化 (exp(log w+2πi·k)=w, 叶差=2πiℤ)
 - 诚实: 能量发散 ⟹ 零点无限 (Hardy 1914, 经典已证); 能量发散 ⟹ 丰度
   (von Mangoldt, 已证); 能量发散 ⟹ RH (位置全称) — 不能, 能量只约束
   临界线上的值大小, 不排除线外零点
