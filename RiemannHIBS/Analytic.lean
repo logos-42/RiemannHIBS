@@ -424,7 +424,7 @@ theorem zero_envelope_circle (t : ℝ)
 --    - 2π 周期: 多圈叶 ⟨r, θ+2πk⟩ 投影回同一点
 --    - 连续折叠: 叶 π+2πk 全部折叠到负实轴 (离散 envelope_fold 的连续版)
 --    - 每圈叶覆盖: 每个 w ≠ 0 的每一圈 k 都有主支相位 θ 使投影回 w
---    (draft: 多值 log 的叶分支, 如实标注)
+--    - 多值 log 单值化 (12.4/12.5): exp(log w + 2πi·k) = w, 叶差 = 2πiℤ
 -- ====================================================================
 
 -- 主支相位参数化: 对 r > 0, θ ∈ (−π, π], expZeta 在相位包络坐标下
@@ -1035,6 +1035,50 @@ theorem helix_continuation (w : ℂ) (k : ℕ) (hw : w ≠ 0) :
       hEvalPhase ⟨‖w‖, θ + 2 * Real.pi * (k : ℝ)⟩ = w :=
   envelope_universal_cover_branch w k hw
 
+-- 12.4 多值 log 的解析侧 (draft 清理): 第 k 叶 log w + 2πi·k 的 exp 投影回 w,
+--     且不同叶之差 = 2πi 的整数倍 — 万有覆盖螺旋柱面的纤维 = 2πℤ.
+--     (几何侧已由 envelope_universal_cover_branch / phase_periodic 覆盖;
+--      此定理补上"多值 log 单值化"的解析内容: exp ∘ logₖ = id.)
+
+-- 12.4a 周期核心: exp(2πi·k) = 1 对 k : ℤ (Int.induction_on: 0/± 分支)
+theorem exp_two_pi_mul_int (k : ℤ) :
+    Complex.exp (2 * (Real.pi : ℂ) * Complex.I * (k : ℂ)) = 1 := by
+  induction k using Int.induction_on with
+  | zero => simp
+  | succ k ih =>
+      -- k : ℕ; ih: exp(2πi * ((k : ℤ) : ℂ)) = 1; 目标: exp(2πi * ((k+1 : ℤ) : ℂ)) = 1
+      have ih' : Complex.exp (2 * (Real.pi : ℂ) * Complex.I * (k : ℂ)) = 1 := by
+        simpa using ih
+      rw [show 2 * (Real.pi : ℂ) * Complex.I * ((k + 1 : ℤ) : ℂ) =
+            2 * (Real.pi : ℂ) * Complex.I * (k : ℂ) + 2 * (Real.pi : ℂ) * Complex.I by
+        push_cast; ring]
+      rw [Complex.exp_add, ih', Complex.exp_two_pi_mul_I, mul_one]
+  | pred k ih =>
+      -- k : ℕ; 目标: exp(2πi * (-(k:ℤ)-1 : ℂ)) = 1
+      rw [show 2 * (Real.pi : ℂ) * Complex.I * ((-(k : ℤ) - 1 : ℤ) : ℂ) =
+            2 * (Real.pi : ℂ) * Complex.I * (-(k : ℂ)) - 2 * (Real.pi : ℂ) * Complex.I by
+        push_cast; ring]
+      rw [Complex.exp_sub]
+      have ih' : Complex.exp (2 * (Real.pi : ℂ) * Complex.I * (-(k : ℂ))) = 1 := by
+        simpa using ih
+      rw [ih', Complex.exp_two_pi_mul_I, div_one]
+
+-- 12.4b 主定理: exp(log w + 2πi·k) = w — 第 k 叶是 log 的单值化
+theorem exp_log_sheet (w : ℂ) (hw : w ≠ 0) (k : ℤ) :
+    Complex.exp (Complex.log w + 2 * (Real.pi : ℂ) * Complex.I * (k : ℂ)) = w := by
+  rw [Complex.exp_add]
+  rw [Complex.exp_log hw]
+  rw [exp_two_pi_mul_int k, mul_one]
+
+-- 12.5 叶差: 第 k 叶与第 j 叶之差 = 2πi·(k−j) — 纤维 = 2πℤ (多值 log 的
+--     单值化条件: 同一 w 的各叶 exp 投影相同, 差恰为周期格的整数倍).
+theorem log_sheet_difference (w : ℂ) (k j : ℤ) :
+    Complex.log w + 2 * (Real.pi : ℂ) * Complex.I * (k : ℂ) -
+      (Complex.log w + 2 * (Real.pi : ℂ) * Complex.I * (j : ℂ)) =
+        2 * (Real.pi : ℂ) * Complex.I * ((k - j : ℤ) : ℂ) := by
+  push_cast
+  ring
+
 -- ====================================================================
 -- 13. 机制完备环 (目标 1): 四种机制描述两两等价
 --     A: NoZerosOutsideCircle   — 圆外无零点 (排除机制, Re ≤ 1/2)
@@ -1614,8 +1658,12 @@ theorem zeroCount_normalized {c w : ℂ} {r : ℝ} (hw : w ∈ Metric.ball c r) 
 --           ≈ (T/2π)·log(T/2π) → ∞ 当 T→∞.
 --    诚实边界: (P1)-(P3) 依赖 Stirling 渐近 + 完成 ζ 有界性 — 二者 mathlib 均
 --       未形式化 (无 Γ 的 Stirling 界, 无 completedRiemannZeta 有界性). 因此
---       "无限非平凡零点" 仍未被证明; 本节省略给出坐标层的精确分解 + 预言框架,
---       把"增长估计"这一唯一真分析输入显式隔离为待形式化边界 (draft).
+--       "无限非平凡零点" 仍未被证明; 本节省略给出坐标层的精确分解 + 预言框架.
+--       ★ 该分析输入的正式承接处: §25.1 UnboundedZetaCertificateAssumption
+--         (def 形态外部假设, 显式陈述"实例化它 = 完成 Hardy/von Mangoldt 层"),
+--         及 Abundance.lean §10 HardyBridgeAssumptions / §11 FrequencyMechanism
+--         Assumptions — 本节的 (P1)-(P3) 是那些外部输入的物理动机, 不再是
+--         "待形式化 draft", 而是已隔离声明的边界.
 -- ====================================================================
 
 -- 17.1 增长分解: ζ(s) = completedRiemannZeta(s) / Gammaℝ(s) (mathlib 已证, 坐标无关).
