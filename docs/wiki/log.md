@@ -42,3 +42,4 @@
 | 2026-08-26 | feat | §31 缺口 A 技术模板地基落地 (无 sorry 编译通过): rotVecOnLine/dirichletPartialSumLine 定义 (与 §19 旋转向量同族); integral_rotating_atom 自证 (∫exp(iΔx)=(e^{iΔT}−e^{−iΔT})/(iΔ); 因 mathlib module 系统迁移 integral_exp_mul_complex 暂不可见, 经 HasDerivAt.comp_ofReal + div_const + mul_div_cancel_right₀ 自建原函数论证); energy_single_term_integral (∫‖v_n‖²=2T(n+1)^{-2σ}, 经 norm_exp 纯虚模一 + rpow_add) — 对角能量项是 log 积累进入均值计算的精确位置; 待办: 双重和主展开 + 极限传递 |
 | 2026-08-25 | research | 零点孤立已证: zeta_zero_isolated (identity theorem); 零点↔ℕ 一一对应孤立侧闭环; fig12 |
 | 2026-08-26 | research | draft 全部清理: 零点可数 (zero_set_countable) + 双射枚举 (zero_enumeration_of_infinite); Hardy 桥/丰度机制结构体化 (外部输入显式声明); 多值 log 单值化 (exp_log_sheet, 叶差 2πiℤ) |
+| 2026-08-26 | research | B 桥原子层: 临界叶能量展开 Lean 形式化 (对角调和+交叉旋转积分+上界); 发现逐项上界过粗, 交叉相消=真实缺口; fig13 |

@@ -230,6 +230,15 @@ stage: current
 - draft 全部清理: §10 HardyBridgeAssumptions (均值定理=外部输入结构体) +
   §11 FrequencyMechanismAssumptions (Riemann–Siegel 连续极限=外部输入结构体)
   + Analytic §12.4/12.5 多值 log 单值化 (exp(log w+2πi·k)=w, 叶差=2πiℤ)
+
+- B 桥原子层内禀形式化 (Abundance §12): 临界叶能量展开 —
+  rotating_integral_atom (∫e^{iΔt} 精确值) + rotating_integral_bound
+  (|∫e^{iΔt}| ≤ 2/|Δ|) + diagonal_energy (∫‖v_n‖² = 2T(n+1)⁻¹ 调和)
+  + cross_energy_bound (|∫v_m conj v_n| ≤ (√(m+1)√(n+1))⁻¹·2/|Δ|)
+  + AlignmentEnergyBridge (B 桥声明)
+- 诚实发现 (B 桥推进中): 逐项三角不等式上界在相邻频率 (Δ→0) 过粗,
+  交叉相消 (Hardy–Littlewood 型 L² 论证) 是真实分析缺口, 未形式化;
+  隐数坐标贡献 = 把交叉项写成旋转积分精确形态 (已证), 相消估计本身仍开放
 - 诚实: 能量发散 ⟹ 零点无限 (Hardy 1914, 经典已证); 能量发散 ⟹ 丰度
   (von Mangoldt, 已证); 能量发散 ⟹ RH (位置全称) — 不能, 能量只约束
   临界线上的值大小, 不排除线外零点
