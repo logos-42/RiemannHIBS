@@ -19,3 +19,8 @@ open RiemannHIBS.Analytic
 -- 示例: 临界线 s = 1/2 + i·(π/4) 的包络点落在圆周 |w| = √e 上
 example : ‖Complex.exp ((1 / 2 : ℂ) + Complex.I * ((Real.pi / 4 : ℝ) : ℂ))‖ = envelopeRadius :=
   criticalLine_circle (Real.pi / 4)
+
+-- §12.4-12.5 多值 log 单值化 (draft 清理后新增)
+#check exp_two_pi_mul_int
+#check exp_log_sheet
+#check log_sheet_difference
