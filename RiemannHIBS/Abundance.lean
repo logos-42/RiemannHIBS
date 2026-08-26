@@ -27,6 +27,7 @@ import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
 import Mathlib.Analysis.Complex.Trigonometric
 import Mathlib.Analysis.SpecialFunctions.Complex.Log
 import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
+import Mathlib.NumberTheory.Harmonic.EulerMascheroni
 
 open scoped Topology
 open scoped ComplexConjugate
@@ -618,6 +619,85 @@ theorem cross_pair_bound_min (m n : ℕ) (hmn : m ≠ n) (T : ℝ) (hT : 0 ≤ T
     _ = ‖((Real.sqrt ((m + 1 : ℕ) : ℝ) : ℂ))⁻¹‖ * ‖((Real.sqrt ((n + 1 : ℕ) : ℝ) : ℂ))⁻¹‖ *
           min (2 * T) (2 / ‖Real.log ((m + 1 : ℕ) : ℝ) - Real.log ((n + 1 : ℕ) : ℝ)‖) := by
           ring
+
+
+-- ============================================================
+-- B3 数值深化 — Lean 化: 对角精确积分 + 欧拉常数项
+--   B3a: ∫₁ᵀ (1/2)·log(t/2π) dt = (T/2)(log(T/2π) − 1) + (log 2π + 1)/2
+--        原函数 G(t) = (t/2)·(log(t/2π) − 1), G'(t) = (1/2)·log(t/2π)
+--   B3b: 调和和 − log(N+1) → γ (mathlib Real.tendsto_eulerMascheroniSeq)
+-- ============================================================
+
+-- B3a 原函数: (t/2)(log(t/2π) − 1) 的导数 = (1/2)log(t/2π)
+theorem diagonal_antideriv (t : ℝ) (ht : t ≠ 0) :
+    HasDerivAt (fun x : ℝ => (x / 2) * (Real.log (x / (2 * Real.pi)) - 1))
+      ((1 / 2 : ℝ) * Real.log (t / (2 * Real.pi))) t := by
+  have hg : HasDerivAt (fun x : ℝ => Real.log (x / (2 * Real.pi)) - 1) (t⁻¹) t := by
+    have hc : t / (2 * Real.pi) ≠ 0 := by
+      intro hz
+      apply ht
+      have := congrArg (fun y : ℝ => y * (2 * Real.pi)) hz
+      field_simp at this
+      linarith
+    have hlog := Real.hasDerivAt_log hc
+    have hlin : HasDerivAt (fun x : ℝ => x / (2 * Real.pi)) ((2 * Real.pi)⁻¹) t := by
+      simpa [div_eq_mul_inv] using (hasDerivAt_id t).mul_const ((2 * Real.pi)⁻¹)
+    have hcomp := hlog.comp t hlin
+    have hder : (t / (2 * Real.pi))⁻¹ * (2 * Real.pi)⁻¹ = t⁻¹ := by
+      field_simp [ht]
+    have hcomp' : HasDerivAt (fun x : ℝ => Real.log (x / (2 * Real.pi))) (t⁻¹) t := by
+      convert hcomp using 1
+      field_simp [ht]
+    convert hcomp'.sub_const 1 using 1
+  have hhalf : HasDerivAt (fun x : ℝ => x / 2) (1 / 2 : ℝ) t := by
+    simpa [div_eq_mul_inv] using (hasDerivAt_id t).mul_const (1 / 2 : ℝ)
+  have hmul := hhalf.mul hg
+  convert hmul using 1
+  · field_simp [ht]
+    ring
+
+-- B3a 积分: ∫₁ᵀ (1/2)·log(t/2π) dt = (T/2)(log(T/2π) − 1) + (log(2π) + 1)/2
+theorem diagonal_integral (T : ℝ) (hT : 0 < T) :
+    (∫ t in (1 : ℝ)..T, (1 / 2 : ℝ) * Real.log (t / (2 * Real.pi))) =
+      (T / 2) * (Real.log (T / (2 * Real.pi)) - 1) + (Real.log (2 * Real.pi) + 1) / 2 := by
+  have hcont : ContinuousOn (fun x : ℝ => (1 / 2 : ℝ) * Real.log (x / (2 * Real.pi)))
+      (Set.uIcc 1 T) := by
+    have h1 : ContinuousOn (fun x : ℝ => x / (2 * Real.pi)) (Set.uIcc 1 T) := by
+      refine Continuous.continuousOn ?_
+      exact continuous_id.div continuous_const (by intro x; positivity)
+    have h2 : ∀ x ∈ Set.uIcc 1 T, x / (2 * Real.pi) ∈ ({0}ᶜ : Set ℝ) := by
+      intro x hx
+      have hmin : 0 < min (1 : ℝ) T := lt_min (by norm_num) hT
+      have hxpos : 0 < x := lt_of_lt_of_le hmin hx.1
+      simp [ne_of_gt (div_pos hxpos (by positivity : 0 < 2 * Real.pi))]
+    have hlog : ContinuousOn (fun x : ℝ => Real.log (x / (2 * Real.pi))) (Set.uIcc 1 T) := by
+      simpa using (Real.continuousOn_log.comp h1 h2)
+    simpa [mul_comm] using hlog.mul continuousOn_const
+  have hderiv : ∀ x ∈ Set.uIcc (1 : ℝ) T,
+      HasDerivAt (fun y : ℝ => (y / 2) * (Real.log (y / (2 * Real.pi)) - 1))
+        ((1 / 2 : ℝ) * Real.log (x / (2 * Real.pi))) x := by
+    intro x hx
+    have hmin : 0 < min (1 : ℝ) T := lt_min (by norm_num) hT
+    have hx0 : x ≠ 0 := ne_of_gt (lt_of_lt_of_le hmin hx.1)
+    exact diagonal_antideriv x hx0
+  rw [intervalIntegral.integral_eq_sub_of_hasDerivAt hderiv (ContinuousOn.intervalIntegrable hcont)]
+  have hG1 : (1 / 2) * (Real.log (1 / (2 * Real.pi)) - 1) =
+      -(Real.log (2 * Real.pi) + 1) / 2 := by
+    have hlog : Real.log (1 / (2 * Real.pi)) = -Real.log (2 * Real.pi) := by
+      rw [Real.log_div (by norm_num : (1 : ℝ) ≠ 0) (by positivity : (2 * Real.pi : ℝ) ≠ 0)]
+      rw [Real.log_one, zero_sub]
+    rw [hlog]
+    ring
+  rw [hG1]
+  ring
+
+-- B3b: 调和和 − log(N+1) → γ (欧拉常数) — 频率坐标的语言
+--   Real.eulerMascheroniSeq N = harmonic N − log(N+1) → γ
+--   harmonic N = Σ_{i<N} 1/(i+1) (mathlib 已证; ℚ 值 cast 到 ℝ)
+theorem harmonic_log_tendsto_euler :
+    Filter.Tendsto (fun N : ℕ => (harmonic N : ℝ) - Real.log ((N + 1 : ℕ) : ℝ))
+      Filter.atTop (𝓝 Real.eulerMascheroniConstant) := by
+  simpa [Real.eulerMascheroniSeq] using Real.tendsto_eulerMascheroniSeq
 
 
 structure AlignmentEnergyBridge where
