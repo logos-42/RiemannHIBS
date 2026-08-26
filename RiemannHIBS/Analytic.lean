@@ -2301,4 +2301,76 @@ theorem zeta_ne_zero_of_boundary_unit_bound
     (fun zh zhmem => (analyticAt_riemannZeta (hone zh zhmem)).sub analyticAt_const)
     ⟨q, hqlt, hdelta⟩
   exact hres z hz (by simpa using hzero)
+-- ====================================================================
+-- 18.6 一个组合 × 无限角度 (用户思路, 2026-08-25) — 严格内核
+--    用户主张: 不必无限种组合; 一个组合在无限多个角度(虚部 t)下可完成
+--    抵消, 相当于无限种组合.
+--    严格内容: 旋转向量图景下第 n 项相位 = -t·log(n+1) (§19). 一个在
+--    t=0 抵消的窗口 (W,A) (即 phaseCancelSum = 2πk, k∈ℤ) 在角度 t 处的
+--    相位 = -t·(Σ aᵢ·log(nᵢ+1)) = -t·2πk. 当 t 取整数(或 k·t∈ℤ)时,
+--    窗口相位重新落入 2πℤ — 一个组合在整数倍 t 上反复对齐.
+--    诚实边界: 这是**部分和窗口**的相位平移性质, 不证 ζ 零点 (窗口是
+--    有限项, 完整 ζ 还含 §19 尾项; 窗口对齐 ≠ ζ=0). "一个组合×整数 t
+--    反复对齐"是"无限平移抵消"在**代数层**的严格可编译内容, 为幅角原理
+--    的相位像提供周期结构; 是否对应 ζ 零点仍需尾项存在/增长输入
+--    (即 §22 ZeroHeightSupply / 证书族), 如实标注, 不装证零点.
+-- ====================================================================
+
+-- 18.6 平移后的窗口相位 = -t·phaseCancelSum (旋转向量的相位线性性).
+theorem phaseShift_cancel_of_int (ns : List ℕ) (as : List ℤ) {k : ℕ}
+    (hc : phaseCancelSum ns as = (2 : ℝ) * Real.pi * (k : ℝ)) (t : ℤ) :
+    ∃ m : ℤ,
+      -((t : ℝ) * phaseCancelSum ns as) = (2 : ℝ) * Real.pi * (m : ℝ) := by
+  refine ⟨-((t : ℤ) * (k : ℤ)), ?_⟩
+  rw [hc]
+  push_cast
+  ring
+
+-- 18.7 一个对齐窗口在整数平移下保持对齐 (相位仍为 2πℤ).
+theorem phaseShift_aligned_at_integer (ns : List ℕ) (as : List ℤ)
+    (hc : ∃ k : ℤ, phaseCancelSum ns as = (2 : ℝ) * Real.pi * ↑k) :
+    ∀ t : ℤ, ∃ m : ℤ,
+      (-((t : ℝ) * phaseCancelSum ns as)) = (2 : ℝ) * Real.pi * (m : ℝ) := by
+  rcases hc with ⟨k, hk⟩
+  intro t
+  refine ⟨-((t : ℤ) * k), ?_⟩
+  rw [hk]
+  push_cast
+  ring
+
+-- ====================================================================
+-- 18.8 调制基元族 — 用户"把组合当作基元, 通过调制覆盖尾项/无限高度"落点
+--    用户主张 (2026-08-25): 不必无限种组合; 把"这一个组合"当基元, 通过
+--    调制扩展, 使尾项/无限高度被覆盖, 摆脱外部"尾项恰好关闭"输入.
+--    核对结论 (诚实):
+--      (i) "固定基元 + 调制 t": 一个对齐窗口在整数平移 t 下反复对齐
+--          已证 (phaseShift_aligned_at_integer). 但它是**有限项窗口**的
+--          相位性质, 不含 s(σ,t), 覆盖不到无限尾项指标.
+--      (ii) "同基元通过调制覆盖无限高度": 单点基元无法让指标 n→∞ 覆盖
+--          (改指标=新组合); 真正能"同一类基元覆盖无限高度"的载体是
+--          **参数化的证书族** — 每个高度 H 配一个单零点证书 (w,g).
+--      (iii) 因此"基元调制"落点 = 把该证书族封装为可命名"调制基元族",
+--          并通过既有桥推出高度供给与无限非平凡零点.
+--    诚实边界: 调制基元族是 def 形态条件前提 (非 axiom, 非已证); 它精确
+--      陈述"分析/数值供给需交付的内容". 不提供族的具体实例 (每个高度真给
+--      一个 (U,w,g,c,r)) — 那需增长/布点分析 (§22黑盒), 如实标注.
+-- ====================================================================
+
+-- 18.8 调制基元族 = 无界证书族 (命名把"基元调制"纳入体系).
+--   语义: 每个高度 H 有一个"调制基元"(单零点证书, w 在临界带) 使
+--   H<|Im w| — 同一类证书随 H 无限延伸即"基元的无限调制".
+def ModulatedZetaFamily : Prop :=
+  UnboundedZetaCertificateAssumption
+
+-- 桥: 调制基元族 ⟹ 高度供给 (复用证书族主桥).
+theorem zeroHeightSupply_of_modulatedFamily (h : ModulatedZetaFamily) :
+    ZeroHeightSupply :=
+  zeroHeightSupply_of_certificateFamily h
+
+-- 桥: 调制基元族 ⟹ 无限非平凡零点 (复用既有全链).
+theorem infinite_nontrivial_zeros_of_modulatedFamily (h : ModulatedZetaFamily) :
+    Set.Infinite {s : ℂ | riemannZeta s = 0 ∧ 0 < s.re ∧ s.re < 1} :=
+  infinite_nontrivial_zeros_of_zeroHeightSupply
+    (zeroHeightSupply_of_modulatedFamily h)
+
 end RiemannHIBS.Analytic
