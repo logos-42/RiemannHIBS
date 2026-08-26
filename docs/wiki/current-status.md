@@ -67,6 +67,9 @@ stage: current
 | xiEntire_eq_mul_zeta / xiEntire_eq_zero_iff_zeta_zero | §27 | 临界带内 ξ(s)=(1/2)s(s−1)Γℝ(s)ζ(s) 显式公式 + 零点桥 ξ=0 ⟺ ζ=0 (Γℝ≠0 由 Gamma_ne_zero_of_re_pos) |
 | critical_leaf_diagonal_energy_term / critical_leaf_diagonal_energy_diverges | §11+ (Hardy) | 能量种子发散已证: 对角能量单项 ‖a_n‖²=(n+1)^{-1} 纯代数; 调和级数 ¬Summable — Hardy 1914 绕开 Stirling 的丰度来源 |
 | Real.gamma_ge_pow_mul_self | §29 | Γ 递推下界 (Hadamard 链 [G] 环节): Γ(x+n) ≥ xⁿ·Γ(x) 对 x≥1, 经 Real.Gamma_add_one 归纳迭代 — 完全初等, 无需 Stirling |
+| rotVecOnLine / dirichletPartialSumLine | §31 | 缺口 A 技术模板: 临界线旋转向量与有限 Dirichlet 部分和的显式定义 |
+| integral_rotating_atom | §31 | 旋转积分原子: ∫exp(iΔx)dx = (e^{iΔT}−e^{−iΔT})/(iΔ), Δ≠0 (自证 HasDerivAt 原函数; mathlib 同名引理因 module 系统迁移暂不可见) |
+| energy_single_term_integral | §31 | 对角能量积分: ∫‖v_n‖² = 2T·(n+1)^{-2σ} — "log 积累"进入计算的精确位置; N→∞ 后对角和 Σn^{-2σ} 在 σ=1/2 发散为 Σn^{-1} |
 | infinitely_many_trivial_zeros | §15 | 零点集合为无限集: 单射嵌入 n↦−2(n+1), 每个是平凡零点 ζ(−2(n+1))=0 |
 | argumentPrinciple_single_zero | §16 | 隐数坐标系幅角原理原子: ∮dz/(z−w)=2πi (w 在圆内, mathlib circleIntegral) |
 | envelope_circle_param | §16 | 圆 |z−c|=r 在相位包络坐标 = θ↦c+r·e^{iθ} (hEvalPhase 即圆参数化) |
@@ -114,6 +117,7 @@ stage: current
 - **阶段① 局部存在性的 Hardy 数值路线阻塞 (2026-08-25)**: 三阶段路线中"有限高度零点证书"(Z(a)Z(b)<0 + IVT ⟹ Z(t)=0 ⟹ ζ(1/2+it)=0) 需要严格区间算术验证数值不等式 — mathlib 当前无 interval arithmetic 基建, 浮点计算不可作 Lean 证明. 已落地替代接口: `ZetaSimpleZeroCertificate` 把数值路线终点表达为纯代数谓词, 任何供给路线 (Hardy 数值/Stirling 组装/Hadamard 无限性反推) 到手后全下游自动接通
 - **幅角原理完成度**: §23 已落地单零点幂因子绕数原子 (∮f'/f = 2πi·m); 完整幅角原理 = 该原子 + 有限零点集枚举 (多零点求和), Riemann–von Mangoldt 还需 Stirling 增长估计 — 后两者仍未形式化
 - **§25 语义澄清 (2026-08-25)**: `UnboundedZetaCertificateAssumption` 是外部分析输入的条件谓词 (def 形态, 非 axiom 非已证) — §25 真正证明的是"若任意高处都能提供严格单零点证书, 则非平凡零点无限多", 尚未证明"任意高处的证书存在"; 后者仍需 Hardy / Riemann–von Mangoldt / 严格数值隔离. 当前全链: CertificateFamily ⟹ Supply ⟹ HeightGrowth ⟹ 无限; CertificateFamily ⟹ Supply ⟹ CountGrowth ⟹ HiddenCountGrowth ⟹ 无限
+- **§31 缺口 A 地基状态 (2026-08-26)**: 有限 Dirichlet 多项式的 L² 均值展开已落地前两块 (旋转积分原子 + 对角能量积分); 双重和展开主定理 (ΣΣ w_m w_n ∫exp 形态) 与取极限步骤 (Abel/一致收敛控制) 未形式化. 技术发现: mathlib 正在迁移 module 系统, Analysis/SpecialFunctions/Integrals/Basic 的部分定理暂非 public, 相关引理需自证
 - **Hadamard 组合链依赖图状态 (§28/§29, 2026-08-26)**: [A]条带内ζ上界(η/Abel量化)未形式化 → [B]Γ粗上界(积分拆分)未形式化 → [C]ξ上界组合依赖AB → [D]Borel–Carathéodory **✅mathlib已有** (Complex.borelCaratheodory) → [E]BC应用+Cauchy估计→G常数→h=e^{bs} 未形式化 → [F]对称性强迫多项式 (轻,代数,xiEntire_one_sub已备) → [G]**✅Γ递推下界已证** (Real.gamma_ge_pow_mul_self) → [H]实轴矛盾组装(轻). 两端已有基建, 中段[A][B][E]是剩余工作量; B-C链补的是Hadamard侧反证组合(Hadamard版缺口B), 不补Hardy均值公式缺口(A)
 - **Hadamard 路线初等化发现 (2026-08-26, §27)**: 非平凡零点无限多的整函数载体 ξ 已落地 — 关键是 mathlib 的 completedRiemannZeta₀ (去极点辅助整函数) 经代数变形 ξ=(1/2)s(s−1)Λ₀+1/2 使整性/对称性免费. **Stirling 并非丰度必经之路**: 增长上界只需 Euler 积分拆分粗界 |Γ(s)|≤e^{O(|s|log|s|)}, 实轴下界只需 Γ 递推 Γ(x+n)≥xⁿΓ(x) — 全初等. 组合链 (Borel–Carathéodory → logDeriv 常数 → 对称强制多项式 → 实轴矛盾) 未形式化, mathlib BorelCaratheodory.lean 已侦察存在
 - **零点隔离完成度 (§26)**: 排除半边已落地 (`no_zero_of_boundary_dominance` 最大模原理路线); 存在半边 (主导线性项 ⟹ 恰一个零点) 需要 winding number 整数性/同伦不变性 — mathlib 缺失该理论 (已侦察确认), 完整 Rouché 待基建

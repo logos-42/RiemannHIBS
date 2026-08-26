@@ -39,3 +39,4 @@
 | 2026-08-26 | feat | §29 Hadamard 链组件 [G] 落地 (无 sorry): `Real.gamma_ge_pow_mul_self` — Γ(x+n) ≥ xⁿ·Γ(x) 对 x≥1, Real.Gamma_add_one 归纳迭代 + mul_le_mul 单调链接, 完全初等无 Stirling; 同节登记 Borel–Carathéodory 依赖图全状态 ([D]BC定理 mathlib 已有 Complex.borelCaratheodory, [G]本轮落地, [A][B][E] 中段未形式化); 明确 B-C 链补 Hadamard 侧反证组合、不补 Hardy 均值公式缺口 |
 | 2026-08-25 | research | 频率丰度机制: 能量=调和发散, 临界线=能量临界点; Abundance.lean (频率坐标骨架, 无 sorry); fig11 数值验证 δ̄=0.9999 |
 | 2026-08-25 | research | 能量无界已证: harmonic_sum_unbounded (调和发散 Lean 化, Hardy 侧); 均值定理桥 draft |
+| 2026-08-26 | feat | §31 缺口 A 技术模板地基落地 (无 sorry 编译通过): rotVecOnLine/dirichletPartialSumLine 定义 (与 §19 旋转向量同族); integral_rotating_atom 自证 (∫exp(iΔx)=(e^{iΔT}−e^{−iΔT})/(iΔ); 因 mathlib module 系统迁移 integral_exp_mul_complex 暂不可见, 经 HasDerivAt.comp_ofReal + div_const + mul_div_cancel_right₀ 自建原函数论证); energy_single_term_integral (∫‖v_n‖²=2T(n+1)^{-2σ}, 经 norm_exp 纯虚模一 + rpow_add) — 对角能量项是 log 积累进入均值计算的精确位置; 待办: 双重和主展开 + 极限传递 |

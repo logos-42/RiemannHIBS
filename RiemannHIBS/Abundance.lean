@@ -16,8 +16,15 @@
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Data.Real.Basic
 import Mathlib.Order.Filter.AtTopBot.Archimedean
+import Mathlib.NumberTheory.LSeries.RiemannZeta
+import Mathlib.NumberTheory.LSeries.HurwitzZetaValues
+import Mathlib.Analysis.Analytic.IsolatedZeros
+import Mathlib.Analysis.Normed.Module.Connected
+import Mathlib.LinearAlgebra.Complex.FiniteDimensional
+import Mathlib.Analysis.Complex.CauchyIntegral
 
 open scoped Topology
+open Set
 
 namespace RiemannHIBS.Abundance
 
@@ -155,8 +162,61 @@ theorem harmonic_sum_unbounded : ∀ B : ℝ, ∃ N : ℕ,
 -- 零点与 ζ 的一一对应 (概念注释, 非定理):
 --   若临界线零点无限, 则零点集 {1/2 + iγ_n} 按虚部升序与 ℕ 双射 —
 --   每个零点唯一对应一个自然数 (可枚举), 每个自然数唯一对应一个零点.
---   严格化需: 零点孤立 (mathlib 有 riemannZeta 解析性可推出) +
---   亚纯零点无聚点 + 排序定理. 未形式化, 如实标注.
+--   严格化需: 零点孤立 (下证) + 亚纯零点无聚点 + 排序定理. 未形式化, 如实标注.
+
+-- ====================================================================
+-- 7. 零点孤立: ζ 的每个非平凡零点是孤立零点 (identity theorem)
+--    配合 §5 能量无界 (调和发散), 这是"零点无限 + 零点 ↔ ℕ 一一对应"
+--    的支撑: 孤立零点 ⟹ 去心邻域无其他零点; 无限 + 孤立 ⟹ 可枚举.
+-- ====================================================================
+
+-- ζ 在 s ≠ 1 处解析 (DifferentiableOn → AnalyticAt)
+theorem zeta_analyticAt (s : ℂ) (hs1 : s ≠ 1) : AnalyticAt ℂ riemannZeta s := by
+  have hdU : DifferentiableOn ℂ riemannZeta ({1}ᶜ : Set ℂ) := by
+    intro z hz
+    exact (differentiableAt_riemannZeta hz).differentiableWithinAt
+  exact hdU.analyticAt (isOpen_compl_singleton.mem_nhds hs1)
+
+-- ζ(2) ≠ 0 (π²/6 ≠ 0) — 用于排除"恒零分支"
+theorem zeta_two_ne_zero : riemannZeta 2 ≠ 0 := by
+  rw [riemannZeta_two]
+  exact div_ne_zero (pow_ne_zero 2 (Complex.ofReal_ne_zero.mpr Real.pi_ne_zero)) (by norm_num)
+
+-- 非平凡零点孤立: 每个零点 s ≠ 1 的去心邻域内无其他零点
+--   证明: AnalyticAt.eventually_eq_zero_or_eventually_ne_zero 给出
+--     "恒零分支 ∨ 去心非零分支"; 恒零分支被 identity theorem 排除
+--     (ℂ∖{1} 连通 + ζ(2) ≠ 0 ⟹ ζ 不恒零).
+theorem zeta_zero_isolated (s : ℂ) (hs1 : s ≠ 1) (_hz : riemannZeta s = 0) :
+    ∀ᶠ z in 𝓝[≠] s, riemannZeta z ≠ 0 := by
+  have hf : AnalyticAt ℂ riemannZeta s := zeta_analyticAt s hs1
+  rcases hf.eventually_eq_zero_or_eventually_ne_zero with hzero | hne
+  · -- 恒零分支: identity theorem ⟹ ζ 在 ℂ∖{1} 恒零 ⟹ ζ(2) = 0 矛盾
+    exfalso
+    have hfreq : ∃ᶠ z in 𝓝[≠] s, riemannZeta z = 0 :=
+      (hzero.filter_mono nhdsWithin_le_nhds).frequently
+    let U : Set ℂ := {z : ℂ | z ≠ 1}
+    have hfU : AnalyticOnNhd ℂ riemannZeta U := by
+      intro z hz
+      exact zeta_analyticAt z hz
+    have hU : IsPreconnected U := by
+      have hrank : 1 < Module.rank ℝ ℂ := by
+        rw [Complex.rank_real_complex]
+        norm_num
+      exact (isPathConnected_compl_singleton_of_one_lt_rank hrank (1 : ℂ)).isConnected.isPreconnected
+    have hEq : EqOn riemannZeta 0 U :=
+      hfU.eqOn_zero_of_preconnected_of_frequently_eq_zero hU hs1 hfreq
+    have hz2 : riemannZeta 2 = 0 := hEq (by norm_num : (2 : ℂ) ≠ 1)
+    exact zeta_two_ne_zero hz2
+  · exact hne
+
+-- ====================================================================
+-- 8. Draft (如实标注): 零点可枚举性
+--    孤立零点 (上) + 零点无聚点 (identity theorem 推论) ⟹ 零点集
+--    是 ℂ 的离散子集; ℂ 是第二可数空间, 孤立点集可数 (mathlib 无
+--    现成引理, 未形式化). 若再配合 §5 能量无界 (调和发散 ⟹ 零点
+--    无限, Hardy 桥), 则零点按虚部升序 γ₁<γ₂<… 与 ℕ 双射 —
+--    "零点与 ζ 一一对应"的完整链条. 排序定理本身未形式化.
+-- ====================================================================
 
 -- ====================================================================
 -- 4. Draft (如实标注): 零点丰度的频率机制
