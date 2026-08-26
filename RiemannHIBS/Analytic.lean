@@ -2659,7 +2659,10 @@ theorem integral_rotating_atom (T Δ : ℝ) (hΔ : Δ ≠ 0) :
     apply hΔ
     have h5 : (Complex.I)⁻¹ * (Complex.I * Δ) = Δ :=
       inv_mul_cancel_left₀ Complex.I_ne_zero Δ
-    rw [← h5, hz, mul_zero]
+    rw [hz] at h5
+    apply Complex.ofReal_injective
+    rw [h5.symm]
+    simp
   -- 原函数 x ↦ exp((I·Δ)x)/(I·Δ), 导数即被积函数.
   -- (mathlib 同名引理因 module 系统迁移暂不可见, 自证; 数学内容一行.)
   have hd : ∀ x ∈ Set.uIcc (-T) T,
@@ -2670,24 +2673,30 @@ theorem integral_rotating_atom (T Δ : ℝ) (hΔ : Δ ≠ 0) :
     intro x _hx
     -- ℂ 域内: exp∘(c·id) 的导数, 再除常数, 再限制到 ℝ 变量 (comp_ofReal)
     have hin : HasDerivAt (fun w : ℂ => (Complex.I * Δ) * w)
-        ((Complex.I * Δ) * 1) ((x : ℝ) : ℂ) :=
-      HasDerivAt.const_mul _ (hasDerivAt_id _)
+        (Complex.I * Δ) ((x : ℝ) : ℂ) := by
+      convert HasDerivAt.const_mul _ (hasDerivAt_id ((x : ℝ) : ℂ)) using 1
+      simp
     have hcomp1 := (Complex.hasDerivAt_exp
       ((Complex.I * Δ) * ((x : ℝ) : ℂ))).comp _ hin
     have hdiv := hcomp1.div_const (Complex.I * Δ)
     simp only [Function.comp_apply, mul_one] at hdiv
-    rw [mul_div_cancel₀ _ hc] at hdiv
-    exact hdiv
+    rw [mul_div_cancel_right₀ _ hc] at hdiv
+    exact hdiv.comp_ofReal
   -- 被积函数连续 (const · ofReal 的 exp)
   have hcfun : Continuous (fun x : ℝ =>
       Complex.exp ((Complex.I * Δ) * ((x : ℝ) : ℂ))) :=
     Complex.continuous_exp.comp
       (Continuous.mul continuous_const Complex.continuous_ofReal)
-  rw [intervalIntegral.integral_eq_sub_of_hasDerivAt hd hcfun.intervalIntegrable]
+  rw [intervalIntegral.integral_eq_sub_of_hasDerivAt hd
+    (hcfun.intervalIntegrable (-T) T)]
   rw [sub_div]
   congr 1
   · rw [show ((Complex.I * Δ) * (T : ℝ)) = Complex.I * (Δ * T) from by ring]
-  · rw [show ((Complex.I * Δ) * (-(T : ℝ))) = -(Complex.I * (Δ * T)) from by ring]
+  · have h2 : ((Complex.I * Δ) * (((-T : ℝ) : ℂ)))
+        = -(Complex.I * (Δ * T)) := by
+      push_cast [mul_assoc]
+      ring
+    rw [h2]
 
 -- 31.2 单项能量积分 (对角贡献): ∫‖v_n‖² = 2T·(n+1)^{−2σ}.
 --   |exp(纯虚)| = 1 ⟹ ‖v_n(x)‖ = (n+1)^{−σ} 常数; 常数积分 = 2T·常数.
@@ -2711,9 +2720,8 @@ theorem energy_single_term_integral (n : ℕ) (σ T : ℝ) :
     simp only [Real.exp_zero, mul_one]
   have hsq : ∀ x : ℝ, ‖rotVecOnLine σ n x‖ ^ 2 = ((n + 1 : ℝ)) ^ (-(2 * σ)) := by
     intro x
-    have hxpos : (0 : ℝ) ≤ ((n + 1 : ℝ)) :=
-      Nat.cast_nonneg (n + 1)
-    rw [hnorm x, Real.rpow_mul hxpos]
+    have hxpos : (0 : ℝ) < ((n + 1 : ℝ)) := by positivity
+    rw [hnorm x, pow_two, ← Real.rpow_add hxpos]
     congr 1
     ring
   have hint2 : (∫ x in (-T)..T, ‖rotVecOnLine σ n x‖ ^ 2)
