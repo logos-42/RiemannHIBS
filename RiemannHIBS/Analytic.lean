@@ -24,6 +24,7 @@ import Mathlib.Analysis.SpecialFunctions.Pow.Complex
 import Mathlib.Analysis.Complex.Trigonometric
 import Mathlib.MeasureTheory.Integral.CircleIntegral
 import Mathlib.Analysis.Complex.CauchyIntegral
+import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
 import Mathlib.Analysis.Complex.AbsMax
 import Mathlib.Analysis.Complex.RemovableSingularity
 import Mathlib.Analysis.Calculus.FDeriv.Analytic
@@ -2625,5 +2626,70 @@ theorem Real.gamma_ge_pow_mul_self {x : ℝ} (hx : 1 ≤ x) (n : ℕ) :
         ≥ x * Real.Gamma ((x : ℝ) + k) := hge1
       _ ≥ x * (x ^ k * Real.Gamma x) := hge2
       _ = x ^ k * x * Real.Gamma x := by ring
+
+-- ====================================================================
+-- 31. 缺口 A 技术模板 — 有限 Dirichlet 多项式的 L² 均值展开 (无 sorry)
+--    地位: Hardy 路线缺口 A ("均值公式") 的第一层可编译地基.
+--    数学内容: 线性组合的模平方按双线性展开成 对角项 + 交叉项;
+--      对角项给能量积累 (∫|v_n|² = 2T·(n+1)^{-2σ}), 交叉项是
+--      旋转振荡积分 (∫exp(iΔt) 型). 这正是 "log 积累" 从哪里
+--      进入计算的精确位置: 取极限 N→∞ 后对角和 Σn^{-2σ}
+--      在临界线 σ=1/2 处发散为 Σn^{-1}.
+--    ───────────────────────────────────────────────────────────
+--    诚实边界: 本节全部在**有限和**内展开 (无取极限步骤);
+--      临界线上的极限传递 (真正缺口 A) 需要 Abel/一致收敛控制,
+--      未形式化. σ>1 区间的极限版本是下一步 (绝对收敛 Fubini).
+-- ====================================================================
+
+-- 31.0 定义: 临界线/任意水平线上第 n 个 Dirichlet 旋转向量
+--   与其部分和 (与 §19 eta_term_rotating_vector 同族形态).
+def rotVecOnLine (σ : ℝ) (n : ℕ) (t : ℝ) : ℂ :=
+  (((n + 1 : ℝ)) ^ (-σ) : ℝ) * Complex.exp (-(Complex.I * t) * Real.log ((n + 1 : ℝ)))
+
+def dirichletPartialSumLine (N : ℕ) (σ : ℝ) (t : ℝ) : ℂ :=
+  ∑ n ∈ Finset.range N, rotVecOnLine σ n t
+
+-- 31.1 旋转积分原子 (Δ ≠ 0): ∫_{−T}^{T} e^{(I·Δ)x} dx = (e^{IΔT} − e^{−IΔT})/(IΔ).
+theorem integral_rotating_atom (T Δ : ℝ) (hΔ : Δ ≠ 0) :
+    (∫ x in (-T)..T, Complex.exp ((Complex.I * Δ) * x))
+      = (Complex.exp (Complex.I * (Δ * T))
+        - Complex.exp (-(Complex.I * (Δ * T)))) / (Complex.I * Δ) := by
+  have hc : (Complex.I * Δ) ≠ 0 := by
+    simpa [Complex.ext_iff] using hΔ
+  exact intervalIntegral.integral_exp_mul_complex hc
+
+-- 31.2 单项能量积分 (对角贡献): ∫‖v_n‖² = 2T·(n+1)^{−2σ}.
+--   |exp(纯虚)| = 1 ⟹ ‖v_n(x)‖ = (n+1)^{−σ} 常数; 常数积分 = 2T·常数.
+theorem energy_single_term_integral (n : ℕ) (σ T : ℝ) :
+    (∫ x in (-T)..T, ‖rotVecOnLine σ n x‖ ^ 2)
+      = 2 * T * (((n + 1 : ℝ)) ^ (-(2 * σ))) := by
+  have hlogre : ∀ x : ℝ,
+      (-(Complex.I * x) * Real.log ((n + 1 : ℝ))).re = 0 := by
+    intro x
+    simp [Complex.mul_re, Complex.neg_re, Complex.I_re, Complex.I_im]
+  have hnorm : ∀ x : ℝ,
+      ‖rotVecOnLine σ n x‖ = ((n + 1 : ℝ)) ^ (-σ) := by
+    intro x
+    unfold rotVecOnLine
+    rw [Complex.norm_mul]
+    have hw : ‖(((((n + 1 : ℝ)) ^ (-σ) : ℝ) : ℂ))‖ = ((n + 1 : ℝ)) ^ (-σ) := by
+      rw [Complex.norm_real, Real.norm_eq_abs]
+      exact abs_of_nonneg (le_of_lt
+        (Real.rpow_pos_of_pos (by exact_mod_cast Nat.succ_pos n) _))
+    rw [hw, Complex.norm_exp, hlogre x]
+    simp only [Real.exp_zero, mul_one]
+  have hsq : ∀ x : ℝ, ‖rotVecOnLine σ n x‖ ^ 2 = ((n + 1 : ℝ)) ^ (-(2 * σ)) := by
+    intro x
+    have hxpos : (0 : ℝ) ≤ ((n + 1 : ℝ)) := by exact_mod_cast Nat.succ_pos n
+    rw [hnorm x, Real.rpow_mul hxpos]
+    congr 1
+    ring
+  have hint : (∫ x in (-T)..T, ‖rotVecOnLine σ n x‖ ^ 2)
+      = ∫ x in (-T)..T, ((n + 1 : ℝ)) ^ (-(2 * σ)) := by
+    refine intervalIntegral.integral_congr ?_
+    intro x hx
+    exact hsq x
+  rw [hint, intervalIntegral.integral_const]
+  simp [two_mul]
 
 end RiemannHIBS.Analytic
