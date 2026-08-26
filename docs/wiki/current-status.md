@@ -207,3 +207,15 @@ stage: current
 - `experiments/envelope_critical.png` 临界线圆周 |w|=√e 与零点共圆验证 (E1)
 - `experiments/envelope_plane.png` 复平面/包络平面视图
 - `experiments/envelope_surface.png` 包络曲面 w=log z (螺旋柱面/万有覆盖)
+
+## 频率丰度机制 (2026-08-25, 新方向)
+- 能量: 每项 |(n+1)^{-1/2}|² = (n+1)^{-1}, 总能量 = 调和级数 (发散)
+- 临界线 = 能量临界点: Σ(n+1)^{-2σ} 收敛 ⟺ σ > 1/2; σ=1/2 处恰好发散
+- 机制: 零点间距 Δγ ≈ 2π/log(γ/2π) (带宽倒数), 数值 δ̄=0.9999 (fig11)
+- N(T) ≈ (T/2π)(log(T/2π) − 1) 复现, 无需 Stirling
+- 已 Lean 化 (Abundance.lean, 独立模块, 无 sorry):
+  freq_span_telescopes (ΣΔfreq = log(N+1) 精确) / freq_gap_le_inv /
+  log_le_harmonic_sum (log(N+1) ≤ 调和和)
+- 诚实: 能量发散 ⟹ 零点无限 (Hardy 1914, 经典已证); 能量发散 ⟹ 丰度
+  (von Mangoldt, 已证); 能量发散 ⟹ RH (位置全称) — 不能, 能量只约束
+  临界线上的值大小, 不排除线外零点
