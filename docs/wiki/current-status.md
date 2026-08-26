@@ -215,7 +215,8 @@ stage: current
 - N(T) ≈ (T/2π)(log(T/2π) − 1) 复现, 无需 Stirling
 - 已 Lean 化 (Abundance.lean, 独立模块, 无 sorry):
   freq_span_telescopes (ΣΔfreq = log(N+1) 精确) / freq_gap_le_inv /
-  log_le_harmonic_sum (log(N+1) ≤ 调和和)
+  log_le_harmonic_sum (log(N+1) ≤ 调和和) /
+  harmonic_sum_unbounded (能量无界: ∀B, ∃N, B<Σ1/(n+1) — 调和发散已证)
 - 诚实: 能量发散 ⟹ 零点无限 (Hardy 1914, 经典已证); 能量发散 ⟹ 丰度
   (von Mangoldt, 已证); 能量发散 ⟹ RH (位置全称) — 不能, 能量只约束
   临界线上的值大小, 不排除线外零点
