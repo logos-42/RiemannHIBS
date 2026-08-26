@@ -2655,8 +2655,39 @@ theorem integral_rotating_atom (T Δ : ℝ) (hΔ : Δ ≠ 0) :
       = (Complex.exp (Complex.I * (Δ * T))
         - Complex.exp (-(Complex.I * (Δ * T)))) / (Complex.I * Δ) := by
   have hc : (Complex.I * Δ) ≠ 0 := by
-    simpa [Complex.ext_iff] using hΔ
-  exact intervalIntegral.integral_exp_mul_complex hc
+    intro hz
+    apply hΔ
+    have h5 : (Complex.I)⁻¹ * (Complex.I * Δ) = Δ :=
+      inv_mul_cancel_left₀ Complex.I_ne_zero Δ
+    rw [← h5, hz, mul_zero]
+  -- 原函数 x ↦ exp((I·Δ)x)/(I·Δ), 导数即被积函数.
+  -- (mathlib 同名引理因 module 系统迁移暂不可见, 自证; 数学内容一行.)
+  have hd : ∀ x ∈ Set.uIcc (-T) T,
+      HasDerivAt (fun y : ℝ =>
+          Complex.exp ((Complex.I * Δ) * ((y : ℝ) : ℂ))
+            / (Complex.I * Δ))
+        (Complex.exp ((Complex.I * Δ) * ((x : ℝ) : ℂ))) x := by
+    intro x _hx
+    -- ℂ 域内: exp∘(c·id) 的导数, 再除常数, 再限制到 ℝ 变量 (comp_ofReal)
+    have hin : HasDerivAt (fun w : ℂ => (Complex.I * Δ) * w)
+        ((Complex.I * Δ) * 1) ((x : ℝ) : ℂ) :=
+      HasDerivAt.const_mul _ (hasDerivAt_id _)
+    have hcomp1 := (Complex.hasDerivAt_exp
+      ((Complex.I * Δ) * ((x : ℝ) : ℂ))).comp _ hin
+    have hdiv := hcomp1.div_const (Complex.I * Δ)
+    simp only [Function.comp_apply, mul_one] at hdiv
+    rw [mul_div_cancel₀ _ hc] at hdiv
+    exact hdiv
+  -- 被积函数连续 (const · ofReal 的 exp)
+  have hcfun : Continuous (fun x : ℝ =>
+      Complex.exp ((Complex.I * Δ) * ((x : ℝ) : ℂ))) :=
+    Complex.continuous_exp.comp
+      (Continuous.mul continuous_const Complex.continuous_ofReal)
+  rw [intervalIntegral.integral_eq_sub_of_hasDerivAt hd hcfun.intervalIntegrable]
+  rw [sub_div]
+  congr 1
+  · rw [show ((Complex.I * Δ) * (T : ℝ)) = Complex.I * (Δ * T) from by ring]
+  · rw [show ((Complex.I * Δ) * (-(T : ℝ))) = -(Complex.I * (Δ * T)) from by ring]
 
 -- 31.2 单项能量积分 (对角贡献): ∫‖v_n‖² = 2T·(n+1)^{−2σ}.
 --   |exp(纯虚)| = 1 ⟹ ‖v_n(x)‖ = (n+1)^{−σ} 常数; 常数积分 = 2T·常数.
@@ -2680,16 +2711,17 @@ theorem energy_single_term_integral (n : ℕ) (σ T : ℝ) :
     simp only [Real.exp_zero, mul_one]
   have hsq : ∀ x : ℝ, ‖rotVecOnLine σ n x‖ ^ 2 = ((n + 1 : ℝ)) ^ (-(2 * σ)) := by
     intro x
-    have hxpos : (0 : ℝ) ≤ ((n + 1 : ℝ)) := by exact_mod_cast Nat.succ_pos n
+    have hxpos : (0 : ℝ) ≤ ((n + 1 : ℝ)) :=
+      Nat.cast_nonneg (n + 1)
     rw [hnorm x, Real.rpow_mul hxpos]
     congr 1
     ring
-  have hint : (∫ x in (-T)..T, ‖rotVecOnLine σ n x‖ ^ 2)
+  have hint2 : (∫ x in (-T)..T, ‖rotVecOnLine σ n x‖ ^ 2)
       = ∫ x in (-T)..T, ((n + 1 : ℝ)) ^ (-(2 * σ)) := by
     refine intervalIntegral.integral_congr ?_
-    intro x hx
+    intro x _hx
     exact hsq x
-  rw [hint, intervalIntegral.integral_const]
+  rw [hint2, intervalIntegral.integral_const]
   simp [two_mul]
 
 end RiemannHIBS.Analytic
