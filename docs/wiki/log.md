@@ -43,3 +43,4 @@
 | 2026-08-25 | research | 零点孤立已证: zeta_zero_isolated (identity theorem); 零点↔ℕ 一一对应孤立侧闭环; fig12 |
 | 2026-08-26 | research | draft 全部清理: 零点可数 (zero_set_countable) + 双射枚举 (zero_enumeration_of_infinite); Hardy 桥/丰度机制结构体化 (外部输入显式声明); 多值 log 单值化 (exp_log_sheet, 叶差 2πiℤ) |
 | 2026-08-26 | research | B 桥原子层: 临界叶能量展开 Lean 形式化 (对角调和+交叉旋转积分+上界); 发现逐项上界过粗, 交叉相消=真实缺口; fig13 |
+| 2026-08-26 | research | B1 交叉相消: 4 原子 Lean 化 (min 界/log 引理/近邻计数/分裂上界); 截断 X(t)=√(t/2π) 机制数值确认 (E/主项→0.5, 交叉/主项→0); fig13 v2 |

@@ -239,6 +239,15 @@ stage: current
 - 诚实发现 (B 桥推进中): 逐项三角不等式上界在相邻频率 (Δ→0) 过粗,
   交叉相消 (Hardy–Littlewood 型 L² 论证) 是真实分析缺口, 未形式化;
   隐数坐标贡献 = 把交叉项写成旋转积分精确形态 (已证), 相消估计本身仍开放
+
+- B1 交叉相消原子 (Abundance §12): rotating_integral_bound_min
+  (|∫e^{iΔt}| ≤ min(2T, 2/|Δ|)) + log_one_add_ge_half (x/2 ≤ log(1+x))
+  + near_frequency_bound (频率差 c 内含 ~m·c 项) + cross_pair_bound_min
+  (每对交叉分裂上界)
+- B1 数学链 (fig13 v2 数值验证): t 依赖截断 X(t)=√(t/2π) —
+  E(T)/主项 → 0.5 (单侧对角 = (T/2)log(T/2π), 主项半), 交叉上界/主项
+  → 0 (截断使交叉 O(√T·log T) 次主导于 T·log T) — 交叉相消机制确认;
+  完整双和估计 (Hardy–Littlewood 型) 未形式化, 如实标注
 - 诚实: 能量发散 ⟹ 零点无限 (Hardy 1914, 经典已证); 能量发散 ⟹ 丰度
   (von Mangoldt, 已证); 能量发散 ⟹ RH (位置全称) — 不能, 能量只约束
   临界线上的值大小, 不排除线外零点
