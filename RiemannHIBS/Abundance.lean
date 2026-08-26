@@ -510,6 +510,116 @@ theorem cross_energy_bound (m n : ℕ) (hmn : m ≠ n) (T : ℝ) :
 #check cross_energy_bound
 
 -- 12.8 B 桥声明: 能量 ⟹ 对齐 (AlignmentEnergyBridge)
+-- 12.9 min 界: |∫_{−T}^{T} e^{iΔt}| ≤ min(2T, 2/|Δ|)
+--     (近邻 Δ≈0: 区间长 2T 界; 远邻: 频率分离 2/|Δ| 界 — 交叉相消的分裂基础)
+theorem rotating_integral_bound_min (T Δ : ℝ) (hT : 0 ≤ T) (hΔ : Δ ≠ 0) :
+    ‖∫ x in (-T)..T, Complex.exp ((Complex.I * Δ) * (x : ℂ))‖ ≤ min (2 * T) (2 / ‖Δ‖) := by
+  apply le_min
+  · -- 平凡界: ‖∫e^{iΔt}‖ ≤ ∫‖e^{iΔt}‖ = 2T
+    have hnorm : ∀ x ∈ Set.uIcc (-T) T, ‖Complex.exp ((Complex.I * Δ) * (x : ℂ))‖ = 1 := by
+      intro x hx
+      simpa [Complex.ofReal_mul, mul_comm, mul_assoc, mul_left_comm] using
+        (Complex.norm_exp_ofReal_mul_I (Δ * x))
+    calc
+      ‖∫ x in (-T)..T, Complex.exp ((Complex.I * Δ) * (x : ℂ))‖
+          ≤ |∫ x in (-T)..T, ‖Complex.exp ((Complex.I * Δ) * (x : ℂ))‖| := by
+            exact intervalIntegral.norm_integral_le_abs_integral_norm
+              (f := fun x : ℝ => Complex.exp ((Complex.I * Δ) * (x : ℂ))) (a := -T) (b := T)
+      _ = ∫ x in (-T)..T, ‖Complex.exp ((Complex.I * Δ) * (x : ℂ))‖ := by
+            rw [abs_of_nonneg]
+            exact intervalIntegral.integral_nonneg (by linarith) (fun u _hu => norm_nonneg _)
+      _ = 2 * T := by
+            rw [intervalIntegral.integral_congr hnorm]
+            rw [intervalIntegral.integral_const]
+            rw [smul_eq_mul]
+            ring
+  · exact rotating_integral_bound T Δ hΔ
+
+-- 12.10 log 下界: x/2 ≤ log(1+x) 对 0 ≤ x ≤ 1
+--     (近邻计数: |log((n+1)/(m+1))| ≤ c ⟹ 间距 ~ m·c 的个数估计)
+theorem log_one_add_ge_half (x : ℝ) (hx0 : 0 ≤ x) (hx1 : x ≤ 1) :
+    x / 2 ≤ Real.log (1 + x) := by
+  -- log(1+x) = −log(1/(1+x)) ≥ −(1/(1+x) − 1) = x/(1+x) ≥ x/2
+  have hpos : 0 < 1 + x := by linarith
+  have hlog : Real.log (1 + x) = -Real.log ((1 + x)⁻¹) := by
+    rw [Real.log_inv]
+    simp
+  rw [hlog]
+  -- −log y ≥ x/(1+x) 其中 y = (1+x)⁻¹: log y ≤ y − 1 ⟹ −log y ≥ 1 − y
+  have hle : Real.log ((1 + x)⁻¹) ≤ (1 + x)⁻¹ - 1 :=
+    Real.log_le_sub_one_of_pos (inv_pos.2 hpos)
+  have hge : -(Real.log ((1 + x)⁻¹)) ≥ 1 - (1 + x)⁻¹ := by linarith
+  have hfrac : 1 - (1 + x)⁻¹ = x / (1 + x) := by
+    field_simp
+    ring
+  rw [hfrac] at hge
+  -- x/(1+x) ≥ x/2 当 1+x ≤ 2 (x ≤ 1)
+  have hden : 1 + x ≤ 2 := by linarith
+  have hx2 : x / (1 + x) ≥ x / 2 := by
+    field_simp
+    nlinarith [mul_le_mul_of_nonneg_right hx1 hx0]
+  linarith
+
+#check rotating_integral_bound_min
+#check log_one_add_ge_half
+
+-- 12.11 近邻频率计数: log(n+1) − log(m+1) ≤ c ⟹ n+1 ≤ (m+1)·e^c
+--     (log 单调 + exp 逆 — 近邻个数估计: 频率差 c 内的项数 ~ m·c)
+theorem near_frequency_bound (m n : ℕ) (c : ℝ) (hc0 : 0 ≤ c)
+    (h : Real.log ((n + 1 : ℕ) : ℝ) - Real.log ((m + 1 : ℕ) : ℝ) ≤ c) :
+    ((n + 1 : ℕ) : ℝ) ≤ ((m + 1 : ℕ) : ℝ) * Real.exp c := by
+  have hlog : Real.log ((n + 1 : ℕ) : ℝ) ≤ Real.log ((m + 1 : ℕ) : ℝ) + c := by linarith
+  have hposm : 0 < ((m + 1 : ℕ) : ℝ) := by positivity
+  have hposn : 0 < ((n + 1 : ℕ) : ℝ) := by positivity
+  calc
+    ((n + 1 : ℕ) : ℝ) = Real.exp (Real.log ((n + 1 : ℕ) : ℝ)) := by
+      rw [Real.exp_log hposn]
+    _ ≤ Real.exp (Real.log ((m + 1 : ℕ) : ℝ) + c) := by
+      exact Real.exp_le_exp.mpr hlog
+    _ = ((m + 1 : ℕ) : ℝ) * Real.exp c := by
+      rw [Real.exp_add, Real.exp_log hposm]
+
+-- 12.12 分裂上界: 每对交叉 |∫v_m conj v_n| ≤ (√(m+1)√(n+1))⁻¹·min(2T, 2/|Δ|)
+--     (min 界: 近邻 Δ≈0 不爆炸 — B1 交叉相消的核心原子组合)
+theorem cross_pair_bound_min (m n : ℕ) (hmn : m ≠ n) (T : ℝ) (hT : 0 ≤ T) :
+    ‖∫ x in (-T)..T, rotatingVec m x * conj (rotatingVec n x)‖ ≤
+      ‖((Real.sqrt ((m + 1 : ℕ) : ℝ) : ℂ))⁻¹‖ * ‖((Real.sqrt ((n + 1 : ℕ) : ℝ) : ℂ))⁻¹‖ *
+        min (2 * T) (2 / ‖Real.log ((m + 1 : ℕ) : ℝ) - Real.log ((n + 1 : ℕ) : ℝ)‖) := by
+  have hΔ : Real.log ((m + 1 : ℕ) : ℝ) - Real.log ((n + 1 : ℕ) : ℝ) ≠ 0 := by
+    intro hz
+    apply hmn
+    have hlog : Real.log ((m + 1 : ℕ) : ℝ) = Real.log ((n + 1 : ℕ) : ℝ) := by linarith
+    have hinj := Real.log_injOn_pos (by positivity : 0 < ((m + 1 : ℕ) : ℝ))
+      (by positivity : 0 < ((n + 1 : ℕ) : ℝ)) hlog
+    have hm1 : m + 1 = n + 1 := by exact_mod_cast hinj
+    omega
+  have hpt : ∀ x ∈ Set.uIcc (-T) T,
+      rotatingVec m x * conj (rotatingVec n x) =
+        ((Real.sqrt ((m + 1 : ℕ) : ℝ) : ℂ))⁻¹ * ((Real.sqrt ((n + 1 : ℕ) : ℝ) : ℂ))⁻¹ *
+          Complex.exp (Complex.I * ((Real.log ((m + 1 : ℕ) : ℝ) - Real.log ((n + 1 : ℕ) : ℝ) : ℝ) : ℂ) * (x : ℂ)) := by
+    intro x hx
+    exact cross_energy m n x
+  rw [intervalIntegral.integral_congr hpt]
+  rw [intervalIntegral.integral_const_mul]
+  rw [norm_mul]
+  rw [norm_mul]
+  have hb := rotating_integral_bound_min T (Real.log ((m + 1 : ℕ) : ℝ) - Real.log ((n + 1 : ℕ) : ℝ)) hT hΔ
+  have hb' : ‖∫ x in (-T)..T, Complex.exp (Complex.I * ((Real.log ((m + 1 : ℕ) : ℝ) - Real.log ((n + 1 : ℕ) : ℝ) : ℝ) : ℂ) * (x : ℂ))‖ ≤
+      min (2 * T) (2 / ‖Real.log ((m + 1 : ℕ) : ℝ) - Real.log ((n + 1 : ℕ) : ℝ)‖) := by
+    simpa [Complex.ofReal_sub, mul_assoc] using hb
+  have hnonneg1 : 0 ≤ ‖((Real.sqrt ((m + 1 : ℕ) : ℝ) : ℂ))⁻¹‖ := norm_nonneg _
+  have hnonneg2 : 0 ≤ ‖((Real.sqrt ((n + 1 : ℕ) : ℝ) : ℂ))⁻¹‖ := norm_nonneg _
+  calc
+    (‖((Real.sqrt ((m + 1 : ℕ) : ℝ) : ℂ))⁻¹‖ * ‖((Real.sqrt ((n + 1 : ℕ) : ℝ) : ℂ))⁻¹‖) *
+        ‖∫ x in (-T)..T, Complex.exp (Complex.I * ((Real.log ((m + 1 : ℕ) : ℝ) - Real.log ((n + 1 : ℕ) : ℝ) : ℝ) : ℂ) * (x : ℂ))‖
+        ≤ (‖((Real.sqrt ((m + 1 : ℕ) : ℝ) : ℂ))⁻¹‖ * ‖((Real.sqrt ((n + 1 : ℕ) : ℝ) : ℂ))⁻¹‖) *
+          min (2 * T) (2 / ‖Real.log ((m + 1 : ℕ) : ℝ) - Real.log ((n + 1 : ℕ) : ℝ)‖) := by
+          exact mul_le_mul_of_nonneg_left hb' (mul_nonneg hnonneg1 hnonneg2)
+    _ = ‖((Real.sqrt ((m + 1 : ℕ) : ℝ) : ℂ))⁻¹‖ * ‖((Real.sqrt ((n + 1 : ℕ) : ℝ) : ℂ))⁻¹‖ *
+          min (2 * T) (2 / ‖Real.log ((m + 1 : ℕ) : ℝ) - Real.log ((n + 1 : ℕ) : ℝ)‖) := by
+          ring
+
+
 structure AlignmentEnergyBridge where
   -- 内禀能量无界 (基于已证原子 12.3/12.4/12.7; 组合定理 energy_lower_bound 待形式化)
   energy_unbounded : Prop
