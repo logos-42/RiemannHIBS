@@ -15,6 +15,9 @@
 
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Data.Real.Basic
+import Mathlib.Order.Filter.AtTopBot.Archimedean
+
+open scoped Topology
 
 namespace RiemannHIBS.Abundance
 
@@ -97,6 +100,63 @@ theorem log_le_harmonic_sum (N : ℕ) :
         = ∑ n ∈ Finset.range N, freqGap n := (freq_span_telescopes N).symm
     _ ≤ ∑ n ∈ Finset.range N, 1 / (((n + 1 : ℕ) : ℝ)) := by
           exact Finset.sum_le_sum (fun n _ => freq_gap_le_inv n)
+
+-- ====================================================================
+-- 5. 能量无界: 调和和超过任意界 (零点无限性论证的能量侧)
+--    用户的能量描述: 每项能量 (n+1)^{-1}, 总和 = 调和级数 (发散).
+--    这里证明它的精确形式: ∀ B, ∃ N, B < Σ_{n<N} 1/(n+1).
+--    证明: log(N+1) → ∞ (tendsto_log_atTop) + log(N+1) ≤ 调和和.
+-- ====================================================================
+
+-- 能量无界 (调和发散): 调和和超过任意界
+--   = "零点无限性"论证中能量侧的精确可证内核
+--   证明: 对任意 B, 取 x = exp(B+1) ⟹ B < log x; Archimedean 取 N > x;
+--     log 严格递增 ⟹ log x < log(N+1) ≤ 调和和 (log_le_harmonic_sum).
+theorem harmonic_sum_unbounded : ∀ B : ℝ, ∃ N : ℕ,
+    B < ∑ n ∈ Finset.range N, 1 / (((n + 1 : ℕ) : ℝ)) := by
+  intro B
+  -- 取 x = exp(B+1): B < log x (log_exp)
+  let x : ℝ := Real.exp (B + 1)
+  have hBlog : B < Real.log x := by
+    dsimp [x]
+    rw [Real.log_exp]
+    linarith
+  -- Archimedean: 取 N 使 x < (N : ℝ) ≤ (N+1 : ℝ)
+  rcases exists_nat_gt x with ⟨N, hN⟩
+  -- log 严格递增: log x < log(N+1)
+  have hlog : Real.log x < Real.log (((N + 1 : ℕ) : ℝ)) := by
+    apply Real.log_lt_log
+    · exact Real.exp_pos (B + 1)
+    · -- x < (N:ℝ) ≤ (N+1:ℝ)
+      have hN1 : (N : ℝ) ≤ ((N + 1 : ℕ) : ℝ) := by
+        exact_mod_cast (Nat.le_succ N)
+      linarith [hN, hN1]
+  refine ⟨N, ?_⟩
+  -- B < log x < log(N+1) ≤ 调和和
+  exact lt_of_lt_of_le (lt_trans hBlog hlog) (log_le_harmonic_sum N)
+
+-- ====================================================================
+-- 6. Draft (如实标注): 零点无限性与 ζ↔零点一一对应
+--    能量无界 (上) 是 Hardy 论证的能量侧; 完整论证还需要:
+--      (a) 均值定理: ∫₀ᵀ |ζ(1/2+it)|² dt 的对角贡献 = Σ_{n≤√(T/2π)} (n+1)^{-1}
+--          随 T → ∞ 发散 (Riemann–Siegel/Hardy–Littlewood, mathlib 无)
+--      (b) 有限零点 ⟹ 对数均值有界 (1/ζ 有界 + 辐角缠绕有界)
+--      (a)+(b) 矛盾 ⟹ 临界线上有无限零点 (Hardy 1914, 经典已证).
+--    零点与 ℕ 的一一对应: 零点无限 + 零点孤立 (ζ 在 s≠1 解析) + 无聚点
+--      (亚纯) ⟹ 可按虚部排序 γ₁<γ₂<… 与 ℕ 双射; 排序存在性未形式化.
+-- ====================================================================
+
+-- Hardy 零点无限性桥 (概念注释; 完整证明需均值定理, 未形式化):
+--   1. 均值定理: ∫₀ᵀ |ζ(1/2+it)|² dt 的对角贡献随 T 发散
+--      (能量无界 ⟹ 均值无界; Hardy–Littlewood, mathlib 无)
+--   2. 有限零点 ⟹ 均值有界 (1/ζ 有界 + 辐角缠绕有界)
+--   3. 1+2 矛盾 ⟹ 临界线零点无限 (Hardy 1914, 经典已证)
+
+-- 零点与 ζ 的一一对应 (概念注释, 非定理):
+--   若临界线零点无限, 则零点集 {1/2 + iγ_n} 按虚部升序与 ℕ 双射 —
+--   每个零点唯一对应一个自然数 (可枚举), 每个自然数唯一对应一个零点.
+--   严格化需: 零点孤立 (mathlib 有 riemannZeta 解析性可推出) +
+--   亚纯零点无聚点 + 排序定理. 未形式化, 如实标注.
 
 -- ====================================================================
 -- 4. Draft (如实标注): 零点丰度的频率机制
