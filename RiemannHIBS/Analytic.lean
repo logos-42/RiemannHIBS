@@ -2780,4 +2780,78 @@ theorem energy_single_term_integral (n : ℕ) (σ T : ℝ) :
   rw [hint2, intervalIntegral.integral_const]
   simp [two_mul]
 
+-- ====================================================================
+-- ====================================================================
+-- ====================================================================
+-- ====================================================================
+-- 31.3 双重和展开主定理: ∫|S_N(t)|² dt = ΣΣ w_m·w_n·J(m,n),
+--    对角项 (m=n) J = 2T·w_n² (能量积累, 31.2),
+--    交叉项 (m≠n) J = 旋转振荡积分 (31.1).
+--    这是 "均值公式" 的有限和版本 — 取极限 N→∞ 即缺口 A.
+-- ====================================================================
+
+-- 31.3.0 逐项恒等式: v_m · conj(v_n) 的显式形态.
+theorem rotVec_mul_conj (m n : ℕ) (σ t : ℝ) :
+    rotVecOnLine σ m t * conj (rotVecOnLine σ n t)
+      = ((((m + 1 : ℝ)) ^ (-σ) : ℝ) : ℂ) * ((((n + 1 : ℝ)) ^ (-σ) : ℝ) : ℂ)
+        * Complex.exp ((Complex.I * t)
+          * (Real.log ((n + 1 : ℝ)) - Real.log ((m + 1 : ℝ)))) := by
+  unfold rotVecOnLine
+  have hcE : conj (((((n + 1 : ℝ)) ^ (-σ) : ℝ) : ℂ)
+      * Complex.exp (-(Complex.I * t) * Real.log ((n + 1 : ℝ))))
+      = (((((n + 1 : ℝ)) ^ (-σ) : ℝ) : ℂ)
+          * Complex.exp ((Complex.I * t) * Real.log ((n + 1 : ℝ)))) := by
+    rw [map_mul, Complex.conj_ofReal, ← Complex.exp_conj]
+    show conj (Complex.exp _) = _
+    rw [Complex.exp_conj]
+
+  rw [hcE, mul_mul_mul_comm, ← Complex.exp_add]
+  simp only [mul_sub]
+  congr 4
+  all_goals try simp
+  all_goals try ring
+
+-- 31.3.1 逐点展开: |S_N(t)|² = 双重和.
+theorem sqNorm_partialSum_pointwise (N : ℕ) (σ t : ℝ) :
+    dirichletPartialSumLine N σ t * conj (dirichletPartialSumLine N σ t)
+      = ∑ m ∈ Finset.range N, ∑ n ∈ Finset.range N,
+          rotVecOnLine σ m t * conj (rotVecOnLine σ n t) := by
+  unfold dirichletPartialSumLine
+  rw [Finset.sum_mul]
+  have hconj : conj (∑ n ∈ Finset.range N, rotVecOnLine σ n t)
+      = ∑ n ∈ Finset.range N, conj (rotVecOnLine σ n t) :=
+    map_sum (starRingEnd ℂ) (fun n => rotVecOnLine σ n t) (Finset.range N)
+  rw [hconj]
+  simp only [Finset.mul_sum]
+
+-- 31.3.2 主展开: 积分穿过双重和.
+theorem l2_mean_partialSum_finite (N : ℕ) (σ T : ℝ) :
+    (∫ x in (-T)..T,
+      dirichletPartialSumLine N σ x * conj (dirichletPartialSumLine N σ x))
+      = ∑ m ∈ Finset.range N, ∑ n ∈ Finset.range N,
+          ((((m + 1 : ℝ)) ^ (-σ) : ℝ) : ℂ) * ((((n + 1 : ℝ)) ^ (-σ) : ℝ) : ℂ)
+            * (∫ x in (-T)..T,
+                Complex.exp ((Complex.I * x)
+                  * (Real.log ((n + 1 : ℝ)) - Real.log ((m + 1 : ℝ)))))) := by
+  have hintegrable : ∀ m n : ℕ, IntervalIntegrable
+      (fun x : ℝ => rotVecOnLine σ m x * conj (rotVecOnLine σ n x))
+      MeasureTheory.volume (-T) T :=
+    by
+      intro m n
+      have hc : Continuous
+          (fun x : ℝ => rotVecOnLine σ m x * conj (rotVecOnLine σ n x)) := by
+        fun_prop
+      exact hc.intervalIntegrable (-T) T
+  rw [intervalIntegral.integral_congr (fun x _hx =>
+    sqNorm_partialSum_pointwise N σ x)]
+  rw [intervalIntegral.integral_finset_sum (fun m _hm =>
+    (hintegrable m).mono le_rfl)]
+  refine Finset.sum_congr rfl fun m _hm => ?_
+  rw [intervalIntegral.integral_finset_sum (fun n _hn =>
+    ((hintegrable m n).mono le_rfl))]
+  simp only [Finset.mul_sum]
+  refine Finset.sum_congr rfl fun n _hn => ?_
+  rw [rotVec_mul_conj]
+
+
 end RiemannHIBS.Analytic

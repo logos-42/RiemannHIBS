@@ -2,6 +2,7 @@
 
 | 日期 | 类型 | 内容 |
 |------|------|------|
+| 2026-08-26 | feat | 论文输出: 依据 wiki 真实成果生成双语论文（英文版 riemann_hibs_en.tex 1026 行 + 中文同步版 riemann_hibs_zh.tex），基于 jsfds 模板，含 11 节 57 个编号定理环境，覆盖隐数坐标 w=e^s 全框架（临界圆、反演不动圆 e→√e→1/2、反射-反演对应、零点定位圆环 1<|w|<e、相位机制、幅角原理/幂因子绕数、证书族与高度供给、能量发散/Hardy 方向、诚实边界完整列表），严格区分已证结构定理与开放分析输入；作者 Yuanjie Liu, yuanjieliu65@gmail.com；biblio.bib 追加 9 经典条目
 | 2026-08-25 | init | 初始化知识系统: bootstrap v2 (LLM Wiki 范式), 8 页面 + manifests + 校验脚本 |
 | 2026-08-25 | research | 包络结构: 临界线卷成圆 ‖w‖=√e (criticalLine_circle), expZeta, 桥定理, 多圈叶/折叠, Möbius 随机性; 数值验证 E1-E4 + 10 图 + 螺旋动画 |
 | 2026-08-25 | research | 半径叶与缠绕: log(√e)=1/2, 临界叶上每项模长锁定 n^{-1/2} (长度维度锁定), 缠绕圈数 log(n+1), 绝对收敛分界 r>e, 临界叶不绝对收敛 (radius_leaf 方向, Analytic.lean §11) |
