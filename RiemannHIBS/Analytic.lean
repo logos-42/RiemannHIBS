@@ -2564,4 +2564,66 @@ theorem xiEntire_eq_mul_zeta {s : ℂ} (hs0 : s ≠ 0) (hs1 : s ≠ 1)
 --      (iv) 组合链本身. 均如实标注为待完成.
 -- ====================================================================
 
+-- ====================================================================
+-- 29. Hadamard 组合链组件 I — Γ 实轴递推下界 (初等, 无 sorry)
+--    地位: Hadamard 反证链的最后矛盾来源. 链条:
+--      增长上界 + 有限零点 ⟹ Borel–Carathéodory ⟹ logDeriv 常数
+--      ⟹ 对称性强迫 ξ 多项式 ⟹ **与实轴超多项式下界矛盾**.
+--    本节证最后一环的下界引擎: Γ(x+n) ≥ xⁿ·Γ(x) (x ≥ 1).
+--    来源: Real.Gamma_add_one (Γ(s+1)=sΓ(s)) 逐次迭代 — 完全初等,
+--    不需要 Stirling 渐近. 这印证 §27 的发现: Stirling 并非丰度必经之路.
+-- ──────────────────────────────────────────────────────────────
+-- Borel–Carathéodory 链的依赖图与状态 (如实标注):
+--   [A] 条带内 ζ 上界 (η 级数 Abel/Dirichlet 求和量化)     — 未形式化
+--   [B] Γ 粗上界 |Γ(s)| ≤ e^{O(|s|·log|s|)} (积分拆分)      — 未形式化
+--   [C] ξ 上界组合 (A+B ⟹ log|ξ| = O(|s|log|s|))          — 依赖 A,B
+--   [D] Borel–Carathéodory 定理本身                        — ✅ mathlib 已有!
+--       Complex.borelCaratheodory: f 解析于球 + Re f < M 于球内
+--       ⟹ ‖f z‖ ≤ 2M‖z‖/(R−‖z‖) + ‖f 0‖(R+‖z‖)/(R−‖z‖)
+--   [E] BC 应用: G := logDeriv h (h=ξ/Q 无零点), Re G = log|h|
+--       受 [C] 控制 ⟹ ‖G(z₀)‖ = O(log R); Cauchy 估计于 G'
+--       ⟹ G' ≡ 0 (Liouville 推广) ⟹ G 常数 ⟹ h = e^{bs}    — 未形式化
+--   [F] 对称性 xiEntire_one_sub 强迫 b=0 ⟹ ξ 多项式         — 轻 (代数)
+--   [G] Γ 递推下界                                         — ✅ 本节省略落地
+--   [H] 实轴矛盾组装                                       — 轻, 依赖 E,F,G
+--   结论: 链条两端 ([D][G]) 已有基建, 中段 ([A][B][E]) 是剩余工作量.
+-- ====================================================================
+
+-- 29.1 Γ 泛函递推的下界形态: Γ(x+n) ≥ xⁿ·Γ(x) 对一切 x ≥ 1.
+--   证明: 对 n 归纳; 每步用 Real.Gamma_add_one 展开一层,
+--   再用 (x+k) ≥ x 与归纳假设链接. 全程只用递推与单调性.
+theorem Real.gamma_ge_pow_mul_self {x : ℝ} (hx : 1 ≤ x) (n : ℕ) :
+    Real.Gamma ((x : ℝ) + n) ≥ x ^ n * Real.Gamma x := by
+  induction n with
+  | zero => simpa using le_refl _
+  | succ k ih =>
+    have hk0 : (0 : ℝ) ≤ k := Nat.cast_nonneg k
+    -- 分层: Γ(x+(k+1)) = Γ((x+k)+1) = (x+k)·Γ(x+k)
+    have hshift : ((x : ℝ) + ((k + 1 : ℕ) : ℝ))
+        = (((x : ℝ) + (k : ℝ)) + 1) := by push_cast; ring
+    have hk1 : ((x : ℝ) + k) ≠ 0 := by linarith
+    have hstep : Real.Gamma ((x : ℝ) + ((k + 1 : ℕ) : ℝ))
+        = ((x : ℝ) + (k : ℝ)) * Real.Gamma ((x : ℝ) + (k : ℝ)) := by
+      have h2 : ((x : ℝ) + ((k + 1 : ℕ) : ℝ))
+          = (((x : ℝ) + (k : ℝ)) + 1) := by push_cast; ring
+      rw [h2, Real.Gamma_add_one hk1]
+    -- Γ(x+k) > 0 (x+k ≥ x ≥ 1)
+    have hkR : (0 : ℝ) ≤ (k : ℝ) := Nat.cast_nonneg k
+    have hGpos : 0 < Real.Gamma ((x : ℝ) + (k : ℝ)) :=
+      Real.Gamma_pos_of_pos (by linarith)
+    -- 链条: (x+k)·Γ ≥ x·Γ ≥ x·(x^k·Γx) = x^{k+1}·Γx
+    have hle1 : (x : ℝ) ≤ (x : ℝ) + (k : ℝ) := by linarith
+    have hge1 : ((x : ℝ) + (k : ℝ)) * Real.Gamma ((x : ℝ) + (k : ℝ))
+        ≥ x * Real.Gamma ((x : ℝ) + (k : ℝ)) :=
+      mul_le_mul_of_nonneg_right hle1 (le_of_lt hGpos)
+    have hge2 : ((x : ℝ)) * Real.Gamma ((x : ℝ) + (k : ℝ))
+        ≥ (x : ℝ) * (x ^ k * Real.Gamma (x : ℝ)) :=
+      mul_le_mul_of_nonneg_left ih (show (0 : ℝ) ≤ x from by linarith)
+    have hpow : (x : ℝ) ^ (k + 1) = x ^ k * x := pow_succ x k
+    rw [hstep, hpow]
+    calc ((x : ℝ) + k) * Real.Gamma ((x : ℝ) + k)
+        ≥ x * Real.Gamma ((x : ℝ) + k) := hge1
+      _ ≥ x * (x ^ k * Real.Gamma x) := hge2
+      _ = x ^ k * x * Real.Gamma x := by ring
+
 end RiemannHIBS.Analytic
