@@ -832,6 +832,93 @@ $g+h$ 盘内无零点，走最大模原理路线；特化到 $\zeta$
 Rouch\'e 有待基建。
 \end{remark}
 
+\section{能量平衡与隐数均值定理}\label{sec:balance}
+
+丰度侧的三个内禀组件把"能量发散"从定性收紧为定量：能量的唯一平衡半径、
+交叉项的截断相消、以及隐数均值定理。
+
+\begin{theorem}[能量平衡半径；\,\Lean{energy_balance_radius}]
+\label{thm:balance}
+对角能量 $E(\sigma)=\sum_n (n+1)^{-2\sigma}$ 收敛当且仅当 $\sigma>\tfrac12$：
+\[
+  \sum_{n\geq 0} (n+1)^{-2\sigma} < \infty \;\;\Longleftrightarrow\;\; \sigma > \tfrac12 .
+\]
+\end{theorem}
+
+\begin{proof}
+级数 $\sum_n (n+1)^{-2\sigma}$ 与 $p$ 级数 $\sum_{n\geq1} n^{-2\sigma}$ 同收敛性
+（平移），MathLib 的 \Lean{summable_nat_rpow_inv} 给出收敛当且仅当 $2\sigma>1$，
+即 $\sigma>\tfrac12$。
+\end{proof}
+
+\begin{remark}[唯一平衡点与 $1/2$ 的身份]\label{remark:balance}
+定理~\ref{thm:balance} 给出"为什么临界线是 $1/2$"的\emph{能量}版本：
+$\sigma=\tfrac12$ 是调和边界——$\sigma>\tfrac12$ 超调和收敛（能量预算有限），
+$\sigma<\tfrac12$ 亚调和发散（能量预算爆炸）。它与反射不动点
+$\sigma=1-\sigma$（即反演不动圆 $\abs{w}=\sqrt{e}$，命题~\ref{prop:logsqrt}）
+指向同一半径。\textbf{平衡点给出半径的唯一候选}，但不单独推出
+"零点恰在此"——后者是 RH 本身（见诚实边界 (vi)）。
+\end{remark}
+
+\begin{theorem}[交叉项 min 界；\,\Lean{rotating_integral_bound_min}]
+\label{thm:crossmin}
+对 $\Delta\neq 0$，
+\[
+  \Abs{\int_{-T}^{T} e^{i\Delta t}\,dt} \;\leq\; \min\!\big(2T,\; 2/\abs{\Delta}\big) .
+\]
+\end{theorem}
+
+\begin{proof}
+两个界分别来自 $\abs{e^{i\Delta t}}=1$ 的区间长平凡界，与旋转积分原子的
+精确值 $\int_{-T}^{T}e^{i\Delta t}dt=(e^{i\Delta T}-e^{-i\Delta T})/(i\Delta)$。
+\end{proof}
+
+\begin{remark}[截断相消：交叉为何次主导]\label{remark:cutoff}
+逐项三角不等式在相邻频率（$\Delta\to 0$）发散；正解是 $t$ 依赖截断
+$X(t)=\sqrt{t/2\pi}$（近似函数方程）。交叉上界按 $X(T)$ 项计算为
+$O(X(T)\log X(T))=O(\sqrt{T}\log T)$，次主导于对角主项
+$\int_0^T \log X(t)\,dt\sim \tfrac{T}{2}\log T$（数值：fig13 v2 中
+交叉/主项 $0.267\to0.049$）。相消的机制是\emph{截断}而非振荡抵消。
+\end{remark}
+
+\begin{theorem}[对角积分精确值；\,\Lean{diagonal_integral}]
+\label{thm:diagint}
+\[
+  \int_{1}^{T} \tfrac12 \log \frac{t}{2\pi}\,dt
+    \;=\; \frac{T}{2}\Big(\log\frac{T}{2\pi}-1\Big) + \frac{\log 2\pi+1}{2} .
+\]
+\end{theorem}
+
+\begin{proof}
+原函数 $G(t)=\tfrac{t}{2}(\log\frac{t}{2\pi}-1)$ 的导数是 $\tfrac12\log\frac{t}{2\pi}$
+（对数导数 + 乘积法则），由微积分基本定理求值。
+\end{proof}
+
+\begin{proposition}[隐数均值定理（猜想，数值确认）]\label{prop:meanvalue}
+单侧截断能量
+\[
+  E(T)=\int_1^T \Abs{\sum_{n\leq\sqrt{t/2\pi}} (n+1)^{-\frac12}\,e^{it\log(n+1)}}^2 dt
+\]
+满足
+\[
+  E(T) \;=\; \frac{T}{2}\Big(\log\frac{T}{2\pi}-1\Big) + \gamma\,T + o(T) ,
+\]
+其中 $\gamma$ 是欧拉常数（调和和 $\sum_{n< N}(n+1)^{-1}-\log(N+1)\to\gamma$，
+\Lean{harmonic_log_tendsto_euler}）。数值：$E(T)/[T\log(T/2\pi)]\to 0.5$，
+余项$/T\to\gamma\approx 0.58$（fig13 v2）。
+\end{proposition}
+
+\begin{remark}[组装双侧：重现 Hardy--Littlewood]\label{remark:hl}
+把单侧能量翻倍（主项与辅项各半）得到
+\[
+  \int_0^T \Abs{\zeta(\tfrac12+it)}^2 dt \;=\; T\log\frac{T}{2\pi} + (2\gamma-1)\,T + o(T) ,
+\]
+即 Hardy--Littlewood 均值定理的完整展开——从初等积分、欧拉常数与
+截断交叉次主导直接组装，\textbf{完全不需要 Stirling 或 $\Gamma$ 渐近}。
+$\gamma$ 项来自调和和的常数项（非 $\zeta$ 的分析性质）；$o(T)$ 的严格
+形式化（交叉次主导）是剩余缺口（诚实边界 (vi)）。
+\end{remark}
+
 \section{诚实边界与结论}\label{sec:honesty}
 
 本节是全文的承重墙：第 2--10 节以何种精度列举了什么\emph{已经}被证明，本节就以
@@ -881,6 +968,21 @@ Rouch\'e 的存在半边，注记~\ref{remark:xientire}）；$\zeta$
 在线上的均方公式（阻碍注记~\ref{remark:mean}）；以及暂时遮蔽个别积分引理的
 模块系统迁移（以直接的 \Lean{HasDerivAt} 认证绕过，
 命题~\ref{prop:intatom}）。
+
+\subsection*{(vi) 能量侧的进展与两个剩余缺口}
+第~11 节的三个内禀组件把能量侧显著收紧，但两个明确缺口仍然开放。
+\textbf{R1（交叉次主导的形式化）}：截断相消的机制已被数值确认（fig13 v2：
+交叉/主项 $0.267\to0.049$），且 min 界（定理~\ref{thm:crossmin}）与
+对角积分精确值（定理~\ref{thm:diagint}）已在 Lean 中证明；但"交叉上界
+$O(\sqrt{T}\log T)$ 次主导"的严格双和估计（Hardy--Littlewood 型
+$L^2$ 论证）未形式化——它是命题~\ref{prop:meanvalue} 中 $o(T)$ 的
+全部内容。\textbf{R2（平衡点 $\to$ 共圆）}：能量平衡半径
+（定理~\ref{thm:balance}）与反射不动点给出 $\sigma=\tfrac12$ 为半径的
+\emph{唯一候选}，但"零点恰在此圆上"仍是 RH 本身（$\tfrac12<\Re s<1$
+无零点）——平衡性不单独推出零点位置。隐数坐标系完成了翻译、身份、
+能量侧与一一对应（零点可数、孤立、双射枚举全部 Lean 化），并把 RH
+压缩为两个被命名的缺口：R1 是工程（经典估计的 Lean 化），R2 是数学
+（经典亦未解决）。
 
 \subsection*{结论}
 隐数坐标系 $w=e^{s}$ 把黎曼猜想的地形转化为几何：临界线成为唯一的反演不动圆，

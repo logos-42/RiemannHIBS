@@ -928,6 +928,104 @@ winding-number integrality and homotopy invariance, absent from MathLib, so a
 full Rouch\'e awaits infrastructure.
 \end{remark}
 
+\section{Energy balance and the hidden mean-value theorem}\label{sec:balance}
+
+Three intrinsic components tighten ``energy divergence'' from qualitative
+to quantitative: the unique energy-balance radius, the cutoff cancellation
+of cross terms, and the resulting hidden mean-value theorem.
+
+\begin{theorem}[Energy-balance radius;\,\Lean{energy_balance_radius}]
+\label{thm:balance}
+The diagonal energy $E(\sigma)=\sum_n (n+1)^{-2\sigma}$ converges iff $\sigma>\tfrac12$:
+\[
+  \sum_{n\geq 0} (n+1)^{-2\sigma} < \infty \;\;\Longleftrightarrow\;\; \sigma > \tfrac12 .
+\]
+\end{theorem}
+
+\begin{proof}
+The series $\sum_n (n+1)^{-2\sigma}$ shares convergence with the $p$-series
+$\sum_{n\geq1} n^{-2\sigma}$ (shift); MathLib's \Lean{summable_nat_rpow_inv}
+gives convergence iff $2\sigma>1$, i.e.\ $\sigma>\tfrac12$.
+\end{proof}
+
+\begin{remark}[The unique balance point and the identity of $1/2$]\label{remark:balance}
+Theorem~\ref{thm:balance} gives the \emph{energy} version of ``why the
+critical line is $1/2$'': $\sigma=\tfrac12$ is the harmonic boundary---above
+it the energy is superharmonic and converges (finite budget), below it
+subharmonic and diverges (exploding budget). It points to the same radius as
+the reflection fixed point $\sigma=1-\sigma$ (the inversion fixed circle
+$\abs{w}=\sqrt{e}$, Proposition~\ref{prop:logsqrt}). \textbf{The balance
+point gives the unique candidate radius, but does not by itself force zeros
+to lie there}---that is RH itself (see Honest boundaries (vi)).
+\end{remark}
+
+\begin{theorem}[Cross-term min bound;\,\Lean{rotating_integral_bound_min}]
+\label{thm:crossmin}
+For $\Delta\neq 0$,
+\[
+  \Abs{\int_{-T}^{T} e^{i\Delta t}\,dt} \;\leq\; \min\!\big(2T,\; 2/\abs{\Delta}\big) .
+\]
+\end{theorem}
+
+\begin{proof}
+The two bounds come from the trivial interval-length bound with
+$\abs{e^{i\Delta t}}=1$, and from the exact rotating-integral atom
+$\int_{-T}^{T}e^{i\Delta t}dt=(e^{i\Delta T}-e^{-i\Delta T})/(i\Delta)$.
+\end{proof}
+
+\begin{remark}[Cutoff cancellation: why cross terms are subdominant]\label{remark:cutoff}
+The pointwise triangle inequality blows up at adjacent frequencies
+($\Delta\to 0$); the resolution is the $t$-dependent cutoff
+$X(t)=\sqrt{t/2\pi}$ (approximate functional equation). The cross-term bound,
+counted over $X(T)$ terms, is $O(X(T)\log X(T))=O(\sqrt{T}\log T)$,
+subdominant to the diagonal main term $\int_0^T \log X(t)\,dt\sim
+\tfrac{T}{2}\log T$ (numerically, fig13 v2: cross/main $0.267\to0.049$).
+The cancellation mechanism is the \emph{cutoff}, not oscillatory interference.
+\end{remark}
+
+\begin{theorem}[Exact diagonal integral;\,\Lean{diagonal_integral}]
+\label{thm:diagint}
+\[
+  \int_{1}^{T} \tfrac12 \log \frac{t}{2\pi}\,dt
+    \;=\; \frac{T}{2}\Big(\log\frac{T}{2\pi}-1\Big) + \frac{\log 2\pi+1}{2} .
+\]
+\end{theorem}
+
+\begin{proof}
+The antiderivative $G(t)=\tfrac{t}{2}(\log\frac{t}{2\pi}-1)$ has derivative
+$\tfrac12\log\frac{t}{2\pi}$ (log derivative plus product rule); evaluate by
+the fundamental theorem of calculus.
+\end{proof}
+
+\begin{proposition}[Hidden mean-value theorem (conjecture, numerically confirmed)]\label{prop:meanvalue}
+The single-sided cutoff energy
+\[
+  E(T)=\int_1^T \Abs{\sum_{n\leq\sqrt{t/2\pi}} (n+1)^{-\frac12}\,e^{it\log(n+1)}}^2 dt
+\]
+satisfies
+\[
+  E(T) \;=\; \frac{T}{2}\Big(\log\frac{T}{2\pi}-1\Big) + \gamma\,T + o(T) ,
+\]
+where $\gamma$ is the Euler constant (harmonic sum
+$\sum_{n< N}(n+1)^{-1}-\log(N+1)\to\gamma$,
+\Lean{harmonic_log_tendsto_euler}). Numerically,
+$E(T)/[T\log(T/2\pi)]\to 0.5$ and remainder$/T\to\gamma\approx 0.58$
+(fig13 v2).
+\end{proposition}
+
+\begin{remark}[Assembling both sides: reproducing Hardy--Littlewood]\label{remark:hl}
+Doubling the single-sided energy (main and auxiliary terms, half each) gives
+\[
+  \int_0^T \Abs{\zeta(\tfrac12+it)}^2 dt \;=\; T\log\frac{T}{2\pi} + (2\gamma-1)\,T + o(T) ,
+\]
+the full Hardy--Littlewood mean-value expansion, assembled from elementary
+integration, the Euler constant, and cutoff subdominance---\textbf{without
+any Stirling or $\Gamma$ asymptotics}. The $\gamma$-term comes from the
+constant of the harmonic sum (not an analytic property of $\zeta$); the
+strict formalization of $o(T)$ (cross-term subdominance) is the remaining
+gap (Honest boundaries (vi)).
+\end{remark}
+
 \section{Honest boundaries and conclusion}\label{sec:honesty}
 
 This section is the load-bearing wall of the paper: it enumerates what has
@@ -998,6 +1096,28 @@ mean-square formulas for $\zeta$ on the line (blocking
 Remark~\ref{remark:mean}); and transient module-system migrations hiding
 individual integral lemmas (worked around by direct
 \Lean{HasDerivAt} certification, Proposition~\ref{prop:intatom}).
+
+\subsection*{(vi) Progress on the energy side and two remaining gaps}
+The three intrinsic components of Section~11 tighten the energy side
+substantially, but two named gaps remain open.
+\textbf{R1 (formalization of cross-term subdominance)}: the cutoff
+cancellation mechanism is numerically confirmed (fig13 v2:
+cross/main $0.267\to0.049$), and the min bound
+(Theorem~\ref{thm:crossmin}) and the exact diagonal integral
+(Theorem~\ref{thm:diagint}) are proved in Lean; but the strict double-sum
+estimate making the cross-term bound $O(\sqrt{T}\log T)$ subdominant
+(a Hardy--Littlewood-type $L^2$ argument) is not formalized---it is
+exactly the $o(T)$ of Proposition~\ref{prop:meanvalue}.
+\textbf{R2 (balance point $\to$ concyclicity)}: the energy-balance radius
+(Theorem~\ref{thm:balance}) and the reflection fixed point make
+$\sigma=\tfrac12$ the \emph{unique candidate} radius, but ``zeros lie on
+this circle'' remains RH itself (no zeros for $\tfrac12<\Re s<1$);
+balance alone does not force the zero location. The hidden-number
+coordinate system has completed the translation, the identity, the energy
+side, and the one-to-one correspondence (countability, isolation, and
+bijective enumeration of zeros all Lean-proved), compressing RH into two
+named gaps: R1 is engineering (Lean-izing classical estimates), R2 is
+mathematics (unsolved classically as well).
 
 \subsection*{Conclusion}
 The hidden-number coordinate system $w=e^{s}$ converts the landscape of the

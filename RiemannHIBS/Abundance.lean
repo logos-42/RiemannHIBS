@@ -28,6 +28,8 @@ import Mathlib.Analysis.Complex.Trigonometric
 import Mathlib.Analysis.SpecialFunctions.Complex.Log
 import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
 import Mathlib.NumberTheory.Harmonic.EulerMascheroni
+import Mathlib.Analysis.PSeries
+import Mathlib.Topology.Algebra.InfiniteSum.NatInt
 
 open scoped Topology
 open scoped ComplexConjugate
@@ -698,6 +700,38 @@ theorem harmonic_log_tendsto_euler :
     Filter.Tendsto (fun N : ℕ => (harmonic N : ℝ) - Real.log ((N + 1 : ℕ) : ℝ))
       Filter.atTop (𝓝 Real.eulerMascheroniConstant) := by
   simpa [Real.eulerMascheroniSeq] using Real.tendsto_eulerMascheroniSeq
+
+
+-- ============================================================
+-- 半径唯一性 (攻坚点 A) — 内禀骨架: 能量平衡半径
+--   E(σ) = Σ (n+1)^{-2σ} (对角能量在半径 r = e^σ 处, 即 |w| = e^σ)
+--   收敛 ⟺ σ > 1/2 (p 级数, mathlib summable_nat_rpow_inv)
+--   ⟹ 1/2 是能量的唯一平衡点: σ > 1/2 超调和收敛, σ < 1/2 亚调和发散
+--   ⟹ 只有临界叶 |w| = √e (σ = 1/2) 处于调和边界 —
+--     "对齐机制的径向唯一性": 能量预算只在平衡半径处临界
+-- ============================================================
+
+-- 12.13 能量平衡半径: Σ (n+1)^{-2σ} 收敛 ⟺ σ > 1/2
+--     (1/2 是能量的唯一平衡点 — 半径唯一性的能量骨架)
+theorem energy_balance_radius (σ : ℝ) :
+    Summable (fun n : ℕ => (((n + 1 : ℕ) : ℝ) ^ (2 * σ))⁻¹) ↔ 1 / 2 < σ := by
+  have hshift : Summable (fun n : ℕ => (((n + 1 : ℕ) : ℝ) ^ (2 * σ))⁻¹) ↔
+      Summable (fun n : ℕ => ((n : ℝ) ^ (2 * σ))⁻¹) := by
+    exact summable_nat_add_iff 1 (f := fun n : ℕ => ((n : ℝ) ^ (2 * σ))⁻¹)
+  rw [hshift]
+  exact (Real.summable_nat_rpow_inv (p := 2 * σ)).trans (by
+    constructor
+    · intro h
+      nlinarith
+    · intro h
+      nlinarith)
+
+-- 12.14 平衡半径的另一半: σ ≤ 1/2 时能量发散 (亚调和/调和边界)
+--     (含 σ = 1/2 调和边界 — Abundance §5 harmonic_sum_unbounded 的姊妹)
+theorem energy_diverges_below_balance (σ : ℝ) (hσ : σ ≤ 1 / 2) :
+    ¬Summable (fun n : ℕ => (((n + 1 : ℕ) : ℝ) ^ (2 * σ))⁻¹) := by
+  rw [energy_balance_radius]
+  linarith
 
 
 structure AlignmentEnergyBridge where
