@@ -350,3 +350,5 @@ stage: current
 - `\Lean{...}` 标识符继续保留在源码中用于追溯，但成稿中隐藏，避免下划线在移动参数中触发 `Missing $ inserted`，同时避免实现名称造成标题和正文溢出。
 - 中文版改用 `xeCJK`，本机优先使用 PingFang，Overleaf 使用 Noto/Fandol 回退字体；已检查输出页，中文标题、摘要和正文正常显示。
 - `Montgomery1973` 改为 `InProceedings`，`Selberg1942` 清理无 volume 的 `number` 字段；干净构建中 BibTeX 不再报告 empty journal 或 number/volume 警告。两版均由 tectonic（XeTeX）成功生成 PDF；剩余仅为旧版 `jsfds` 模板的 `frenchb` 弃用提示及少量字体/分页排版提示。
+- 双语论文现明确标注：隐数空间是论文作者在前期工作中提出并发展的坐标框架
+  （`LiuXu2026bridge`），本篇是在该既有构造上组织 $\zeta$ 零点的论证；同时补充半径、提升角坐标和叶编号的几何作用，避免把前期工作误写成本文临时引入的记号。
