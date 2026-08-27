@@ -1570,5 +1570,30 @@ structure InversionPairDecomposition where
   rh : Prop
   assemble : no_nonself_pair → rh
 
-end RiemannHIBS.Abundance
 
+-- ============================================================
+-- §17 对齐密度猜想 (R5) — 频率均匀性 → 对齐密度的显式陈述
+--   数值 (fig15): N(T)/F(T) → 1 (T=100..3200: 1.031 → 1.0003),
+--   其中 F(T) = (T/2π)(log(T/2π) − 1) 为频率相位投影 (无 Stirling)
+--   已证骨架: freq_span_telescopes (ΣΔfreq = log N) + freq_gap_le_inv
+--   (Δfreq ≤ 1/(n+1)) — 频率均匀性内禀
+--   诚实边界: 严格化需等分布/加权 Weyl 准则 (mathlib 无);
+--   且 R5c 数值显示临界带内部分和 |S_N| 不趋于 0 (γ₁ 处随 N 增长,
+--   0.25 → 1.42) — 对齐 (零点) 是解析延拓的零点, 非级数部分和的零点
+--   ⟹ §10 zeta_phase_alignment_condition 的 Re>1 版本不能直接搬进临界带
+-- ============================================================
+structure FrequencyAlignmentConjecture where
+  -- 已证: 频率均匀性 (freq_span_telescopes + freq_gap_le_inv, §1-2)
+  frequency_uniformity : Prop
+  -- 数值: N(T)/F(T) → 1 (T=100..3200: 1.0310 → 1.0003, fig15)
+  density_projection_numerics : Prop
+  -- 猜想: 零点 (对齐事件) 密度 = 频率相位投影 (无 Stirling)
+  alignment_density : Prop
+  -- 数值对照: 反演对分解只属临界带 (平凡零点对破坏 vs 临界带成对, fig15)
+  pair_decomposition_numerics : Prop
+  -- 缺口: 严格化需等分布/加权 Weyl 准则 (mathlib 未形式化)
+  equidistribution_needed : Prop
+
+
+
+end RiemannHIBS.Abundance
