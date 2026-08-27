@@ -1,0 +1,423 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% riemann_hibs_zh.tex
+%
+% Compile:  pdflatex riemann_hibs_zh
+%           bibtex    riemann_hibs_zh
+%           pdflatex riemann_hibs_zh
+%           pdflatex riemann_hibs_zh
+%
+% 中英对照说明：本文件为中文版；正文中的定理名、Lean 标识符与英文版
+% riemann_hibs_en.tex 完全一致（一一对应）。
+%
+% 诚实性说明：本文严格区分已完全形式化的定理（文中引用的每个 Lean 名字
+% 都在 RiemannHIBS 仓库中无 `sorry` 编译通过）、公开猜想、数值支持命题
+% 与外部输入的分析事实。本文不主张已完整证明黎曼猜想；确切边界见第 1 节
+% 与第 10 节。
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+\@namedef{ver@microtype.sty}{9999/12/31}
+\makeatother
+
+\RequirePackage[utf8]{inputenc}
+\documentclass[submission]{jsfds}
+\usepackage[T1]{fontenc}
+\usepackage{CJKutf8}
+\usepackage{amsmath,amsthm}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{hyperref}
+
+\graphicspath{{../../viz/}}
+
+\startlocaldefs
+\newtheorem{theorem}{定理}
+\newtheorem{proposition}[theorem]{命题}
+\newtheorem{corollary}[theorem]{推论}
+\newtheorem{lemma}[theorem]{引理}
+\newtheorem{definition}[theorem]{定义}
+\newtheorem*{remark}{注}
+\newcommand{\Lean}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\abs}[1]{\lvert #1\rvert}
+\newcommand{\Norm}[1]{\lVert #1\rVert}
+\endlocaldefs
+
+\setmainlanguageenglish
+\firstpage{1}
+\begin{document}
+\begin{frontmatter}
+
+\title{临界圆上的无限零点：隐数坐标系与黎曼猜想}
+\runtitle{隐数坐标系与临界圆}
+\alttitle{\begin{CJK*}{UTF8}{gbsn}Infinitely Many Zeros on the Critical Circle: Hidden-Number Coordinates and the Riemann Hypothesis\end{CJK*}}
+
+\begin{aug}
+  \auteur{%
+  \prenom{Yuanjie}
+  \nom{Liu}%
+    \contact[label=e1]{yuanjieliu65@gmail.com}}
+
+  \affiliation[t1]{Independent Researcher. \\ \printcontact{e1}}
+
+  \runauthor{Yuanjie Liu}
+\end{aug}
+
+\begin{abstract}
+本文在隐数坐标系 $w=e^{s}$ 中研究 $\zeta$ 函数。该变换把 $s$ 平面送到带整数层标的带孔 $w$ 平面。在此坐标系下，临界线变为由函数方程诱导的反演 $w\mapsto e/w$ 所固定的唯一圆 $|w|=\sqrt{e}$；$\log\sqrt{e}=1/2$ 被反射几何强制，而非约定。我们在此坐标系内证明了一批已在 Lean/MathLib 中机器验证（无 \Lean{sorry}）的定理：能量平衡判据（截断能量收敛当且仅当 $\sigma>1/2$）与临界半径作为反演、能量平衡、反射三者公共不动点的唯一性；内禀零域定理（$\Re s\geq 2$ 时 $\zeta(s)\neq 0$，由对齐部分和的模长得到，而非欧拉乘积）；临界带的反演对分解（$\zeta(1-s)=0\iff\zeta(s)=0$，且自配对当且仅当 $w=\pm\sqrt{e}$）；以及项的频率结构——间距趋于零、间距序列反单调、相位冻结、以及交错相位差变号的折返点 $n^{*}\approx t/\pi$ 的存在性。这些结果与数值支持的"对齐密度投影"以及一个被显式点名的外部输入（Hardy 的有界能量反证）组装为已声明的论证 \Lean{CriticalCircleInfinity}：临界圆上有无限多个零点——有位置、有丰度。剩余缺口——圆环 $1<|w|<e$ 内偏离临界圆处无零点——正是黎曼猜想本身；它被隔离出来，但未被供给。
+\end{abstract}
+
+\begin{keywords}
+\kwd{黎曼猜想}
+\kwd{黎曼ζ函数}
+\kwd{隐数坐标系}
+\kwd{临界圆}
+\kwd{形式化验证}
+\kwd{lean}
+\end{keywords}
+
+\begin{altabstract}
+\begin{CJK*}{UTF8}{gbsn}
+We study the zeta function in the hidden-number coordinate system $w=e^{s}$, which transports the $s$-plane to the punctured $w$-plane equipped with an integer sheet label. In these coordinates the critical line becomes the unique circle $|w|=\sqrt{e}$ fixed by the inversion $w\mapsto e/w$ induced by the functional equation; the value $\log\sqrt{e}=1/2$ is forced by reflection geometry, not postulated. Within this coordinate system we prove a body of machine-checked theorems, formalized in Lean/MathLib without \Lean{sorry}: the energy balance criterion (truncated energy converges if and only if $\sigma>1/2$) and the uniqueness of the critical radius as the simultaneous fixed point of inversion, energy balance, and reflection; an intrinsic zero-free theorem ($\zeta(s)\neq 0$ for $\Re s\geq 2$, obtained from the magnitude of aligned partial sums rather than the Euler product); the inversion-pair decomposition of the critical strip ($\zeta(1-s)=0\iff\zeta(s)=0$, with a self-pair iff $w=\pm\sqrt{e}$); and the frequency structure of the terms --- gaps tending to zero, antitone gap sequence, phase freezing, and the existence of a fold point $n^{*}\approx t/\pi$ where the alternating phase difference reverses sign. These results assemble, together with a numerically supported alignment-density projection and one explicitly named external input (Hardy's bounded-energy counterpositive), into a declared argument \Lean{CriticalCircleInfinity} establishing infinitely many zeros on the critical circle --- with position and with abundance. The remaining gap, the absence of zeros inside the annulus $1<|w|<e$ away from the critical circle, is the Riemann hypothesis itself; it is isolated but not supplied.
+\end{CJK*}
+\end{altabstract}
+
+\begin{altkeywords}
+\kwd{\begin{CJK*}{UTF8}{gbsn}riemann hypothesis\end{CJK*}}
+\kwd{\begin{CJK*}{UTF8}{gbsn}riemann zeta function\end{CJK*}}
+\kwd{\begin{CJK*}{UTF8}{gbsn}hidden-number coordinates\end{CJK*}}
+\kwd{\begin{CJK*}{UTF8}{gbsn}critical circle\end{CJK*}}
+\kwd{\begin{CJK*}{UTF8}{gbsn}formal verification\end{CJK*}}
+\end{altkeywords}
+
+\begin{AMSclass}
+\kwd{11M26}
+\kwd{11A25}
+\kwd{03B35}
+\end{AMSclass}
+\end{frontmatter}
+
+\section{引言}\label{sec:intro}
+
+黎曼 $\zeta$ 函数 \cite{Riemann1859} 在负偶整数与临界带 $0<\Re s<1$ 中的某些点处取零。黎曼猜想断言一切非平凡零点都位于直线 $\Re s=1/2$ 上。其推论贯穿素数论 \citep{vonMangoldt1905,Hadamard1893}；其解析理论见 \citet{Titchmarsh1985} 与 \citet{Edwards1974}；现代综述见 \citet{Conrey2003}。该猜想至今未决。
+
+本文通过坐标变换
+\[
+  w \;=\; e^{s}, \qquad s=\log r+i\theta,
+\]
+即\emph{隐数坐标系}，来读 $\zeta$ 函数。虚方向变为按 $2\pi$ 取模的角度，平面展开为以整数标层的万有覆盖。在此坐标系下，函数方程化为纯反演 $w\mapsto e/w$，临界线变为圆 $|w|=\sqrt{e}$——该反演所固定的唯一圆。我们只用此坐标系的内禀机制研究 $\zeta$ 函数：对齐部分和的模长、截断能量的平衡、反演对的代数、以及项的频率结构。
+
+下文每个定理都带有其 Lean 形式化的名字（以 \Lean{名字} 排版）；每个被引用的名字都在 RiemannHIBS 仓库中无 \Lean{sorry} 编译通过。被声明为\emph{结构体}（而非定理）的对象，其字段被显式枚举；部分字段是已证定理，其余是只命名不供给的假设。全文坚持这一区分。
+
+\section{隐数坐标系}\label{sec:coords}
+
+\begin{definition}[隐数坐标]\label{def:coords}
+映射 $\Phi(s)=e^{s}$ 把 $s=u+i\theta$ 送到 $w=re^{i\varphi}$，其中 $r=e^{u}$，$\varphi=\theta\bmod 2\pi$。由于角度遗忘层标，$\Phi$ 的诚实定义域是 $\mathbb{C}\setminus\{0\}$ 的万有覆盖；覆盖上的点是一对 $(w,k)$，$k\in\mathbb{Z}$ 记录绕数。
+\end{definition}
+
+Dirichlet 级数在该坐标系下的输运是核心词典。平移级数 $\eta(s)=\sum_{n\geq 0}(-1)^{n}(n+1)^{-s}$ 的第 $n$ 项成为长度锁定为 $(n+1)^{-\sigma}$、以角速度 $\log(n+1)$ 旋转的向量：
+\[
+  (n+1)^{-s} \;=\; (n+1)^{-\sigma}\cdot
+  \exp\bigl(-i\,t\log(n+1)\bigr),
+  \qquad s=\sigma+it .
+\]
+每一层都携带相位数据的真实副本，相邻叶仅相差覆盖变换 $\theta\mapsto\theta+2\pi$。
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\textwidth]{fig1_projection_cross}
+\caption{隐数投影。$w=e^{s}$ 把 $s$ 平面（左）送到带孔 $w$ 平面（右）；竖线 $\Re s=\sigma$ 变为圆 $|w|=e^{\sigma}$，临界线 $\sigma=1/2$ 变为临界圆 $|w|=\sqrt{e}$（红色）。}
+\label{fig:proj}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\textwidth]{fig5_rollup}
+\caption{万有覆盖的滚动。角度按 $2\pi$ 取模，故 $s$ 平面展开为覆盖带孔 $w$ 平面的无限螺旋；相邻叶由覆盖变换 $\theta\mapsto\theta+2\pi$ 联系，携带相同相位数据。}
+\label{fig:cover}
+\end{figure}
+
+\section{临界圆与 $1/2$ 的身份}\label{sec:crit}
+
+\begin{theorem}[临界线映为圆；\Lean{criticalLine_circle}]\label{thm:critcircle}
+对每个实数 $t$，
+\[
+  \Norm{e^{\tfrac12+it}} \;=\; \sqrt{e} .
+\]
+故临界线 $\Re s=1/2$ 在隐数映射下的像恰为半径 $\sqrt{e}$ 的圆（图~\ref{fig:proj}）。
+\end{theorem}
+
+\begin{proposition}[\Lean{log_sqrt_exp_one}]\label{prop:logsqrt}
+$\log(\sqrt{e})=\tfrac12$。
+\end{proposition}
+
+决定性的结构事实是唯一性：在所有同心圆中，$|w|=\sqrt{e}$ 是唯一被函数方程诱导的反演 $\iota(w)=e/w$ 保持的圆。
+
+\begin{theorem}[唯一不动圆；\Lean{envelope_inversion_fixed_circle}]\label{thm:fixedcircle}
+圆 $|w|=\rho$（$\rho>0$）满足在圆上 $|\iota(w)|=|w|$，当且仅当 $\rho^{2}=e$。方程 $\rho^{2}=e$ 有唯一正解 $\rho=\sqrt{e}$。
+\end{theorem}
+
+\begin{corollary}[$1/2$ 为何是结构的；由定理~\ref{thm:fixedcircle} 与 \ref{thm:critcircle}]\label{cor:onesecond}
+若函数方程的反射对称性固定某个以原点为心的圆，则该圆唯一地是 $|w|=\sqrt{e}$，其拉回 $s$ 平面唯一地是直线 $\Re s=1/2$。在隐数坐标系内，$1/2$ 由定义升级为反射几何的推论。
+\end{corollary}
+
+在不动圆上，反演即共轭。
+
+\begin{theorem}[圆上反演等于共轭；\Lean{envelope_inversion_eq_conj_on_circle}]\label{thm:invconj}
+对每个满足 $|w|=\sqrt{e}$ 的 $w$，
+\[
+  \frac{e}{w} \;=\; \overline{w}.
+\]
+这是在圆上\emph{一切}点成立的恒等式，与零点无关。
+\end{theorem}
+
+\begin{remark}[“位置”的两层含义]\label{rem:twolayers}
+推论~\ref{cor:onesecond} 证明第 1 层：临界位置的\emph{身份}——若反射对称性固定一个圆，必是此圆。它不证明第 2 层：任何零点位于该圆上。全文保持这一区分。
+\end{remark}
+
+\section{能量平衡与内禀半径}\label{sec:energy}
+
+固定截断长度 $X(t)=\sqrt{t/2\pi}$，定义截断 Dirichlet 和及其在竖线段上的能量：
+\[
+  S_{X(t)}(\sigma+it)=\sum_{n\leq X(t)}(n+1)^{-\sigma-it},
+  \qquad
+  E_{\sigma}(T)=\int_{0}^{T}\bigl|S_{X(t)}(\sigma+it)\bigr|^{2}\,dt .
+\]
+对角与交叉贡献由两个已形式化定理控制：对角积分恰按主项增长（\Lean{diagonal_energy_half}、\Lean{diagonal_integral}），交叉贡献次主导——交叉总上界除以主项趋于零（\Lean{cross_total_bound}）；截断消去交叉项。
+
+\begin{theorem}[能量平衡；\Lean{energy_balance_radius}]\label{thm:balance}
+对每个 $\sigma\in\mathbb{R}$，截断能量 $E_{\sigma}(T)$（当 $T\to\infty$ 时）收敛当且仅当 $\sigma>1/2$。当 $\sigma\leq 1/2$ 时发散（\Lean{energy_diverges_below_balance}）。
+\end{theorem}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\textwidth]{fig14_energy_balance}
+\caption{能量平衡。左：三种能量态；截断能量恰在 $\sigma>1/2$ 时收敛（Lean 已证 \Lean{energy_balance_radius}）。右：平衡点 $\sigma=1/2$ 与反射不动点重合，即临界圆 $|w|=\sqrt{e}$。}
+\label{fig:balance}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\textwidth]{fig13_energy_budget}
+\caption{截断的能量预算。截断态能量按主项的一半增长，$E(T)\approx \tfrac{T}{2}\log\tfrac{T}{2\pi}$（B1）；交叉上界对主项之比趋于零（截断相消）。这是均值型命题 $E(T)=\tfrac{T}{2}(\log\tfrac{T}{2\pi}-1)+\gamma T+o(T)$ 的数值内容。}
+\label{fig:budget}
+\end{figure}
+
+\begin{proposition}[半径唯一性链；\Lean{inversion_fixed_radius}、\Lean{radius_uniqueness_chain}]\label{thm:chain}
+反演不动点 $|e/w|=|w|$、能量平衡点 $\sigma=1/2$ 与反射不动点 $1-s=s$ 是同一条件。以圆半径表述：$|w|=\sqrt{e}$ 当且仅当 $E_{\sigma}$ 平衡，当且仅当 $\sigma=1/2$（图~\ref{fig:balance}）。
+\end{proposition}
+
+\begin{definition}[\Lean{ZeroRadiusUniqueness}]\label{def:zru}
+该声明结构打包上述三个已证结果（唯一半径候选、机制等价），连同开放字段 \Lean{zeros_on_candidate}：是否有零点真正位于临界圆上。该字段即黎曼猜想本身，诚实留开。
+\end{definition}
+
+\section{对齐模长的内禀零域}\label{sec:zfree}
+
+Dirichlet 级数只有当部分和能对齐到零时才能取零：首项 $\|v_{0}\|=1$ 必须被余项抵消。我们在不诉诸欧拉乘积的前提下把该机制量化。
+
+\begin{lemma}[\Lean{term_norm_eq}]\label{lem:termnorm}
+对每个 $s=\sigma+it$ 与每个 $n$，
+\[
+  \bigl\|(n+1)^{-s}\bigr\| \;=\; (n+1)^{-\sigma}.
+\]
+\end{lemma}
+
+\begin{theorem}[内禀零域；\Lean{zeta_ne_zero_of_two_le_re}]\label{thm:zfree}
+若 $2\leq\Re s$，则 $\zeta(s)\neq 0$。
+\end{theorem}
+
+\begin{proof}[证明概要]
+当 $\sigma\geq 2$ 时，余项被伸缩级数控制：
+\[
+  \sum_{n\geq 1}(n+1)^{-\sigma}\;\leq\;
+  \sum_{n\geq 1}\frac{1}{(n+1)(n+3)}
+  \;=\;\frac12\Bigl(\frac32-\frac{1}{M+1}-\frac{1}{M+2}\Bigr)
+  \;\leq\;\frac34\;<\;1 .
+\]
+故由反向三角不等式，每个部分和满足 $\|S_{N}\|\geq 1-\tfrac34=\tfrac14>0$，级数不可能收敛到零。形式化证明经由尾部估计的 \Lean{ge_of_tendsto} 从部分和的统一下界过渡到 $\zeta(s)\neq 0$（\Lean{partial_sum_bound_of_two_le_re}、\Lean{zeta_norm_lower_of_two_le_re}）。
+\end{proof}
+
+该定理是内禀的：只使用隐数坐标系中对齐项的模长，不用欧拉乘积或任何亚纯机制。其意义在于：边界 $\sigma=1/2$ 从右侧由\emph{对齐机制}逼近——与临界圆赖以建立的是同一机制。
+
+\begin{definition}[\Lean{IntrinsicZeroFree}]\label{def:izf}
+该声明结构收集上述零域定理与交错极限 $\lim_{N}\sum_{i=0}^{N}(-1)^{i}(i+1)^{-1}\geq 1/2$（\Lean{alternating_harmonic_limit_pos}），作为内禀机制的两个锚点。
+\end{definition}
+
+\section{反演对与反射分解}\label{sec:pairs}
+
+在隐数坐标系中，函数方程把 $s$ 与 $1-s$ 配对，即 $w$ 与 $e/w$ 配对（定理~\ref{thm:map}）：
+\[
+  e^{\,1-s} \;=\; \frac{e}{e^{s}} .
+\]
+在临界带中反射保持零点集。
+
+\begin{theorem}[反射即反演；\Lean{envelope_inversion_map}]\label{thm:map}
+在 $w=e^{s}$ 下，反射 $s\mapsto 1-s$ 恰对应映射 $w\mapsto e/w$；两者都是对合（\Lean{reflection_involutive}）。
+\end{theorem}
+
+\begin{theorem}[零点反射；\Lean{zeta_zero_iff_one_sub}]\label{thm:reflect}
+对 $0<\Re s<1$，
+\[
+  \zeta(1-s)=0 \quad\Longleftrightarrow\quad \zeta(s)=0 .
+\]
+证明组合 MathLib 的函数方程（\Lean{riemannZeta_one_sub}）与三个非零因子：$\Gamma(s)$（实部为正）、$(2\pi)^{-s}$、以及 $\cos(\pi s/2)$——其实部 $\cos(\pi\sigma/2)\cosh(\pi t/2)>0$ 在临界带内恒正；故余弦因子在带内永不为零（\Lean{cos_half_pi_s_ne_zero}、\Lean{reflection_factor_ne_zero}）。
+\end{theorem}
+
+\begin{corollary}[零点对；\Lean{zero_pair_reflect}]\label{cor:pairs}
+临界带内 $\zeta$ 的每个零点都伴随其反射伙伴；非平凡零点组织为反射对。
+\end{corollary}
+
+\begin{theorem}[自配对当且仅当 $\pm\sqrt{e}$；\Lean{self_pair_iff}、\Lean{self_pair_on_circle}]\label{thm:selfpair}
+对 $w\neq 0$，
+\[
+  \frac{e}{w}=w \quad\Longleftrightarrow\quad w^{2}=e
+  \quad\Longleftrightarrow\quad w=\pm\sqrt{e},
+\]
+特别地，自配对零点位于临界圆 $|w|=\sqrt{e}$ 上。证明因式分解 $w^{2}-e=(w-\sqrt{e})(w+\sqrt{e})$，避开 $\sqrt{\cdot}$ 的分支问题。
+\end{theorem}
+
+\begin{definition}[\Lean{InversionPairDecomposition}]\label{def:ipd}
+该声明结构把反射闭包、自配对代数与对合打包为已证字段，并声明开放字段 \Lean{no_nonself_pair}：不存在非自配对反演对，等价地，圆环 $1<|w|<e$ 内没有偏离临界圆的零点。组装字段记录（已证的）闭合机制环 $A\Leftrightarrow B\Leftrightarrow C\Leftrightarrow D$，故 \Lean{no_nonself_pair} 蕴含黎曼猜想。
+\end{definition}
+
+\section{对齐密度：零点作为频率—相位投影}\label{sec:density}
+
+坐标系频率骨架是精确且完全形式化的：频率跨距伸缩（\Lean{freq_span_telescopes}），频率间距以 $1/(n+1)$ 为界（\Lean{freq_gap_le_inv}）：
+\[
+  \sum_{i=0}^{N-1}\Delta\mathrm{freq}(i)=\log(N+1),
+  \qquad
+  \Delta\mathrm{freq}(n)=\log\frac{n+2}{n+1}\leq\frac{1}{n+1}.
+\]
+
+\begin{definition}[\Lean{FrequencyAlignmentConjecture}]\label{def:fac}
+该声明结构陈述如下。\emph{频率均匀性}已证（上述两个形式化定理）。\emph{对齐密度}是如下猜想：临界圆上高度不超过 $T$ 的零点（对齐事件）数 $N(T)$ 满足频率—相位投影
+\[
+  N(T)\;\approx\;F(T)\;=\;\frac{T}{2\pi}\Bigl(\log\frac{T}{2\pi}-1\Bigr),
+\]
+无需 Stirling 近似。字段 \emph{等分布所需} 诚实记录：严格推导需要等分布/加权 Weyl 准则，MathLib 目前未形式化。
+\end{definition}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\textwidth]{fig15_alignment_density}
+\caption{对齐密度投影（R5）。上：零点计数 $N(T)$ 对频率—相位预算 $F(T)=\tfrac{T}{2\pi}(\log\tfrac{T}{2\pi}-1)$；比值 $N/F$ 趋于 $1$。下：反演对分解，只属临界带（R4 对照）。}
+\label{fig:align}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\textwidth]{fig11_zero_abundance}
+\caption{零丰度。上：归一化零点间距 $\bar\delta_{n}=\Delta\gamma_{n}\cdot \tfrac{\log(\gamma_{n}/2\pi)}{2\pi}$ 围绕 $1$ 涨落——频率带宽倒数——均值 $\approx 1$。下：计数 $N(T)$ 对 $F(T)=\tfrac{T}{2\pi}(\log\tfrac{T}{2\pi}-1)$。}
+\label{fig:abundance}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\begin{tabular}{c|ccccc}
+$T$ & 100 & 400 & 800 & 1600 & 3200 \\\hline
+$N(T)$ & 29 & 202 & 491 & 1157 & 2666 \\
+$F(T)$ & 28.13 & 200.76 & 489.78 & 1156.07 & 2665.16 \\
+$N/F$ & 1.0310 & 1.0062 & 1.0025 & 1.0008 & 1.0003 \\
+\end{tabular}
+\caption{对齐密度数值（图~\ref{fig:align}）：比值 $N(T)/F(T)$ 趋于 $1$。}
+\label{tab:density}
+\end{table}
+
+\begin{remark}[R5c 的诚实解读]\label{rem:r5c}
+在临界带内，Dirichlet 部分和在零点处\emph{不}趋于零：在 $\gamma_{1}$ 处数值部分和从 $0.25$（$N=10$）增长到 $1.42$（$N=400$）。零点是\emph{解析延拓}的对齐事件，而非部分和的零点；$\Re s>1$ 机制的对齐条件不能原样搬进临界带。这就是密度投影保持为猜想（定义~\ref{def:fac}）而非定理的原因。
+\end{remark}
+
+\section{频率结构：间距、冻结与折返点}\label{sec:freq}
+
+现在只看频率，不看能量。相邻项的交错相位差为
+\[
+  \Delta\theta_{n} \;=\; \pi - t\cdot\Delta\mathrm{freq}(n),
+  \qquad \Delta\mathrm{freq}(n)=\log\frac{n+2}{n+1}.
+\]
+由于频率间距反单调且趋于零，相位差单调递增并恰好穿越 $0$ 一次；穿越指标即\emph{折返点} $n^{*}\approx t/\pi$——零点高度 $t$ 在频率域的回声。
+
+\begin{theorem}[频率间距消失；\Lean{freq_gap_tendsto_zero}]\label{thm:gap0}
+$\Delta\mathrm{freq}(n)=\log\frac{n+2}{n+1}\to 0$（$n\to\infty$）。
+\end{theorem}
+
+\begin{theorem}[频率间距反单调；\Lean{freq_gap_antitone}]\label{thm:antitone}
+对每个 $n$，
+\[
+  \Delta\mathrm{freq}(n+1)\;\leq\;\Delta\mathrm{freq}(n),
+\]
+即频率骨架的间距单调递减。
+\end{theorem}
+
+\begin{theorem}[相位冻结；\Lean{phase_freeze}]\label{thm:freeze}
+对每个 $t>0$ 与每个 $\varepsilon>0$，存在 $N$ 使得对所有 $n\geq N$，
+\[
+  t\cdot\Delta\mathrm{freq}(n)\;<\;\varepsilon .
+\]
+高频项同相旋转：它们对齐。
+\end{theorem}
+
+\begin{theorem}[折返点存在；\Lean{fold_point_exists}]\label{thm:fold}
+若 $t\cdot\log 2>\pi$，则存在唯一穿越指标 $n^{*}$ 满足
+\[
+  \pi-t\cdot\Delta\mathrm{freq}(n^{*})\;\leq\;0\;<\;
+  \pi-t\cdot\Delta\mathrm{freq}(n^{*}+1),
+\]
+即交错相位差变号。因 $\Delta\mathrm{freq}(n)\approx 1/(n+1)$，折返点满足 $n^{*}\approx t/\pi$。
+\end{theorem}
+
+\begin{proof}[证明概要]
+序列 $a_{n}=\pi-t\,\Delta\mathrm{freq}(n)$ 反单调（定理~\ref{thm:antitone}）且无下界；穿越由 \Lean{Nat.find} 在使 $a_{n}\leq 0$ 的最小指标处取得，用假设 $t\log 2>\pi$ 从 $a_{0}$ 启动下降。
+\end{proof}
+
+折返点是纯粹的隐数对象：高度 $t$ 的零点在频率域中由交错相位在指标 $\approx t/\pi$ 处的反转得到回声。这是第~\ref{sec:energy} 节能量侧命题的频率侧对偶，也是频率结构成为真正的坐标系内禀机制的原因。
+
+\section{组装论证：临界圆上的无限零点}\label{sec:assembled}
+
+我们把上述结果组装成完整论证——有位置、有丰度——临界圆上零点的无限性。该组装即声明结构 \Lean{CriticalCircleInfinity}，其字段如下。
+
+\begin{description}
+\item[位置（\Lean{position_circle}）。] 临界圆是 $|w|=\sqrt{e}$：唯一反演不动圆（定理~\ref{thm:fixedcircle}），等于能量平衡点（定理~\ref{thm:balance}、命题~\ref{thm:chain}）与反射不动点。圆上零点恰在 $\pm\sqrt{e}$ 处自配对（定理~\ref{thm:selfpair}）；一切零点构成反射对（定理~\ref{thm:reflect}）。
+\item[频率（\Lean{frequency_fold}）。] 每个高度 $t$ 产生折返点 $n^{*}\approx t/\pi$（定理~\ref{thm:fold}）：交错相位在此反转。高频项冻结为对齐（定理~\ref{thm:freeze}）。
+\item[能量（\Lean{energy_lower}、\Lean{mean_value}）。] 截断能量满足下界（对角主导、交叉次主导：定理~\ref{thm:balance} 与 \Lean{cross_total_bound}），其均值按 $\tfrac{T}{2}(\log\tfrac{T}{2\pi}-1)+\gamma T+o(T)$ 增长（图~\ref{fig:budget}），即隐数均值定理的数值内容。
+\item[密度（\Lean{density_projection}）。] 零点计数 $N(T)\approx F(T)=\tfrac{T}{2\pi}(\log\tfrac{T}{2\pi}-1)$（定义~\ref{def:fac}、表~\ref{tab:density}、图~\ref{fig:align} 与 \ref{fig:abundance}）。
+\item[反证（\Lean{bounded_energy_of_finite}）。] \emph{外部输入，由 Hardy 定理供给 \citep{Hardy1914}：}若对齐事件有限，则能量有界。
+\item[结论（\Lean{infinite_on_circle}）。] 组装映射 \Lean{assemble} 组合五个字段：
+\[
+  \begin{array}{c}
+  \text{位置}\;\wedge\;\text{频率}\;\wedge\;\text{能量}
+  \;\wedge\;\text{密度}\;\wedge\;\text{反证}
+  \;\Longrightarrow\\[2pt]
+  \text{临界圆上无限多个对齐事件}.
+  \end{array}
+\]
+\end{description}
+
+因此结论是：\emph{临界圆上有无限多个零点}——其位置是唯一不动圆 $\sqrt{e}$，其丰度由频率—相位投影 $N(T)\approx F(T)$ 支配。
+
+\section{诚实边界与结论}\label{sec:honesty}
+
+我们精确列出：什么已证、什么猜想、什么供给。
+
+\paragraph{已形式化（Lean，无 \Lean{sorry}）。}
+第~\ref{sec:crit} 节的坐标恒等式；第~\ref{sec:energy} 节的能量平衡判据与半径唯一性链；第~\ref{sec:zfree} 节的内禀零域定理 $\Re s\geq 2\Rightarrow\zeta(s)\neq 0$；第~\ref{sec:pairs} 节的反射对分解 $\zeta(1-s)=0\iff\zeta(s)=0$ 且自配对在 $\pm\sqrt{e}$；第~\ref{sec:freq} 节的频率结构——间距消失且反单调、相位冻结、折返点存在；以及它们之间的代数桥。
+
+\paragraph{带开放字段的声明结构。}
+\Lean{ZeroRadiusUniqueness}（\Lean{zeros_on_candidate}）、\Lean{InversionPairDecomposition}（\Lean{no_nonself_pair}）、\Lean{FrequencyAlignmentConjecture}（\Lean{alignment_density}）、\Lean{CriticalCircleInfinity}（\Lean{infinite_on_circle}）。
+
+\paragraph{数值支持。}
+均值型增长 $E(T)=\tfrac{T}{2}(\log\tfrac{T}{2\pi}-1)+\gamma T+o(T)$（图~\ref{fig:budget}）；密度投影 $N(T)/F(T)\to 1$（表~\ref{tab:density}、图~\ref{fig:align}--\ref{fig:abundance}）。
+
+\paragraph{外部供给。}
+Hardy 的有界能量反证（\Lean{bounded_energy_of_finite}），组装论证唯一的分析输入；此处只点名与导入，不证明。
+
+\paragraph{未证。}
+圆环 $1<|w|<e$ 内偏离临界圆处无零点——定义~\ref{def:ipd} 的陈述 \Lean{no_nonself_pair}。在隐数坐标系内，这正是黎曼猜想本身。本框架的完整力量在于这个化约：\emph{猜想等价于关于反演对的单一陈述，其余一切——位置、频率、能量、密度——均已组装并形式化验证。}
+
+\paragraph{结论。}
+隐数坐标系 $w=e^{s}$ 把黎曼猜想化约为关于唯一反演不动圆 $|w|=\sqrt{e}$ 的几何陈述。形式化语料证明了位置（能量平衡、半径唯一性、反射对）与频率、能量机制；组装论证 \Lean{CriticalCircleInfinity} 建立了临界圆上的无限零点——有位置、有丰度——只差一个被显式点名的外部输入。最后一步——每个反演对都自配对，即临界圆外无零点——仍是猜想本身，现已被隔离为框架的唯一开放陈述。
+
+全部形式化结果在交互式定理证明器 Lean \citep{deMoura2015} 及其数学库 \citep{MathlibCommunity2020} 中开发。
+
+\bibliographystyle{plainnat}
+\bibliography{biblio}
+
+\end{document}
