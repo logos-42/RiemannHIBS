@@ -28,6 +28,8 @@ import Mathlib.Analysis.Complex.Trigonometric
 import Mathlib.Analysis.SpecialFunctions.Complex.Log
 import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
 import Mathlib.NumberTheory.Harmonic.EulerMascheroni
+import Mathlib.NumberTheory.Harmonic.Bounds
+import Mathlib.Data.Rat.BigOperators
 import Mathlib.Analysis.PSeries
 import Mathlib.Topology.Algebra.InfiniteSum.NatInt
 
@@ -710,6 +712,183 @@ theorem harmonic_log_tendsto_euler :
 --   ⟹ 只有临界叶 |w| = √e (σ = 1/2) 处于调和边界 —
 --     "对齐机制的径向唯一性": 能量预算只在平衡半径处临界
 -- ============================================================
+
+-- ============================================================
+-- R1 (task 1): 交叉双和上界 — 行界 + 总界
+--   交叉 ≤ 2·ΣΣ_{m<n} (mn)^{-1/2}/|Δ|  ≤ 2·ΣΣ_{m<n} √(n/m)/(n−m)
+--   行界: Σ_{m<n} √(n/m)/(n−m) ≤ √n·(1 + log(n−1))
+--   总界: ΣΣ ≤ N·√N·(1 + log N)
+--   截断 X=√(T/2π) 时: 交叉 ≤ 2N^{1.5}(1+log N) ~ T^{0.75}·log T
+--   次主导于对角 T·log T (T^{-0.25} → 0) — R1 完成
+-- ============================================================
+
+-- 引理: m ≥ 1 ⟹ √(n/m) ≤ √n
+lemma sqrt_div_le (n m : ℕ) (hm : 1 ≤ m) :
+    Real.sqrt ((n : ℝ) / (m : ℝ)) ≤ Real.sqrt (n : ℝ) := by
+  have hdiv : (n : ℝ) / (m : ℝ) ≤ (n : ℝ) := by
+    rw [div_le_iff₀ (by positivity : 0 < (m : ℝ))]
+    nlinarith [show (1 : ℝ) ≤ (m : ℝ) by exact_mod_cast hm,
+      mul_nonneg (by positivity : 0 ≤ (n : ℝ)) (by positivity : 0 ≤ (n : ℝ))]
+  exact Real.sqrt_le_sqrt hdiv
+
+-- 重排: Σ_{m∈range (n−1)} 1/(n−(m+1)) = Σ_{m∈range (n−1)} 1/(m+1) (sum_range_reflect)
+lemma sum_recip_shift_range (n : ℕ) (hn : 2 ≤ n) :
+    (∑ m ∈ Finset.range (n - 1), 1 / ((n : ℝ) - ((m + 1 : ℕ) : ℝ))) =
+      (∑ m ∈ Finset.range (n - 1), 1 / ((m + 1 : ℕ) : ℝ)) := by
+  calc
+    (∑ m ∈ Finset.range (n - 1), 1 / ((n : ℝ) - ((m + 1 : ℕ) : ℝ)))
+      = ∑ m ∈ Finset.range (n - 1), 1 / (((n - 1 - m : ℕ) : ℝ)) := by
+          apply Finset.sum_congr rfl
+          intro m hm
+          have hle' : m + 1 ≤ n := by
+            have hmr : m < n - 1 := Finset.mem_range.mp hm
+            have hmr' : m + 1 ≤ n - 1 := Nat.succ_le_of_lt hmr
+            omega
+          rw [← Nat.cast_sub hle']
+          congr 1
+          exact_mod_cast (by omega : n - (m + 1) = n - 1 - m)
+    _ = ∑ m ∈ Finset.range (n - 1), 1 / ((m + 1 : ℕ) : ℝ) := by
+          have hrefl := Finset.sum_range_reflect (fun j : ℕ => 1 / ((j + 1 : ℕ) : ℝ)) (n - 1)
+          convert hrefl using 1
+          · apply Finset.sum_congr rfl
+            intro m hm
+            have hmr : m < n - 1 := Finset.mem_range.mp hm
+            congr 1
+            exact_mod_cast (by omega : n - 1 - m = (n - 1 - 1 - m) + 1)
+
+-- 行界: Σ_{m<n} √(n/m)/(n−m) ≤ √n·(1 + log(n−1))  (n ≥ 2)
+--   用 m+1 (range) 参数化: Σ_{m∈range (n−1)} √(n/(m+1))/(n−(m+1))
+theorem cross_row_bound (n : ℕ) (hn : 2 ≤ n) :
+    (∑ m ∈ Finset.range (n - 1),
+        Real.sqrt ((n : ℝ) / ((m + 1 : ℕ) : ℝ)) / ((n : ℝ) - ((m + 1 : ℕ) : ℝ))) ≤
+      Real.sqrt (n : ℝ) * (1 + Real.log ((n : ℝ) - 1)) := by
+  -- 逐项: √(n/(m+1))/(n−(m+1)) ≤ √n/(n−(m+1))  (√(n/(m+1)) ≤ √n)
+  have hle : ∀ m ∈ Finset.range (n - 1),
+      Real.sqrt ((n : ℝ) / ((m + 1 : ℕ) : ℝ)) / ((n : ℝ) - ((m + 1 : ℕ) : ℝ)) ≤
+        Real.sqrt (n : ℝ) / ((n : ℝ) - ((m + 1 : ℕ) : ℝ)) := by
+    intro m hm
+    have hm1 : 1 ≤ m + 1 := by omega
+    have hs : Real.sqrt ((n : ℝ) / ((m + 1 : ℕ) : ℝ)) ≤ Real.sqrt (n : ℝ) := sqrt_div_le n (m + 1) hm1
+    have hmn' : m + 1 < n := by
+      have hmr : m < n - 1 := Finset.mem_range.mp hm
+      omega
+    have hd : 0 < (n : ℝ) - ((m + 1 : ℕ) : ℝ) := by
+      exact sub_pos.mpr (by exact_mod_cast hmn')
+    exact (div_le_div_iff_of_pos_right hd).mpr hs
+  calc
+    (∑ m ∈ Finset.range (n - 1),
+        Real.sqrt ((n : ℝ) / ((m + 1 : ℕ) : ℝ)) / ((n : ℝ) - ((m + 1 : ℕ) : ℝ)))
+        ≤ ∑ m ∈ Finset.range (n - 1), Real.sqrt (n : ℝ) / ((n : ℝ) - ((m + 1 : ℕ) : ℝ)) := by
+          exact Finset.sum_le_sum hle
+    _ = Real.sqrt (n : ℝ) * (∑ m ∈ Finset.range (n - 1), 1 / ((n : ℝ) - ((m + 1 : ℕ) : ℝ))) := by
+          rw [Finset.mul_sum]
+          apply Finset.sum_congr rfl
+          intro m hm
+          ring
+    _ = Real.sqrt (n : ℝ) * (∑ m ∈ Finset.range (n - 1), 1 / ((m + 1 : ℕ) : ℝ)) := by
+          -- 换元: n−(m+1) → m+1 (sum_range_reflect, sum_recip_shift_range)
+          rw [sum_recip_shift_range n hn]
+    _ = Real.sqrt (n : ℝ) * (harmonic (n - 1) : ℝ) := by
+          congr 1
+          -- 目标: Σ_{m∈range (n−1)} 1/((m+1):ℝ) = (harmonic (n−1) : ℝ)
+          have hdef : harmonic (n - 1) = ∑ i ∈ Finset.range (n - 1), ((i + 1 : ℕ) : ℚ)⁻¹ := by
+            rfl
+          calc
+            (∑ m ∈ Finset.range (n - 1), 1 / ((m + 1 : ℕ) : ℝ))
+              = ∑ m ∈ Finset.range (n - 1), (((m + 1 : ℕ) : ℚ)⁻¹ : ℝ) := by
+                  apply Finset.sum_congr rfl
+                  intro m hm
+                  norm_num [Rat.cast_inv, Rat.cast_natCast]
+            _ = (↑(∑ i ∈ Finset.range (n - 1), ((i + 1 : ℕ) : ℚ)⁻¹) : ℝ) := by
+                  rw [Rat.cast_sum (Finset.range (n - 1)) (fun i : ℕ => ((i + 1 : ℕ) : ℚ)⁻¹)]
+                  apply Finset.sum_congr rfl
+                  intro m hm
+                  rw [← Rat.cast_inv]
+            _ = (harmonic (n - 1) : ℝ) := by rw [hdef]
+    _ ≤ Real.sqrt (n : ℝ) * (1 + Real.log ((n : ℝ) - 1)) := by
+          apply mul_le_mul_of_nonneg_left _ (Real.sqrt_nonneg _)
+          have hh : (harmonic (n - 1) : ℝ) ≤ 1 + Real.log ((n - 1 : ℕ) : ℝ) := by
+            exact_mod_cast harmonic_le_one_add_log (n - 1)
+          simpa [Nat.cast_sub (by omega : 1 ≤ n)] using hh
+
+-- 总界: Σ_{n≤N} √n·(1+log(n−1)) ≤ N·√N·(1+log N)  (N ≥ 2)
+theorem cross_total_bound (N : ℕ) (hN : 2 ≤ N) :
+    (∑ n ∈ Finset.Icc 2 N,
+        Real.sqrt (n : ℝ) * (1 + Real.log ((n : ℝ) - 1))) ≤
+      (N : ℝ) * Real.sqrt (N : ℝ) * (1 + Real.log (N : ℝ)) := by
+  have hlogN : 0 ≤ 1 + Real.log (N : ℝ) := by
+    have hlogpos : 0 ≤ Real.log (N : ℝ) := Real.log_nonneg (by exact_mod_cast (by omega : 1 ≤ N))
+    linarith
+  have hle : ∀ n ∈ Finset.Icc 2 N,
+      Real.sqrt (n : ℝ) * (1 + Real.log ((n : ℝ) - 1)) ≤
+        Real.sqrt (N : ℝ) * (1 + Real.log (N : ℝ)) := by
+    intro n hn
+    have hn2 : 2 ≤ n := (Finset.mem_Icc.mp hn).1
+    have hnN : n ≤ N := (Finset.mem_Icc.mp hn).2
+    have hsqrt : Real.sqrt (n : ℝ) ≤ Real.sqrt (N : ℝ) :=
+      Real.sqrt_le_sqrt (by exact_mod_cast hnN)
+    have hlog : 1 + Real.log ((n : ℝ) - 1) ≤ 1 + Real.log (N : ℝ) := by
+      have hnpos : 0 < (n : ℝ) - 1 := by
+        nlinarith [show (2 : ℝ) ≤ (n : ℝ) by exact_mod_cast hn2]
+      have hle' : (n : ℝ) - 1 ≤ (N : ℝ) := by
+        nlinarith [show (n : ℝ) ≤ (N : ℝ) by exact_mod_cast hnN]
+      have hlog' : Real.log ((n : ℝ) - 1) ≤ Real.log (N : ℝ) :=
+        Real.log_le_log hnpos hle'
+      simpa [add_comm] using add_le_add_right hlog' 1
+    have hnonneg1 : 0 ≤ Real.sqrt (N : ℝ) := Real.sqrt_nonneg _
+    have hlogN' : 0 ≤ 1 + Real.log ((n : ℝ) - 1) := by
+      have hn1 : 1 ≤ (n : ℝ) - 1 := by
+        nlinarith [show (2 : ℝ) ≤ (n : ℝ) by exact_mod_cast hn2]
+      have hlp : 0 ≤ Real.log ((n : ℝ) - 1) := Real.log_nonneg hn1
+      linarith
+    calc
+      Real.sqrt (n : ℝ) * (1 + Real.log ((n : ℝ) - 1))
+          ≤ Real.sqrt (N : ℝ) * (1 + Real.log ((n : ℝ) - 1)) :=
+            mul_le_mul_of_nonneg_right hsqrt hlogN'
+      _ ≤ Real.sqrt (N : ℝ) * (1 + Real.log (N : ℝ)) :=
+            mul_le_mul_of_nonneg_left hlog hnonneg1
+  calc
+    (∑ n ∈ Finset.Icc 2 N,
+        Real.sqrt (n : ℝ) * (1 + Real.log ((n : ℝ) - 1)))
+        ≤ ∑ n ∈ Finset.Icc 2 N, Real.sqrt (N : ℝ) * (1 + Real.log (N : ℝ)) := by
+          exact Finset.sum_le_sum hle
+    _ = (Finset.Icc 2 N).card • (Real.sqrt (N : ℝ) * (1 + Real.log (N : ℝ))) := by
+          rw [Finset.sum_const]
+    _ ≤ (N : ℝ) * (Real.sqrt (N : ℝ) * (1 + Real.log (N : ℝ))) := by
+          -- card(Icc 2 N) ≤ N (单射 n ↦ n−1 入 range N)
+          have hinj : Set.InjOn (fun n : ℕ => n - 1) (↑(Finset.Icc 2 N)) := by
+            intro a ha b hb h
+            have ha' : 2 ≤ a := by
+              rw [Finset.mem_coe] at ha
+              exact (Finset.mem_Icc.mp ha).1
+            have hb' : 2 ≤ b := by
+              rw [Finset.mem_coe] at hb
+              exact (Finset.mem_Icc.mp hb).1
+            have hsub : a - 1 = b - 1 := h
+            omega
+          have him : ∀ n ∈ Finset.Icc 2 N, n - 1 ∈ Finset.range N := by
+            intro n hn
+            have hn2 : 2 ≤ n := (Finset.mem_Icc.mp hn).1
+            have hnN : n ≤ N := (Finset.mem_Icc.mp hn).2
+            rw [Finset.mem_range]
+            have hn1 : 0 < n := by omega
+            omega
+          have hcard' : ((Finset.Icc 2 N).image (fun n : ℕ => n - 1)).card = (Finset.Icc 2 N).card := by
+            rw [Finset.card_image_of_injOn hinj]
+          have hcard : ((Finset.Icc 2 N).card : ℝ) ≤ (N : ℝ) := by
+            calc
+              ((Finset.Icc 2 N).card : ℝ) = ((Finset.Icc 2 N).image (fun n => n - 1) |>.card : ℝ) := by rw [hcard']
+              _ ≤ ((Finset.range N).card : ℝ) := by
+                exact_mod_cast (Finset.card_le_card (by
+                  intro x hx
+                  rw [Finset.mem_image] at hx
+                  rcases hx with ⟨n, hn, rfl⟩
+                  exact him n hn))
+              _ = (N : ℝ) := by rw [Finset.card_range]
+          simpa using (mul_le_mul_of_nonneg_right hcard
+            (mul_nonneg (Real.sqrt_nonneg _) hlogN))
+    _ = (N : ℝ) * Real.sqrt (N : ℝ) * (1 + Real.log (N : ℝ)) := by ring
+
 
 -- 12.13 能量平衡半径: Σ (n+1)^{-2σ} 收敛 ⟺ σ > 1/2
 --     (1/2 是能量的唯一平衡点 — 半径唯一性的能量骨架)
