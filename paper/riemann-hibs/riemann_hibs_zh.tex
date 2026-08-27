@@ -38,6 +38,15 @@
 \newtheorem{definition}[theorem]{定义}
 \newtheorem*{remark}{注}
 \newcommand{\Lean}[1]{\texttt{\detokenize{#1}}}
+\setattribute{copyright}{text}{\vspace*{-1cm}%
+    \hspace{\fill}%
+    \raisebox{.45cm}{%
+    \parbox{.9\linewidth}{%
+      \centering\color{navy}{\LARGE\sffamily\journal@name}\\[5pt]
+      \sffamily\textbf{\@volume}\@issue\@pubyear
+      \doi@text}%
+  }%
+ }
 \newcommand{\abs}[1]{\lvert #1\rvert}
 \newcommand{\Norm}[1]{\lVert #1\rVert}
 \endlocaldefs

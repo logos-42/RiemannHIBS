@@ -4,7 +4,7 @@
 构造黎曼猜想中的核心函数 —— **Riemann ζ 函数**与 **Dirichlet η 函数** ——
 并证明其代数骨架。
 
-纯 core Lean 4（v4.28.0，无 mathlib），值类型用 `Int`。
+Core 模块使用纯 Lean 4（无 mathlib）。`Analytic` 模块使用 **mathlib v4.28.0**。
 
 **English version**: [README.md](README.md)
 
@@ -28,18 +28,10 @@ HIBS 的隐数 `⟨值, 标签⟩` 有两条核心流规则：
 | **隐虚数** | `hiddenImag b` = ⟨b, iR⟩ | A3 开方流入虚部 | 临界线点 1/2 + it 的虚部 t 承载于 iR 支（`doubledEmbedding`） |
 | **隐方数** | `hSqrt h` = ⟨h.val, iR⟩ | A3 开方强制投影到 iℝ | 平方量 t² 经 √ 流入 iR 支，投影为纯虚数 ⟨0, t²⟩（`sqrt_pure_imag`）——虚轴方向从隐方数涌现 |
 
-> **上游注记（2026-08-21）**：HIBS（Lean_HIBS）自 commit `cc08ceb` 起大幅重构 ——
-> `Definitions.lean` 新增 ℂ 的 `Add`/`Mul` 实例、`conj`、`CompositeHidden`、`DecidableEq`
-> 等；`Axioms.lean` 改为参数化结构 `Axiom1/2/3` + `HIBS_Axioms`；并新增
-> `Conjugation`（conjS/signalRev）、`Sqrt`（符号感知 `hSqrtFull`）、`Derivation`
-> （`hEval`/`imul`/`hMulAdj`）、`Embedding`（ι'/π'）、`Model`（公理独立性 M₁/M₂/M₃）
-> 五个模块。本仓库的 `Hidden.lean`/`Axioms.lean` 已**对齐新版 Definitions/Axioms**
-> （`ι_R` 替代旧 `hiddenProj`，`CompositeHidden`/`π'` 移到 Hidden.lean），ζ/η 构造不变。
->
-> 关于开方符号：HIBS 论文模型 (4.5) 与例 4.3 曾有一处符号笔误，几何一致约定为
-> **⟨+ ↦ iR⁻、⟨− ↦ iR⁺**，已由 `cc08ceb` 修正。本仓库 `hSqrt` 为简化的
-> 值保持标签模型（无半轴结构，对应 A3 标签子句而非 (4.5) 值公式），**不受影响**；
-> 完整 A3（符号感知 `hSqrtFull`）在 Lean_HIBS `HIBS/Sqrt.lean`。
+> **上游注记**：HIBS（Lean_HIBS）自 commit `cc08ceb` 起大幅重构——参数化公理
+> 结构、新增模块（Conjugation/Sqrt/Derivation/Embedding/Model）。本仓库
+> `Hidden.lean`/`Axioms.lean` 已对齐新版上游，ζ/η 构造不变。论文开方符号
+> 笔误已在上游修正；本仓库 `hSqrt`（值保持标签模型）不受影响。
 
 对应表：
 
@@ -200,8 +192,8 @@ grep -rn -- "sorry" RiemannHIBS/ Main.lean
 
 ## 5. 局限与后续
 
-- 值类型为 `Int`：`ζ(2) = π²/6` 等超越结果、级数收敛、解析延拓需要 ℝ/ℂ 分析
-  （可引入 mathlib 后继续）。
+- Core 模块（`Hidden`/`Axioms`/`Zeta`/`Euler`/`Riemann`）使用 `Int` 值；
+  超越结果与级数收敛需要 ℝ/ℂ 分析（`Analytic` 模块通过 mathlib 搭桥）。
 - 完整黎曼猜想（无限多个零点全在临界线）是开放问题，本项目的价值在
   **构造层**：隐数运算法则为 ζ/η 的级数结构提供了精确的代数骨架，
   并让"欧拉乘积 = ζ 和式"这一质数-整数桥以可验证的形式落地。
