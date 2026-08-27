@@ -45,7 +45,7 @@ OUT = "viz"
 SQRT_E = float(np.e) ** 0.5
 N_ZEROS = 6
 T_MAX = 42.0          # covers gamma_6 ~ 37.59
-TURNS = 2.5
+TURNS = 7.0           # helix height covers all six zeros (7 turns ~ 44)
 
 for _fp in ("/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
             "/System/Library/Fonts/Hiragino Sans GB.ttc",
