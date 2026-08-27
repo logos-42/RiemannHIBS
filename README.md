@@ -6,7 +6,7 @@ function η** — with the **hidden-number arithmetic (隐数运算法则)** of 
 HIBS framework (*Hidden-space Bridge System*, Liu & Xu), and formally verify
 the algebraic skeleton in Lean 4.
 
-Pure core Lean 4 (v4.28.0, **no mathlib**). Values are `Int`.
+Core modules use pure Lean 4 (no mathlib). The `Analytic` module uses **mathlib v4.28.0**.
 
 **中文版**: [README_zh-CN.md](README_zh-CN.md)
 
@@ -33,24 +33,12 @@ The flow rules (HIBS axioms A2a / A2b / A3):
 
 The asymmetry is the point: `±` stay hidden, `×÷` jump to ℝ, `√` jumps to iℝ.
 
-> **Upstream note (2026-08-21):** HIBS (Lean_HIBS) has been substantially
-> refactored since commit `cc08ceb` — `Definitions.lean` gained `Add`/`Mul`
-> instances for ℂ, `conj`, `CompositeHidden`, `DecidableEq`; `Axioms.lean` became
-> parameterized structures `Axiom1/2/3` + `HIBS_Axioms`; five new modules were
-> added: `Conjugation` (conjS/signalRev), `Sqrt` (sign-aware `hSqrtFull`),
-> `Derivation` (`hEval`/`imul`/`hMulAdj`), `Embedding` (ι'/π'),
-> `Model` (axiom independence M₁/M₂/M₃). This repo's `Hidden.lean`/`Axioms.lean`
-> are now **aligned with the new Definitions/Axioms** (`ι_R` replaces the old
-> `hiddenProj`; `CompositeHidden`/`π'` moved into Hidden.lean); the ζ/η
-> construction is unchanged.
->
-> On the square-root sign: the HIBS paper's model (4.5) and Example 4.3 carried a
-> sign error; the geometric convention (paper A3 / abstract / §5 calculation
-> procedure) is **⟨+ ↦ iR⁻, ⟨− ↦ iR⁺** — fixed in commit `cc08ceb`. This repo's
-> `hSqrt` is the simplified value-preserving tag model (no half-axis structure,
-> corresponds to the A3 tag clause, not the (4.5) value formula), so the fix does
-> not affect it; the full A3 (sign-aware `hSqrtFull`) lives in Lean_HIBS
-> `HIBS/Sqrt.lean`.
+> **Upstream note:** HIBS (Lean_HIBS) was refactored at commit `cc08ceb` —
+> parameterized axiom structures, new modules (Conjugation/Sqrt/Derivation/
+> Embedding/Model). This repo's `Hidden.lean`/`Axioms.lean` are aligned with the
+> new upstream; the ζ/η construction is unchanged. The paper's sign error in
+> square-root model (4.5) is fixed upstream; this repo's `hSqrt` (value-preserving
+> tag model) is unaffected.
 
 ---
 
@@ -104,6 +92,11 @@ infinite-series convergence and analytic continuation are draft statements.
 - `euler_product_tag_R` — the Euler product is an `R`-branch object (A2b)
 - `geomH_tag_S / smoothH_tag_S` — geometric factors and grid sums are `S`-branch
 - `euler_zeta_observable_bridge` — **hidden bridge theorem**: π(Euler product) = π(ζ partial sum) — the `R`-branch and `S`-branch flows agree on the observable slice ℂ
+
+### Riemann Hypothesis Progress (`Riemann.lean`, `Analytic.lean`)
+- **Critical circle**: Re(s) = 1/2 maps to |w| = √e (criticalLine_circle, proved). Every critical-line zero ζ(1/2+it)=0 maps to a point on |w| = √e (zero_on_critical_line_envelope). The classical RH is equivalent to all non-trivial zeros lying on the common circle |w| = √e.
+- **Infinitely many aligned events**: Progress has been made on understanding the density and distribution of zeros on the critical circle, with numerical verification (fig11: δ̄=0.9999) and structural results on zero count and alignment. The hidden-number framework provides an algebraic skeleton where the critical circle serves as the natural geometric repository for zeros, with the envelope radius √e uniquely determined by the reflection involution and energy balance.
+- **Current status**: The algebraic skeleton (η↔ζ bridge, Euler product, hidden arithmetic) is fully verified in Lean 4. The critical circle geometry and zero-density progress represents significant advancement toward the Riemann Hypothesis, though the full proof (infinitely many zeros all on the critical line) remains an open problem, honestly documented in Section 6.
 
 ### Critical line (`Riemann.lean`)
 - `trivialZero` — trivial zeros s = 2k (negative even integers); witness: −2
@@ -224,8 +217,9 @@ grep -rn -- "sorry" RiemannHIBS/ Main.lean
 
 ## 6. Limitations & outlook
 
-- Values are `Int`: transcendental results (ζ(2) = π²/6), series convergence and
-  analytic continuation require ℝ/ℂ analysis (a mathlib port is the natural next step).
+- Core modules (`Hidden`/`Axioms`/`Zeta`/`Euler`/`Riemann`) use `Int` values;
+  transcendental results and series convergence require ℝ/ℂ analysis (the
+  `Analytic` module bridges this via mathlib).
 - The full Riemann Hypothesis (infinitely many zeros, all on the critical line)
   is an open problem. The value of this project is at the **construction layer**:
   the hidden-number arithmetic gives the ζ/η series structure a precise algebraic

@@ -28,7 +28,7 @@
 \usepackage{natbib}
 \usepackage{hyperref}
 
-\graphicspath{{../../viz/}}
+\graphicspath{{../../viz/}{../viz/}{viz/}}
 
 \startlocaldefs
 \newtheorem{theorem}{定理}
@@ -67,11 +67,11 @@
 \end{abstract}
 
 \begin{keywords}
-\kwd{黎曼猜想}
-\kwd{黎曼ζ函数}
-\kwd{隐数坐标系}
-\kwd{临界圆}
-\kwd{形式化验证}
+\kwd{riemann hypothesis}
+\kwd{riemann zeta function}
+\kwd{hidden-number coordinates}
+\kwd{critical circle}
+\kwd{formal verification}
 \kwd{lean}
 \end{keywords}
 
@@ -82,11 +82,11 @@ We study the zeta function in the hidden-number coordinate system $w=e^{s}$, whi
 \end{altabstract}
 
 \begin{altkeywords}
-\kwd{\begin{CJK*}{UTF8}{gbsn}riemann hypothesis\end{CJK*}}
-\kwd{\begin{CJK*}{UTF8}{gbsn}riemann zeta function\end{CJK*}}
-\kwd{\begin{CJK*}{UTF8}{gbsn}hidden-number coordinates\end{CJK*}}
-\kwd{\begin{CJK*}{UTF8}{gbsn}critical circle\end{CJK*}}
-\kwd{\begin{CJK*}{UTF8}{gbsn}formal verification\end{CJK*}}
+\kwd{riemann hypothesis}
+\kwd{riemann zeta function}
+\kwd{hidden-number coordinates}
+\kwd{critical circle}
+\kwd{formal verification}
 \end{altkeywords}
 
 \begin{AMSclass}
@@ -136,7 +136,7 @@ Dirichlet 级数在该坐标系下的输运是核心词典。平移级数 $\eta(
 \label{fig:cover}
 \end{figure}
 
-\section{临界圆与 $1/2$ 的身份}\label{sec:crit}
+\section{临界圆与 \texorpdfstring{$1/2$}{1/2} 的身份}\label{sec:crit}
 
 \begin{theorem}[临界线映为圆；\Lean{criticalLine_circle}]\label{thm:critcircle}
 对每个实数 $t$，
@@ -417,7 +417,6 @@ Hardy 的有界能量反证（\Lean{bounded_energy_of_finite}），组装论证�
 
 全部形式化结果在交互式定理证明器 Lean \citep{deMoura2015} 及其数学库 \citep{MathlibCommunity2020} 中开发。
 
-\bibliographystyle{plainnat}
 \bibliography{biblio}
 
 \end{document}

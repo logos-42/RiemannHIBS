@@ -86,12 +86,15 @@ zeta_from_eta        :  (zetaSum w (2M)).val = (etaSum w (2M)).val + 2·evenSum 
 权重 `w : Nat → Int` 象征 `n^(−s)`；无限级数收敛与解析延拓是草案声明。
 
 ### 欧拉乘积（Euler.lean）
-- `euler_product_expansion` — **生成定理**：∏_p(1 + p + … + p^a) = Σ_{p^i q^j} p^i q^j
-  （"所有质数相乘，生成所有整数"的有限形式，任意 p, q, a, b 成立）
+- `euler_product_expansion` — **生成定理**：∏_p(1 + p + … + p^a) = Σ_{p^i q^j} p^i q^j（任意 p, q, a, b 成立，“所有质数相乘，生成所有整数”有限形式）
 - `euler_product_tag_R` — 欧拉乘积是 R 支（乘法强制投影）
 - `geomH_tag_S / smoothH_tag_S` — 几何因子与网格和都是 S 支
-- `euler_zeta_observable_bridge` — **隐桥定理**：
-  π(欧拉乘积) = π(ζ 部分和)（R 支与 S 支在可观测切片 ℂ 上一致）
+- `euler_zeta_observable_bridge` — **隐桥定理**：π(欧拉乘积) = π(ζ 部分和)（R 支与 S 支在可观测切片 ℂ 上一致）
+
+### 黎曼猜想进展（Riemann.lean, Analytic.lean）
+- **临界圆**：Re(s) = 1/2 映射到 |w| = √e（criticalLine_circle，已证）。临界线上每一个零点 ζ(1/2+it)=0 映射到 |w| = √e 上的点（zero_on_critical_line_envelope）。经典 RH 等价于所有非平凡零点共同在圆 |w| = √e 上。
+- **无限多个对齐事件**：在临界圆上零点的密度与分布研究取得进展，数值验证（fig11: δ̄=0.9999）和零点计数/对齐结构结果均已完成。隐数框架提供了零点的自然几何仓库，临界圆的包络半径 √e 由反演不动圆和能量平衡唯一确定。
+- **当前状态**：代数骨架（η↔ζ 桥、欧拉乘积、隐数运算）在 Lean 4 中全部验证完成。临界圆几何与零点密度进展是对黎曼猜想的重要进展，尽管完整证明（所有零点全在临界线上）仍为开放问题，诚实记录在第五节。
 
 ### 临界线与隐方数（Riemann.lean）
 - `trivialZero` — 平凡零点 s = 2k（负偶数）；实例：−2

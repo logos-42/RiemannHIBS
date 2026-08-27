@@ -32,7 +32,7 @@
 \usepackage{natbib}
 \usepackage{hyperref}
 
-\graphicspath{{../../viz/}}
+\graphicspath{{../../viz/}{../viz/}{viz/}}
 
 \startlocaldefs
 \newtheorem{theorem}{Theorem}
@@ -111,11 +111,11 @@ itself; it is isolated but not supplied.
 \end{altabstract}
 
 \begin{altkeywords}
-\kwd{\begin{CJK*}{UTF8}{gbsn}黎曼猜想\end{CJK*}}
-\kwd{\begin{CJK*}{UTF8}{gbsn}黎曼ζ函数\end{CJK*}}
-\kwd{\begin{CJK*}{UTF8}{gbsn}隐数坐标系\end{CJK*}}
-\kwd{\begin{CJK*}{UTF8}{gbsn}临界圆\end{CJK*}}
-\kwd{\begin{CJK*}{UTF8}{gbsn}形式化验证\end{CJK*}}
+\kwd{riemann hypothesis}
+\kwd{riemann zeta function}
+\kwd{hidden-number coordinates}
+\kwd{critical circle}
+\kwd{formal verification}
 \end{altkeywords}
 
 \begin{AMSclass}
@@ -203,7 +203,7 @@ phase data.}
 \label{fig:cover}
 \end{figure}
 
-\section{The critical circle and the identity of $1/2$}\label{sec:crit}
+\section{The critical circle and the identity of \texorpdfstring{$1/2$}{1/2}}\label{sec:crit}
 
 \begin{theorem}[critical line maps to a circle;\,
 \Lean{criticalLine_circle}]\label{thm:critcircle}
@@ -681,7 +681,6 @@ All formalized results were developed in the interactive theorem prover
 Lean \citep{deMoura2015} against its mathematical library
 \citep{MathlibCommunity2020}.
 
-\bibliographystyle{plainnat}
 \bibliography{biblio}
 
 \end{document}
