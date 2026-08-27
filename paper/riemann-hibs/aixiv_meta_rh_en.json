@@ -1,0 +1,14 @@
+{
+  "title": "The Riemann Zeta Function in Hidden-Number Coordinates: From Classical Inputs to the Critical-Circle Reduction",
+  "authors": ["Yuan-Jie Liu"],
+  "corresponding_author": "yuanjieliu, yuanjieliu65@gmail.com",
+  "category": ["Formal Sciences", "Mathematics", "Number theory"],
+  "keywords": ["Riemann hypothesis", "Riemann zeta function", "hidden-number coordinates", "critical circle", "formal verification"],
+  "license": "CC-BY-4.0",
+  "abstract": "We give a logically ordered account of the hidden-number coordinate description of the Riemann zeta function. The hidden-number space used here was introduced and developed by the present author in earlier work; the present paper applies that prior coordinate framework to the zero set of ζ. The argument starts with classical analytic facts: the functional equation, the zero-free half-plane, and Hardy's theorem on zeros on the critical line. The change of variables w=e^s then translates reflection into the inversion w↦e/w and the critical line into the unique inversion-fixed circle |w|=√e. From these facts we derive the annular location and reflection pairing of nontrivial zeros, and Hardy's theorem transports directly to the statement that infinitely many lifted zeros lie over this circle. The energy and frequency calculations are included as exact coordinate diagnostics; they do not by themselves create zeros or prove a density law. The Riemann hypothesis is consequently isolated as the remaining assertion that every nontrivial reflection pair is self-paired. Lean identifiers are retained in the source for traceability but are suppressed in the typeset article.",
+  "doc_type": "paper",
+  "version": "1.0",
+  "is_public": 1,
+  "submitter_type": "human",
+  "authorship_type": "human"
+}
