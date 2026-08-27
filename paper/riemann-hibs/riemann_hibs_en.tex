@@ -40,7 +40,7 @@
 \newtheorem{definition}[theorem]{Definition}
 \newtheorem*{remark}{Remark}
 \setattribute{title}{size}{\LARGE\bfseries}
-\newcommand{\Lean}[1]{\texttt{\detokenize{#1}}\allowbreak}
+\newcommand{\Lean}[1]{{\footnotesize\texttt{\detokenize{#1}}}}
 \def\journal@name{}%
 \setattribute{jsfdsinfo}{text}{}%
 \setattribute{copyright}{text}{}
@@ -243,7 +243,7 @@ definition to a consequence of reflection geometry.
 On the fixed circle the inversion acts as conjugation.
 
 \begin{theorem}[inversion equals conjugation on the circle;\,
-\Lean{envelope_inversion_eq_conj_on_circle}]\label{thm:invconj}
+formalized as \Lean{envelope_inversion_eq_conj_on_circle}]\label{thm:invconj}
 For every $w$ with $|w|=\sqrt{e}$,
 \[
   \frac{e}{w} \;=\; \overline{w}.

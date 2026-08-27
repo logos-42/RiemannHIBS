@@ -39,7 +39,7 @@
 \newtheorem{definition}[theorem]{定义}
 \newtheorem*{remark}{注}
 \setattribute{title}{size}{\LARGE\bfseries}
-\newcommand{\Lean}[1]{\texttt{\detokenize{#1}}\allowbreak}
+\newcommand{\Lean}[1]{{\footnotesize\texttt{\detokenize{#1}}}}
 \def\journal@name{}%
 \setattribute{jsfdsinfo}{text}{}%
 \setattribute{copyright}{text}{}
@@ -159,7 +159,7 @@ $\log(\sqrt{e})=\tfrac12$。
 
 在不动圆上，反演即共轭。
 
-\begin{theorem}[圆上反演等于共轭；\Lean{envelope_inversion_eq_conj_on_circle}]\label{thm:invconj}
+\begin{theorem}[圆上反演等于共轭；形式化陈述 \Lean{envelope_inversion_eq_conj_on_circle}]\label{thm:invconj}
 对每个满足 $|w|=\sqrt{e}$ 的 $w$，
 \[
   \frac{e}{w} \;=\; \overline{w}.
