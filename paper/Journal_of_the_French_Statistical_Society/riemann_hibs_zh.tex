@@ -11,8 +11,9 @@
 %           xelatex riemann_hibs_zh
 % （或直接：tectonic riemann_hibs_zh —— tectonic 会自动跑 BibTeX。）
 %
-% 中文排版采用 xeCJK/XeLaTeX 路线，含两处针对本仓库 jsfds.cls/jsfds.sty 的
-% 主文件级规避补丁（均不改动类文件本身）：
+% 中文排版采用 xeCJK/XeLaTeX 路线，含以下针对本仓库 jsfds.cls/jsfds.sty 的
+% 主文件级规避补丁（均不改动类文件本身；英文版 riemann_hibs_en.tex 若要改走
+% XeLaTeX 路线需做同样处理）：
 %   * 不要加载 inputenc / fontenc / CJKutf8（那是 pdflatex 路线的产物）；
 %   * 【去掉 microtype 伪加载占位】英文版文件头的
 %     \@namedef{ver@microtype.sty}{...} 补丁在 pdflatex 下无害，但在 XeLaTeX 下
@@ -23,7 +24,19 @@
 %     "I can't switch ':' on or off--not a shorthand"。解法是在 \documentclass
 %     之前用内核钩子 package/babel/after 把 \shorthandon/\shorthandoff 重定义为
 %     吞参数的 no-op（法文高标点间距由 babel-french 的 XeTeX 原生机制照常提供）。
-%   * 中文字体使用 macOS 自带 Songti SC（备选 STSong，见下行注释）。
+%   * 【\Lean 下划线安全化】Lean 定理名含 "_"（catcode 8 数学字符），在文本
+%     模式会触发 "Missing $ inserted"；且定理可选标题属于 moving argument，
+%     会进入 jsfds/amsthm 的展开链。\Lean 因此重定义为
+%     \texttt{\detokenize{#1}}，标题内则进一步包成
+%     \mbox{\texttt{\detokenize{...}}} 双保险。
+%   * 【\printcontact 规避】XeTeX 下 jsfds 的 \printead/\saferef 链在首次编译
+%     （引用未定义）时会触发 "Incomplete \iffalse"，故作者栏邮箱改为纯文本
+%     直接排版（内容不变，仅失去 mailto 链接）。
+%   * 【致谢环境补齐】jsfds 类并未定义 acknowledgement 环境（英文版的
+%     \begin{acknowledgement} 同样无法编译），在 \startlocaldefs 中补齐。
+%   * 中文字体使用 macOS 自带 Songti SC（备选 STSong，见下行注释）；另用
+%     \xeCJKDeclareSubCJKBlock 把希腊区块划给 CJK 字体，使关键词中的裸字符
+%     "ζ" 正常输出。
 %
 % Honesty note: 中文版与英文版同样严格区分“已在仓库 RiemannHIBS 中无 `sorry`
 % 编译通过的形式化定理”与“开放问题及外部供给的分析输入”。本文不声称完整
@@ -47,6 +60,7 @@
 \documentclass[submission]{jsfds}
 \usepackage{xeCJK}
 % macOS 自带字体；若无 Songti SC，请改为 \setCJKmainfont{STSong}
+\xeCJKDeclareSubCJKBlock{Greek}{"0370 -> "03FF}
 \setCJKmainfont{Songti SC}
 \usepackage{amsmath,amsthm}
 \usepackage{natbib}
@@ -59,9 +73,14 @@
 \newtheorem{lemma}[theorem]{引理}
 \newtheorem{definition}[theorem]{定义}
 \newtheorem*{remark}{注记}
-\newcommand{\Lean}[1]{\texttt{#1}}
+\newcommand{\Lean}[1]{\texttt{\detokenize{#1}}}
 \newcommand{\abs}[1]{\lvert #1\rvert}
+\newcommand{\Abs}[1]{\lvert #1\rvert}
 \newcommand{\Norm}[1]{\lVert #1\rVert}
+% jsfds 类未内置致谢环境（英文版同样缺失），此处按期刊风格补齐
+\newenvironment{acknowledgement}
+  {\par\medskip\noindent{\itshape 致谢}\ \ignorespaces}
+  {\par}
 \endlocaldefs
 
 \setmainlanguageenglish
@@ -79,7 +98,7 @@
   \nom{Liu}%
     \contact[label=e1]{yuanjieliu65@gmail.com}}
 
-  \affiliation[t1]{Independent Researcher. \\ \printcontact{e1}}
+  \affiliation[t1]{Independent Researcher. \\ yuanjieliu65@gmail.com}
 
   \runauthor{Yuanjie Liu}
 \end{aug}
@@ -194,7 +213,7 @@ $k\in\mathbb{Z}$ 记录绕数，且 $\theta=2\pi k+\arg w$。
 
 $\zeta$ 向这些坐标的搬运由主支公式给出。
 
-\begin{proposition}[主支；\,\Lean{expZeta_phase_principal}]\label{prop:principal}
+\begin{proposition}[主支；\,\mbox{\texttt{\detokenize{expZeta_phase_principal}}}]\label{prop:principal}
 在去孔 $w$ 平面上，定义 $\widehat{\zeta}(re^{i\varphi})
 :=\zeta(\log r+i\varphi)$，其中取实对数。则凡右端有定义之处，$\widehat{\zeta}$
 在该坐标变换下与 $\zeta$ 一致，并且构成提升函数的主叶。
@@ -203,8 +222,8 @@ $\zeta$ 向这些坐标的搬运由主支公式给出。
 诸叶之间以精确的周期性相互作用，而特定的叶会折叠到射线上。
 
 \begin{proposition}[多叶周期性与折叠；\,
-\Lean{phase_periodic}, \Lean{phase_fold_neg_axis},
-\Lean{phase_fold_many_sheets}]\label{prop:periodic}
+\mbox{\texttt{\detokenize{phase_periodic}}}, \mbox{\texttt{\detokenize{phase_fold_neg_axis}}},
+\mbox{\texttt{\detokenize{phase_fold_many_sheets}}}]\label{prop:periodic}
 对每个整数 $k$ 与每个可容许的点，
 \[
   \widehat{\zeta}_{k}(re^{i\varphi})
@@ -217,8 +236,8 @@ $\zeta$ 向这些坐标的搬运由主支公式给出。
 
 螺旋的每一圈都携带一份真正的相位数据拷贝。
 
-\begin{theorem}[每一圈之上皆有分支；\,\Lean{envelope_universal_cover_branch},
-\Lean{helix_continuation}]\label{thm:branches}
+\begin{theorem}[每一圈之上皆有分支；\,\mbox{\texttt{\detokenize{envelope_universal_cover_branch}}},
+\mbox{\texttt{\detokenize{helix_continuation}}}]\label{thm:branches}
 对每个 $w\neq 0$ 与每个整数 $k$，在第 $k$ 叶上都存在一个主支相位原像；因此提升函数的
 螺旋延续穿过万有覆盖的每一圈。
 \end{theorem}
@@ -230,7 +249,7 @@ $\zeta$ 向这些坐标的搬运由主支公式给出。
 
 整个图像的结构健全性概括为两种描述之间的一个同构。
 
-\begin{theorem}[覆盖—平面对应；\,\Lean{zetaCoverIsomorphism}]
+\begin{theorem}[覆盖—平面对应；\,\mbox{\texttt{\detokenize{zetaCoverIsomorphism}}}]
 \label{thm:coveriso}
 下列数据构成覆盖描述与经典复平面描述之间的结构同构：叶与圈之间的双射
 \Lean{covers}；半径上的单射 \Lean{radial}；取值一致 \Lean{zeta_eq}；螺旋延续
@@ -246,7 +265,7 @@ $\zeta$ 向这些坐标的搬运由主支公式给出。
 \section{临界圆与\texorpdfstring{$1/2$}{1/2}的身份}
 \label{sec:criticalcircle}
 
-\begin{theorem}[临界线映为圆；\,\Lean{criticalLine_circle}]
+\begin{theorem}[临界线映为圆；\,\mbox{\texttt{\detokenize{criticalLine_circle}}}]
 \label{thm:critcircle}
 对每个实数 $t$，
 \[
@@ -257,14 +276,14 @@ $\zeta$ 向这些坐标的搬运由主支公式给出。
 
 这个半径本身并非约定，而是一条对数恒等式。
 
-\begin{proposition}[\Lean{log_sqrt_exp_one}]\label{prop:logsqrt}
+\begin{proposition}[\mbox{\texttt{\detokenize{log_sqrt_exp_one}}}]\label{prop:logsqrt}
 $\log(\sqrt{e}) = \tfrac12$。
 \end{proposition}
 
 决定性的结构事实是：临界圆不只是\emph{某条}特殊的半径——在全体同心圆之中，它是被
 函数方程诱导的反演所保持的唯一一个。把该反演写作 $\iota(w)=e/w$。
 
-\begin{theorem}[唯一不动圆；\,\Lean{envelope_inversion_fixed_circle}]
+\begin{theorem}[唯一不动圆；\,\mbox{\texttt{\detokenize{envelope_inversion_fixed_circle}}}]
 \label{thm:fixedcircle}
 圆 $\abs{w}=\rho$（$\rho>0$）在圆上满足
 $\abs{\iota(w)}=\abs{w}$ 当且仅当 $\rho^{2}=e$。方程 $\rho^{2}=e$ 有唯一的
@@ -283,7 +302,7 @@ $\Re s=1/2$。于是在隐数坐标之内，位置 $1/2$ 从一条定义升级�
 在不动圆上，反演的作用不多不少正是取共轭。
 
 \begin{theorem}[圆上反演等于共轭；\,
-\Lean{envelope_inversion_eq_conj_on_circle}]\label{thm:invconj}
+\mbox{\texttt{\detokenize{envelope_inversion_eq_conj_on_circle}}}]\label{thm:invconj}
 对每个满足 $\abs{w}=\sqrt{e}$ 的 $w$，
 \[
   \frac{e}{w} \;=\; \overline{w}\, .
@@ -305,7 +324,7 @@ $\Re s=1/2$。于是在隐数坐标之内，位置 $1/2$ 从一条定义升级�
 
 函数方程把 $s$ 与 $1-s$ 配对。在隐数坐标下这变成关于临界圆的一个反演。
 
-\begin{theorem}[作为反演的反射；\,\Lean{envelope_inversion_map}]
+\begin{theorem}[作为反演的反射；\,\mbox{\texttt{\detokenize{envelope_inversion_map}}}]
 \label{thm:map}
 在 $w=e^{s}$ 之下，反射 $s\mapsto 1-s$ 恰好对应于映射
 \[
@@ -325,7 +344,7 @@ $\Re s=1/2$。于是在隐数坐标之内，位置 $1/2$ 从一条定义升级�
 \item[\textup{(D)}] 经典的黎曼猜想。
 \end{itemize}
 
-\begin{theorem}[闭合机制环；\,\Lean{mechanism_cycle_closed}]
+\begin{theorem}[闭合机制环；\,\mbox{\texttt{\detokenize{mechanism_cycle_closed}}}]
 \label{thm:cycle}
 在显式机制假设 $h_0:\ 0<\Re s$（零点位于右半平面）之下，蕴含
 $A\Rightarrow B\Rightarrow C\Rightarrow D\Rightarrow A$
@@ -345,18 +364,18 @@ $D\Rightarrow A$ 要经过 MathLib 的声明对象 \Lean{RiemannHypothesis}；�
 
 前两个定理排除临界带的两侧。
 
-\begin{theorem}[远侧；\,\Lean{zero_free_outside_envelope}]\label{thm:farside}
+\begin{theorem}[远侧；\,\mbox{\texttt{\detokenize{zero_free_outside_envelope}}}]\label{thm:farside}
 若 $\Re s\geq 1$ 则 $\zeta(s)\neq 0$。证明搬运欧拉乘积的正性：每个局部因子非零，
 故乘积非零（参见 MathLib 的 \Lean{riemannZeta_ne_zero_of_one_le_re}）。
 \end{theorem}
 
-\begin{theorem}[负侧；\,\Lean{zero_free_negative_side}]
+\begin{theorem}[负侧；\,\mbox{\texttt{\detokenize{zero_free_negative_side}}}]
 \label{thm:negside}
 若 $\Re s\leq 0$ 且 $s\notin\{0,-2,-4,-6,\dots\}$，则 $\zeta(s)\neq 0$；论证经
 函数方程把远侧结果作反射（定理~\ref{thm:map}）。
 \end{theorem}
 
-\begin{corollary}[临界带；\,\Lean{nontrivial_zero_in_critical_strip}]
+\begin{corollary}[临界带；\,\mbox{\texttt{\detokenize{nontrivial_zero_in_critical_strip}}}]
 \label{cor:strip}
 每个非平凡零点满足 $0<\Re s<1$。
 \end{corollary}
@@ -364,7 +383,7 @@ $D\Rightarrow A$ 要经过 MathLib 的声明对象 \Lean{RiemannHypothesis}；�
 搬运到包络上，临界带变成一个圆环，其几何平均正是临界圆。
 
 \begin{theorem}[圆环定位；\,
-\Lean{nontrivial_zero_in_envelope_annulus}]\label{thm:annulus}
+\mbox{\texttt{\detokenize{nontrivial_zero_in_envelope_annulus}}}]\label{thm:annulus}
 若 $s$ 是非平凡零点，则
 \[
   1 \;<\; \Norm{e^{s}} \;<\; e\, ,
@@ -378,7 +397,7 @@ $D\Rightarrow A$ 要经过 MathLib 的声明对象 \Lean{RiemannHypothesis}；�
 相比之下，平凡零点数量众多且完全显式。
 
 \begin{theorem}[无限多个平凡零点；\,
-\Lean{infinitely_many_trivial_zeros}]\label{thm:trivial}
+\mbox{\texttt{\detokenize{infinitely_many_trivial_zeros}}}]\label{thm:trivial}
 平凡零点的集合是无限的：映射 $n\mapsto -2(n+1)$ 是单射，且每个值都是零点，
 $\zeta(-2(n+1))=0$。这里没有使用任何形式的解析增长输入；无限性来自一个显式公式。
 \end{theorem}
@@ -392,21 +411,21 @@ $\zeta(-2(n+1))=0$。这里没有使用任何形式的解析增长输入；无�
 
 \section{圆环中的反射对}\label{sec:pairs}
 
-\begin{proposition}[\Lean{inversion_preserves_annulus}]\label{prop:preserves}
+\begin{proposition}[\mbox{\texttt{\detokenize{inversion_preserves_annulus}}}]\label{prop:preserves}
 反演 $w\mapsto e/w$ 保持圆环 $1<\abs{w}<e$。
 \end{proposition}
 
 \begin{definition}[圆环非平凡零点；\,
-\Lean{AnnularNontrivialZero}]\label{def:annzero}
+\mbox{\texttt{\detokenize{AnnularNontrivialZero}}}]\label{def:annzero}
 \emph{圆环非平凡零点}是如下打包而成的对象：临界带内的一点 $s$，连同
 $\Norm{e^{s}}$ 位于圆环之内的见证。构造器
 \Lean{annularNontrivialZero_of_zero} 把任何非平凡零点提升为该对象。
 \end{definition}
 
 \begin{proposition}[在反射下封闭；\,
-\Lean{annularNontrivialZero_reflects},
-\Lean{annularNontrivialZero_iff_reflects},
-\Lean{on_circle_reflects_on_circle}]\label{prop:closes}
+\mbox{\texttt{\detokenize{annularNontrivialZero_reflects}}},
+\mbox{\texttt{\detokenize{annularNontrivialZero_iff_reflects}}},
+\mbox{\texttt{\detokenize{on_circle_reflects_on_circle}}}]\label{prop:closes}
 圆环非平凡零点的集合在反射 $s\mapsto
 1-s$ 下封闭，且封闭是可逆的（一个“当且仅当”）。在临界圆上，反射把圆作为一个
 \emph{集合}加以保持；这是集合层面的保持，而不是逐点的固定。平凡的负偶零点已被
@@ -414,7 +433,7 @@ $\Norm{e^{s}}$ 位于圆环之内的见证。构造器
 \end{proposition}
 
 \begin{theorem}[反射对的存在性；\,
-\Lean{exists_annular_nontrivial_zero_pair}]\label{thm:pairs}
+\mbox{\texttt{\detokenize{exists_annular_nontrivial_zero_pair}}}]\label{thm:pairs}
 给定一个圆环非平凡零点，就可以构造出它的反射伙伴，产生一个真正的对
 $\{s,\,1-s\}$。该定理刻意是\emph{条件性的}：从一个零点造出两个，绝不从无造出一。
 它不推出无限性。
@@ -422,16 +441,16 @@ $\{s,\,1-s\}$。该定理刻意是\emph{条件性的}：从一个零点造出两
 
 为了讨论高度，需把有限矩形提升入覆盖。
 
-\begin{definition}[带窗；\,\Lean{hiddenStripWindow},
-\Lean{hiddenLiftRectangle}]\label{def:window}
+\begin{definition}[带窗；\,\mbox{\texttt{\detokenize{hiddenStripWindow}}},
+\mbox{\texttt{\detokenize{hiddenLiftRectangle}}}]\label{def:window}
 对 $T>0$，\emph{隐数带窗}是万有覆盖内部的提升矩形
 $\{s:\ 0<\Re s<1,\ \abs{\Im s}<T\}$；它保留螺旋角 $\theta=\Im s$ 而不折叠。其对称
 变体 \Lean{hiddenLiftRectangle} 在全部四条边上保持相同的叶坐标。
 \end{definition}
 
 \begin{proposition}[边界积分；\,
-\Lean{hiddenRectangleBoundaryIntegral},
-\Lean{hiddenRectangleBoundaryIntegral_eq_zero_of_differentiableOn}]
+\mbox{\texttt{\detokenize{hiddenRectangleBoundaryIntegral}}},
+\mbox{\texttt{\detokenize{hiddenRectangleBoundaryIntegral_eq_zero_of_differentiableOn}}}]
 \label{prop:boundaryint}
 提升矩形的四条边组装成隐数坐标中的一个边界积分，且对矩形上全纯的任意函数，该积分
 为零。证明调用 MathLib 的 Cauchy--Goursat 矩形原子；除全纯性之外，没有用到关于
@@ -441,15 +460,15 @@ $\zeta$ 的任何东西。
 随后即可提取高度，并在给定高度增长的条件下把它转换为无限性。
 
 \begin{definition}[高度接口；\,
-\Lean{hiddenNontrivialZeroHeights},
-\Lean{HiddenZeroHeightGrowth}]\label{def:heightgrowth}
+\mbox{\texttt{\detokenize{hiddenNontrivialZeroHeights}}},
+\mbox{\texttt{\detokenize{HiddenZeroHeightGrowth}}}]\label{def:heightgrowth}
 圆环非平凡零点被映射到它们的覆盖高度
 $\abs{\Im s}$。\emph{隐零点高度增长}即是断言：该高度集合无界。
 \end{definition}
 
 \begin{theorem}[高度增长给出无限性；\,
-\Lean{infinite_annular_nontrivial_zeros_of_height_growth},
-\Lean{infinite_nontrivial_zeros_of_hidden_height_growth}]
+\mbox{\texttt{\detokenize{infinite_annular_nontrivial_zeros_of_height_growth}}},
+\mbox{\texttt{\detokenize{infinite_nontrivial_zeros_of_hidden_height_growth}}}]
 \label{thm:heightgrowth}
 若隐零点高度增长，则圆环非平凡零点的集合无限，从而经典临界带内 $\zeta$
 的非平凡零点集合无限。两个蕴含都是纯集合论之桥：有界高度会把零点限制到一个紧矩形
@@ -467,7 +486,7 @@ $\abs{\Im s}$。\emph{隐零点高度增长}即是断言：该高度集合无界
 
 在临界叶上，$\zeta$ 的 Dirichlet 级数变成一组长度锁定的旋转向量的叠加。
 
-\begin{proposition}[长度锁定；\,\Lean{critical_leaf_norm_locked}]
+\begin{proposition}[长度锁定；\,\mbox{\texttt{\detokenize{critical_leaf_norm_locked}}}]
 \label{prop:lock}
 在临界叶（$r=\sqrt{e}$）上，级数的每一项的模都恰为
 \[
@@ -477,13 +496,13 @@ $\abs{\Im s}$。\emph{隐零点高度增长}即是断言：该高度集合无界
 \end{proposition}
 
 \begin{proposition}[绝对收敛分界；\,
-\Lean{absolute_convergence_outside_critical_leaf},
-\Lean{critical_leaf_not_absolutely_convergent}]\label{prop:convdiv}
+\mbox{\texttt{\detokenize{absolute_convergence_outside_critical_leaf}}},
+\mbox{\texttt{\detokenize{critical_leaf_not_absolutely_convergent}}}]\label{prop:convdiv}
 绝对收敛严格成立于半径 $e$ 之外（更靠外的叶），而临界叶 $r=\sqrt{e}<e$ 不绝对收敛：
 临界叶正坐在分界的非绝对收敛一侧。
 \end{proposition}
 
-\begin{proposition}[缠绕计数；\,\Lean{term_winding_number}]
+\begin{proposition}[缠绕计数；\,\mbox{\texttt{\detokenize{term_winding_number}}}]
 \label{prop:windingcount}
 第 $n$ 项沿自然相位参数转过的圈数是 $\log(n+1)$——角速度乘以叶数——记录为
 \Lean{windingCount}。
@@ -492,17 +511,17 @@ $\abs{\Im s}$。\emph{隐零点高度增长}即是断言：该高度集合无界
 相位抵消容许一个精确的组合刻画。
 
 \begin{definition}[有限相位抵消；\,
-\Lean{phaseCancelRelation}]\label{def:cancel}
+\mbox{\texttt{\detokenize{phaseCancelRelation}}}]\label{def:cancel}
 有限整数组合 $\sum_i a_i\log(n_i+1)$ 称为\emph{抵消}，若它落在
 $2\pi\mathbb{Z}$ 中：有限多个频率经整数加权后，在单位圆上回到出发角度。
 \end{definition}
 
-\begin{proposition}[\Lean{phaseCancel_of_exp_one}]\label{prop:expone}
+\begin{proposition}[\mbox{\texttt{\detokenize{phaseCancel_of_exp_one}}}]\label{prop:expone}
 抵消推出 $\exp\!\bigl(i\sum_i a_i\log(n_i+1)\bigr)=1$，即单位向量之积回到 $1$。
 \end{proposition}
 
 \begin{theorem}[抵消等于整数幂恒等式；\,
-\Lean{phaseCancel_zero_iff_powProduct_one}]\label{thm:cancel}
+\mbox{\texttt{\detokenize{phaseCancel_zero_iff_powProduct_one}}}]\label{thm:cancel}
 有限相位抵消等价于如下整数乘法恒等式
 \[
   \sum_i a_i\log(n_i+1)\in 2\pi\mathbb{Z}
@@ -526,8 +545,8 @@ $2\pi\mathbb{Z}$ 中：有限多个频率经整数加权后，在单位圆上回
 一个平行的机制贯穿交错函数 $\eta$，在其收敛一侧有效。
 
 \begin{proposition}[交错桥；\,
-\Lean{eta_eq_mul_zeta}, \Lean{eta_term_rotating_vector},
-\Lean{eta_phase_alignment_condition}]\label{prop:eta}
+\mbox{\texttt{\detokenize{eta_eq_mul_zeta}}}, \mbox{\texttt{\detokenize{eta_term_rotating_vector}}},
+\mbox{\texttt{\detokenize{eta_phase_alignment_condition}}}]\label{prop:eta}
 对 $\Re s>1$，
 \[
   \eta(s) \;=\; \bigl(1-2^{1-s}\bigr)\,\zeta(s),
@@ -536,11 +555,11 @@ $2\pi\mathbb{Z}$ 中：有限多个频率经整数加权后，在单位圆上回
 $\eta(s)=0$ 当且仅当旋转向量的交错和为零。
 \end{proposition}
 
-\begin{definition}[\Lean{alignmentZero}]\label{def:align}
+\begin{definition}[\mbox{\texttt{\detokenize{alignmentZero}}}]\label{def:align}
 $s$ 称为\emph{对齐零点}，若其交替旋转向量和（$\eta$ 形态）等于零。
 \end{definition}
 
-\begin{theorem}[\Lean{alignmentZero_iff_zeta_zero}]\label{thm:align}
+\begin{theorem}[\mbox{\texttt{\detokenize{alignmentZero_iff_zeta_zero}}}]\label{thm:align}
 对 $\Re s>1$，$s$ 处的对齐零点等价于 $\zeta(s)=0$；排斥因子 $1-2^{1-s}$ 在此处
 非零。对齐零点投影为经典零点。
 \end{theorem}
@@ -561,7 +580,7 @@ $(n+1)^{-1/2}\log(n+1)$
 \section{幅角原理与缠绕原子}\label{sec:winding}
 
 \begin{theorem}[单零点原子；\,
-\Lean{argumentPrinciple_single_zero}]\label{thm:atom}
+\mbox{\texttt{\detokenize{argumentPrinciple_single_zero}}}]\label{thm:atom}
 若圆围住唯一点 $w_{0}$ 且避开原点的奇性，则
 \[
   \oint \frac{dz}{z-w_{0}} \;=\; 2\pi i\, .
@@ -569,22 +588,22 @@ $(n+1)^{-1/2}\log(n+1)$
 \end{theorem}
 
 \begin{proposition}[圆参数化；\,
-\Lean{envelope_circle_param}]\label{prop:param}
+\mbox{\texttt{\detokenize{envelope_circle_param}}}]\label{prop:param}
 圆 $\abs{z-c}=r$ 在包络相位坐标中由 $\theta\mapsto c+r e^{i\theta}$ 参数化。
 \end{proposition}
 
 \begin{theorem}[相位缠绕计零点；\,
-\Lean{phase_winding_equals_zero_count}]\label{thm:phasewind}
+\mbox{\texttt{\detokenize{phase_winding_equals_zero_count}}}]\label{thm:phasewind}
 以对数导数的形式表述：相位沿一条围道的缠绕等于（所围零点数）乘 $2\pi i$：
 每个零点对应整整一圈相位。
 \end{theorem}
 
-\begin{proposition}[\Lean{zeroCount_normalized}]\label{prop:norm}
+\begin{proposition}[\mbox{\texttt{\detokenize{zeroCount_normalized}}}]\label{prop:norm}
 归一化消去常数：$(2\pi i)^{-1}\oint dz/(z-w_{0})=1$。
 \end{proposition}
 
 \begin{theorem}[幂因子绕数；\,
-\Lean{powFactor_logDeriv_eq}, \Lean{winding_of_pow_factorization}]
+\mbox{\texttt{\detokenize{powFactor_logDeriv_eq}}}, \mbox{\texttt{\detokenize{winding_of_pow_factorization}}}]
 \label{thm:powwind}
 若 $f(z)=(z-w_{0})^{m}g(z)$，其中 $g$ 在盘上全纯且不取零，则
 \[
@@ -602,7 +621,7 @@ $(n+1)^{-1/2}\log(n+1)$
 缠绕原子之所以有用，是通过那些把零点与其下游所需的一切打包在一起的证书。
 
 \begin{definition}[单零点证书；\,
-\Lean{ZetaSimpleZeroCertificate}]\label{def:cert}
+\mbox{\texttt{\detokenize{ZetaSimpleZeroCertificate}}}]\label{def:cert}
 一个\emph{单零点证书}由一个开集 $U$、一点 $w\in U$ 以及一个在 $U$ 上全纯且非零的
 函数 $g$ 组成，使得
 \[
@@ -612,10 +631,10 @@ $(n+1)^{-1/2}\log(n+1)$
 \end{definition}
 
 \begin{theorem}[证书的推论；\,
-\Lean{certificate_gives_zero},
-\Lean{zeta_winding_eq_two_pi_i_of_certificate},
-\Lean{annulusZeroWitness_of_zetaCertificate},
-\Lean{exists_annular_pair_of_zetaCertificate}]\label{thm:certchain}
+\mbox{\texttt{\detokenize{certificate_gives_zero}}},
+\mbox{\texttt{\detokenize{zeta_winding_eq_two_pi_i_of_certificate}}},
+\mbox{\texttt{\detokenize{annulusZeroWitness_of_zetaCertificate}}},
+\mbox{\texttt{\detokenize{exists_annular_pair_of_zetaCertificate}}}]\label{thm:certchain}
 从任何一个单零点证书出发，以下各项自动成立：
 (i) $\zeta(w)=0$（在 $w$ 处取值该因式分解）；
 (ii) 对数导数缠绕一圈，$\oint\zeta'/\zeta=2\pi i$ 沿 $U$ 中适当的围道；
@@ -627,7 +646,7 @@ $(n+1)^{-1/2}\log(n+1)$
 \section{增长分解与存在性接口}\label{sec:growth}
 
 \begin{theorem}[增长分解；\,
-\Lean{zeta_growth_decomposition}]\label{thm:decomp}
+\mbox{\texttt{\detokenize{zeta_growth_decomposition}}}]\label{thm:decomp}
 坐标无关，且已在 MathLib 中得证：
 \[
   \zeta(s) \;=\; \frac{\Lambda_{0}(s)}{\Gamma_{\mathbb{R}}(s)}\, ,
@@ -638,9 +657,9 @@ $(n+1)^{-1/2}\log(n+1)$
 
 各因子的范数在隐数坐标下容许精确的读法。
 
-\begin{proposition}[\Lean{gammaR_norm_decomposition},
-\Lean{gammaR_norm_in_envelope_coords},
-\Lean{zeta_norm_in_envelope_coords}]\label{prop:normread}
+\begin{proposition}[\mbox{\texttt{\detokenize{gammaR_norm_decomposition}}},
+\mbox{\texttt{\detokenize{gammaR_norm_in_envelope_coords}}},
+\mbox{\texttt{\detokenize{zeta_norm_in_envelope_coords}}}]\label{prop:normread}
 纯代数地，
 \[
   \Norm{\Gamma_{\mathbb{R}}(s)}
@@ -660,25 +679,25 @@ $\pi^{-1/4}\Norm{\Gamma((\log\sqrt{e}+i\theta)/2)}$，从而
 
 局部分析把积分转换成见证。
 
-\begin{proposition}[\Lean{analyticAt_riemannZeta}]\label{prop:analytic}
+\begin{proposition}[\mbox{\texttt{\detokenize{analyticAt_riemannZeta}}}]\label{prop:analytic}
 $\zeta$ 在每个 $s\neq 1$ 处解析；证明经由去心邻域的可微性再以连续性拼接而成。
 \end{proposition}
 
-\begin{theorem}[\Lean{logDeriv_circle_integral_eq_zero_of_zero_free}]
+\begin{theorem}[\mbox{\texttt{\detokenize{logDeriv_circle_integral_eq_zero_of_zero_free}}}]
 \label{thm:zerofreeint}
 若 $\zeta$ 在闭盘内既无零点也无极点，则包围圆上的对数导数积分为零。
 \end{theorem}
 
 \begin{theorem}[逆否存在性之桥；\,
-\Lean{exists_closedBall_zero_of_logDeriv_integral_ne_zero}]
+\mbox{\texttt{\detokenize{exists_closedBall_zero_of_logDeriv_integral_ne_zero}}}]
 \label{thm:existbridge}
 若对数导数的圆周积分非零，则 $\zeta$ 在闭盘内有零点。这是
 定理~\ref{thm:zerofreeint} 精确的逻辑逆否；形式化\emph{并不}声称这样的非零积分
 真的出现。
 \end{theorem}
 
-\begin{definition}[\Lean{AnnulusZeroWitness},
-\Lean{CriticalStripWitness}]\label{def:witness}
+\begin{definition}[\mbox{\texttt{\detokenize{AnnulusZeroWitness}}},
+\mbox{\texttt{\detokenize{CriticalStripWitness}}}]\label{def:witness}
 \emph{有限盘见证}打包一个盘与非零的绕数；临界带变体再加上盘位于带内的约束。
 这些是可验证的对象，而代码中不含“存在这样一个对象”的断言。
 \end{definition}
@@ -686,14 +705,14 @@ $\zeta$ 在每个 $s\neq 1$ 处解析；证明经由去心邻域的可微性再�
 以上一切共同喂给一个单一的、被锐利隔离的黑盒。
 
 \begin{definition}[高度供给；\,
-\Lean{ZeroHeightSupply}]\label{def:supply}
+\mbox{\texttt{\detokenize{ZeroHeightSupply}}}]\label{def:supply}
 \emph{高度供给}是断言：在每个高度 $H$ 之上都存在一个临界带零点。它是
 $N(T)\to\infty$ 的直接弱化；它被形式化为一个显式定义，既非公理也非已证定理。
 \end{definition}
 
 \begin{theorem}[供给链；\,
-\Lean{hiddenZeroHeightGrowth_of_zeroHeightSupply},
-\Lean{infinite_nontrivial_zeros_of_zeroHeightSupply}]\label{thm:chain}
+\mbox{\texttt{\detokenize{hiddenZeroHeightGrowth_of_zeroHeightSupply}}},
+\mbox{\texttt{\detokenize{infinite_nontrivial_zeros_of_zeroHeightSupply}}}]\label{thm:chain}
 高度供给推出隐零点高度增长（定义~\ref{def:heightgrowth}），后者推出无限多个
 非平凡零点。这条链在逻辑上是无条件的，在前提上是有条件的。
 \end{theorem}
@@ -701,17 +720,17 @@ $N(T)\to\infty$ 的直接弱化；它被形式化为一个显式定义，既非�
 证书把供给精炼为一种局部可核查的通货。
 
 \begin{definition}[无界证书族；\,
-\Lean{UnboundedZetaCertificateAssumption}]\label{deffamily}
+\mbox{\texttt{\detokenize{UnboundedZetaCertificateAssumption}}}]\label{deffamily}
 \emph{无界证书族}是条件谓词（形式化为定义，而非公理）：在每个高度之上都存在一个
 单零点证书实例（定义~\ref{def:cert}），其盘位于临界带之内。
 \end{definition}
 
 \begin{theorem}[族之桥；\,
-\Lean{zeroHeightSupply_of_certificateFamily},
-\Lean{classicalZeroCountGrowth_of_zeroHeightSupply},
-\Lean{ModulatedZetaFamily},
-\Lean{zeroHeightSupply_of_modulatedFamily},
-\Lean{infinite_nontrivial_zeros_of_modulatedFamily}]\label{thm:family}
+\mbox{\texttt{\detokenize{zeroHeightSupply_of_certificateFamily}}},
+\mbox{\texttt{\detokenize{classicalZeroCountGrowth_of_zeroHeightSupply}}},
+\mbox{\texttt{\detokenize{ModulatedZetaFamily}}},
+\mbox{\texttt{\detokenize{zeroHeightSupply_of_modulatedFamily}}},
+\mbox{\texttt{\detokenize{infinite_nontrivial_zeros_of_modulatedFamily}}}]\label{thm:family}
 下列蕴含成立：
 \[
   \textup{证书族}
@@ -740,14 +759,14 @@ $N(T)\to\infty$ 的直接弱化；它被形式化为一个显式定义，既非�
 
 \section{能量发散与 Hardy 方向}\label{sec:energy}
 
-\begin{proposition}[\Lean{critical_leaf_diagonal_energy_term}]\label{prop:diagterm}
+\begin{proposition}[\mbox{\texttt{\detokenize{critical_leaf_diagonal_energy_term}}}]\label{prop:diagterm}
 在临界叶上，把锁定长度平方（命题~\ref{prop:lock}）即得第 $n$ 项的对角能量：
 \[
   \Norm{a_n}^{2} \;=\; (n+1)^{-1}\, .
 \]
 \end{proposition}
 
-\begin{theorem}[\Lean{critical_leaf_diagonal_energy_diverges}]
+\begin{theorem}[\mbox{\texttt{\detokenize{critical_leaf_diagonal_energy_diverges}}}]
 \label{thm:diverge}
 相应的级数 $\sum_n (n+1)^{-1}$ 就是调和级数且不收敛：临界叶上的对角能量发散。
 这是 Hardy 精神中丰度的种子——不以任何方式求助于 Stirling
@@ -756,7 +775,7 @@ $N(T)\to\infty$ 的直接弱化；它被形式化为一个显式定义，既非�
 
 要把能量计算做成定量的，需要旋转积分模板。
 
-\begin{definition}[\Lean{rotVecOnLine}, \Lean{dirichletPartialSumLine}]
+\begin{definition}[\mbox{\texttt{\detokenize{rotVecOnLine}}}, \mbox{\texttt{\detokenize{dirichletPartialSumLine}}}]
 \label{def:template}
 临界线上的旋转向量 $v_n(t)=(n+1)^{-1/2}
 e^{-it\log(n+1)}$，以及相关的有限 Dirichlet 部分和，被显式定义为供均值计算使用的
@@ -764,7 +783,7 @@ e^{-it\log(n+1)}$，以及相关的有限 Dirichlet 部分和，被显式定义�
 \end{definition}
 
 \begin{proposition}[旋转积分原子；\,
-\Lean{integral_rotating_atom}]\label{prop:intatom}
+\mbox{\texttt{\detokenize{integral_rotating_atom}}}]\label{prop:intatom}
 对 $\Delta\neq 0$，
 \[
   \int_{-T}^{T} \exp(i\Delta x)\,dx
@@ -775,7 +794,7 @@ e^{-it\log(n+1)}$，以及相关的有限 Dirichlet 部分和，被显式定义�
 \end{proposition}
 
 \begin{theorem}[单项能量积分；\,
-\Lean{energy_single_term_integral}]\label{thm:energyint}
+\mbox{\texttt{\detokenize{energy_single_term_integral}}}]\label{thm:energyint}
 在长度为 $2T$ 的高度窗口上，
 \[
   \int \Norm{v_n}^{2} \;=\; 2T\,(n+1)^{-2\sigma}\, .
@@ -799,7 +818,7 @@ $\int_{0}^{T}\abs{\zeta(1/2+it)}^{2}dt\asymp T\log T$ 得出临界线上无限�
 还有两个初等输入把 Hadamard 一侧的图景打磨得更锋利。
 
 \begin{theorem}[递推下界；\,
-\Lean{Real.gamma_ge_pow_mul_self}]\label{thm:gamma}
+\mbox{\texttt{\detokenize{Real.gamma_ge_pow_mul_self}}}]\label{thm:gamma}
 对一切 $x\geq 1$ 与自然数 $n$，
 \[
   \Gamma(x+n) \;\geq\; x^{n}\,\Gamma(x)\, ,
@@ -832,12 +851,12 @@ $g+h$ 盘内无零点，走最大模原理路线；特化到 $\zeta$
 Rouch\'e 有待基建。
 \end{remark}
 
-\section{能量平衡与隐数均值定理}\label{sec:balance}
+\section{能量平衡与隐均值定理}\label{sec:balance}
 
-丰度侧的三个内禀组件把"能量发散"从定性收紧为定量：能量的唯一平衡半径、
-交叉项的截断相消、以及隐数均值定理。
+三个内在组件把“能量发散”从定性收紧为定量：唯一的能量平衡半径、交叉项的截断
+相消，以及由此得到的隐均值定理。
 
-\begin{theorem}[能量平衡半径；\,\Lean{energy_balance_radius}]
+\begin{theorem}[能量平衡半径；\,\mbox{\texttt{\detokenize{energy_balance_radius}}}]
 \label{thm:balance}
 对角能量 $E(\sigma)=\sum_n (n+1)^{-2\sigma}$ 收敛当且仅当 $\sigma>\tfrac12$：
 \[
@@ -846,21 +865,21 @@ Rouch\'e 有待基建。
 \end{theorem}
 
 \begin{proof}
-级数 $\sum_n (n+1)^{-2\sigma}$ 与 $p$ 级数 $\sum_{n\geq1} n^{-2\sigma}$ 同收敛性
-（平移），MathLib 的 \Lean{summable_nat_rpow_inv} 给出收敛当且仅当 $2\sigma>1$，
-即 $\sigma>\tfrac12$。
+级数 $\sum_n (n+1)^{-2\sigma}$ 与 $p$-级数
+$\sum_{n\geq1} n^{-2\sigma}$（平移）同敛散；MathLib 的 \Lean{summable_nat_rpow_inv}
+给出收敛当且仅当 $2\sigma>1$，即 $\sigma>\tfrac12$。
 \end{proof}
 
 \begin{remark}[唯一平衡点与 $1/2$ 的身份]\label{remark:balance}
-定理~\ref{thm:balance} 给出"为什么临界线是 $1/2$"的\emph{能量}版本：
-$\sigma=\tfrac12$ 是调和边界——$\sigma>\tfrac12$ 超调和收敛（能量预算有限），
-$\sigma<\tfrac12$ 亚调和发散（能量预算爆炸）。它与反射不动点
-$\sigma=1-\sigma$（即反演不动圆 $\abs{w}=\sqrt{e}$，命题~\ref{prop:logsqrt}）
-指向同一半径。\textbf{平衡点给出半径的唯一候选}，但不单独推出
-"零点恰在此"——后者是 RH 本身（见诚实边界 (vi)）。
+定理~\ref{thm:balance} 给出“临界线为何是 $1/2$”的\emph{能量}版本：
+$\sigma=\tfrac12$ 是调和边界——其上能量超调和而收敛（预算有限），其下次调和而发散
+（预算爆炸）。它与反射不动点 $\sigma=1-\sigma$（反演不动圆
+$\abs{w}=\sqrt{e}$，命题~\ref{prop:logsqrt}）指向同一半径。
+\textbf{平衡点给出唯一的候选半径，但其本身并不强迫零点落在那里}——那正是 RH
+本身（见诚实边界 (vi)）。
 \end{remark}
 
-\begin{theorem}[交叉项 min 界；\,\Lean{rotating_integral_bound_min}]
+\begin{theorem}[交叉项极小界；\,\mbox{\texttt{\detokenize{rotating_integral_bound_min}}}]
 \label{thm:crossmin}
 对 $\Delta\neq 0$，
 \[
@@ -869,19 +888,19 @@ $\sigma=1-\sigma$（即反演不动圆 $\abs{w}=\sqrt{e}$，命题~\ref{prop:log
 \end{theorem}
 
 \begin{proof}
-两个界分别来自 $\abs{e^{i\Delta t}}=1$ 的区间长平凡界，与旋转积分原子的
-精确值 $\int_{-T}^{T}e^{i\Delta t}dt=(e^{i\Delta T}-e^{-i\Delta T})/(i\Delta)$。
+两个界分别来自 $\abs{e^{i\Delta t}}=1$ 的平凡区间长度界，以及精确的旋转积分原子
+$\int_{-T}^{T}e^{i\Delta t}dt=(e^{i\Delta T}-e^{-i\Delta T})/(i\Delta)$。
 \end{proof}
 
-\begin{remark}[截断相消：交叉为何次主导]\label{remark:cutoff}
-逐项三角不等式在相邻频率（$\Delta\to 0$）发散；正解是 $t$ 依赖截断
-$X(t)=\sqrt{t/2\pi}$（近似函数方程）。交叉上界按 $X(T)$ 项计算为
-$O(X(T)\log X(T))=O(\sqrt{T}\log T)$，次主导于对角主项
-$\int_0^T \log X(t)\,dt\sim \tfrac{T}{2}\log T$（数值：fig13 v2 中
-交叉/主项 $0.267\to0.049$）。相消的机制是\emph{截断}而非振荡抵消。
+\begin{remark}[截断相消：为什么交叉项是次主导的]\label{remark:cutoff}
+逐点三角不等式在相邻频率处爆炸（$\Delta\to 0$）；解决方案是依赖 $t$
+的截断 $X(t)=\sqrt{t/2\pi}$（近似函数方程）。交叉项界按 $X(T)$ 项计数为
+$O(X(T)\log X(T))=O(\sqrt{T}\log T)$，次于对角主项 $\int_0^T \log X(t)\,dt\sim
+\tfrac{T}{2}\log T$（数值上，fig13 v2：cross/main $0.267\to0.049$）。
+相消机制是\emph{截断}，而非振荡干涉。
 \end{remark}
 
-\begin{theorem}[对角积分精确值；\,\Lean{diagonal_integral}]
+\begin{theorem}[精确对角积分；\,\mbox{\texttt{\detokenize{diagonal_integral}}}]
 \label{thm:diagint}
 \[
   \int_{1}^{T} \tfrac12 \log \frac{t}{2\pi}\,dt
@@ -890,11 +909,11 @@ $\int_0^T \log X(t)\,dt\sim \tfrac{T}{2}\log T$（数值：fig13 v2 中
 \end{theorem}
 
 \begin{proof}
-原函数 $G(t)=\tfrac{t}{2}(\log\frac{t}{2\pi}-1)$ 的导数是 $\tfrac12\log\frac{t}{2\pi}$
-（对数导数 + 乘积法则），由微积分基本定理求值。
+原函数 $G(t)=\tfrac{t}{2}(\log\frac{t}{2\pi}-1)$ 的导数为
+$\tfrac12\log\frac{t}{2\pi}$（对数求导加乘积法则）；由微积分基本定理取值。
 \end{proof}
 
-\begin{proposition}[隐数均值定理（猜想，数值确认）]\label{prop:meanvalue}
+\begin{proposition}[隐均值定理（猜想，数值确认）]\label{prop:meanvalue}
 单侧截断能量
 \[
   E(T)=\int_1^T \Abs{\sum_{n\leq\sqrt{t/2\pi}} (n+1)^{-\frac12}\,e^{it\log(n+1)}}^2 dt
@@ -903,20 +922,22 @@ $\int_0^T \log X(t)\,dt\sim \tfrac{T}{2}\log T$（数值：fig13 v2 中
 \[
   E(T) \;=\; \frac{T}{2}\Big(\log\frac{T}{2\pi}-1\Big) + \gamma\,T + o(T) ,
 \]
-其中 $\gamma$ 是欧拉常数（调和和 $\sum_{n< N}(n+1)^{-1}-\log(N+1)\to\gamma$，
-\Lean{harmonic_log_tendsto_euler}）。数值：$E(T)/[T\log(T/2\pi)]\to 0.5$，
-余项$/T\to\gamma\approx 0.58$（fig13 v2）。
+其中 $\gamma$ 为欧拉常数（调和和
+$\sum_{n< N}(n+1)^{-1}-\log(N+1)\to\gamma$，
+\Lean{harmonic_log_tendsto_euler}）。数值上，
+$E(T)/[T\log(T/2\pi)]\to 0.5$ 且余项$/T\to\gamma\approx 0.58$
+（fig13 v2）。
 \end{proposition}
 
-\begin{remark}[组装双侧：重现 Hardy--Littlewood]\label{remark:hl}
-把单侧能量翻倍（主项与辅项各半）得到
+\begin{remark}[两侧拼装：复现 Hardy--Littlewood]\label{remark:hl}
+把单侧能量加倍（主项与辅助项各占一半）即得
 \[
   \int_0^T \Abs{\zeta(\tfrac12+it)}^2 dt \;=\; T\log\frac{T}{2\pi} + (2\gamma-1)\,T + o(T) ,
 \]
-即 Hardy--Littlewood 均值定理的完整展开——从初等积分、欧拉常数与
-截断交叉次主导直接组装，\textbf{完全不需要 Stirling 或 $\Gamma$ 渐近}。
-$\gamma$ 项来自调和和的常数项（非 $\zeta$ 的分析性质）；$o(T)$ 的严格
-形式化（交叉次主导）是剩余缺口（诚实边界 (vi)）。
+即完整的 Hardy--Littlewood 均值展开，它由初等积分、欧拉常数与截断次主导性拼装而成
+——\textbf{不借助任何 Stirling 或 $\Gamma$ 渐近}。$\gamma$
+项来自调和和的常数项（不是 $\zeta$ 的解析性质）；$o(T)$
+（交叉项次主导性）的严格形式化是剩余缺口（诚实边界 (vi)）。
 \end{remark}
 
 \section{诚实边界与结论}\label{sec:honesty}
@@ -969,20 +990,20 @@ Rouch\'e 的存在半边，注记~\ref{remark:xientire}）；$\zeta$
 模块系统迁移（以直接的 \Lean{HasDerivAt} 认证绕过，
 命题~\ref{prop:intatom}）。
 
-\subsection*{(vi) 能量侧的进展与两个剩余缺口}
-第~11 节的三个内禀组件把能量侧显著收紧，但两个明确缺口仍然开放。
-\textbf{R1（交叉次主导的形式化）}：截断相消的机制已被数值确认（fig13 v2：
-交叉/主项 $0.267\to0.049$），且 min 界（定理~\ref{thm:crossmin}）与
-对角积分精确值（定理~\ref{thm:diagint}）已在 Lean 中证明；但"交叉上界
-$O(\sqrt{T}\log T)$ 次主导"的严格双和估计（Hardy--Littlewood 型
-$L^2$ 论证）未形式化——它是命题~\ref{prop:meanvalue} 中 $o(T)$ 的
-全部内容。\textbf{R2（平衡点 $\to$ 共圆）}：能量平衡半径
-（定理~\ref{thm:balance}）与反射不动点给出 $\sigma=\tfrac12$ 为半径的
-\emph{唯一候选}，但"零点恰在此圆上"仍是 RH 本身（$\tfrac12<\Re s<1$
-无零点）——平衡性不单独推出零点位置。隐数坐标系完成了翻译、身份、
-能量侧与一一对应（零点可数、孤立、双射枚举全部 Lean 化），并把 RH
-压缩为两个被命名的缺口：R1 是工程（经典估计的 Lean 化），R2 是数学
-（经典亦未解决）。
+\subsection*{(vi) 能量一侧的进展与两个剩余缺口}
+第 11 节的三个内在组件大幅收紧了能量一侧，但仍有两个被命名的缺口保持开放。
+\textbf{R1（交叉项次主导性的形式化）}：截断相消机制已获数值确认（fig13 v2：
+cross/main $0.267\to0.049$），且极小界
+（定理~\ref{thm:crossmin}）与精确对角积分
+（定理~\ref{thm:diagint}）已在 Lean 中得证；但使交叉项界
+$O(\sqrt{T}\log T)$ 成为次主导的严格双重和估计（Hardy--Littlewood 型 $L^2$
+论证）尚未形式化——它恰是命题~\ref{prop:meanvalue} 中的 $o(T)$。
+\textbf{R2（平衡点 $\to$ 共圆性）}：能量平衡半径
+（定理~\ref{thm:balance}）与反射不动点使 $\sigma=\tfrac12$ 成为\emph{唯一候选}
+半径，但“零点位于此圆上”仍是 RH 本身（$\tfrac12<\Re s<1$ 无零点）；仅凭平衡不能
+强迫零点位置。隐数坐标系已完成翻译、身份、能量一侧与一一对应（零点的可数性、
+孤立性与双射枚举均经 Lean 证明），把 RH 压缩为两个被命名的缺口：R1 是工程问题
+（经典估计的 Lean 化），R2 是数学问题（经典上同样未解）。
 
 \subsection*{结论}
 隐数坐标系 $w=e^{s}$ 把黎曼猜想的地形转化为几何：临界线成为唯一的反演不动圆，
