@@ -38,6 +38,7 @@
 \newtheorem{lemma}[theorem]{Lemma}
 \newtheorem{definition}[theorem]{Definition}
 \newtheorem*{remark}{Remark}
+\setattribute{title}{size}{\LARGE\bfseries}
 \newcommand{\Lean}[1]{\texttt{\detokenize{#1}}}
 \def\journal@name{}%
 \setattribute{jsfdsinfo}{text}{}%
@@ -104,42 +105,7 @@ itself; it is isolated but not supplied.
 \kwd{lean}
 \end{keywords}
 
-\begin{altabstract}
-We study the zeta function in the hidden-number coordinate system
-$w=e^{s}$, which transports the $s$-plane to the punctured $w$-plane
-equipped with an integer sheet label. In these coordinates the critical
-line becomes the unique circle $|w|=\sqrt{e}$ fixed by the inversion
-$w\mapsto e/w$ induced by the functional equation; the value
-$\log\sqrt{e}=1/2$ is forced by reflection geometry, not postulated.
-Within this coordinate system we prove a body of machine-checked
-theorems, formalized in Lean/MathLib without \Lean{sorry}: the energy
-balance criterion (truncated energy converges if and only if
-$\sigma>1/2$) and the uniqueness of the critical radius as the
-simultaneous fixed point of inversion, energy balance, and reflection;
-an intrinsic zero-free theorem ($\zeta(s)\neq 0$ for $\Re s\geq 2$,
-obtained from the magnitude of aligned partial sums rather than the
-Euler product); the inversion-pair decomposition of the critical strip
-($\zeta(1-s)=0\iff\zeta(s)=0$, with a self-pair iff $w=\pm\sqrt{e}$);
-and the frequency structure of the terms --- gaps tending to zero,
-antitone gap sequence, phase freezing, and the existence of a fold
-point $n^{*}\approx t/\pi$ where the alternating phase difference
-reverses sign. These results assemble, together with a numerically
-supported alignment-density projection and one explicitly named
-external input (Hardy's bounded-energy counterpositive), into a
-declared argument \Lean{CriticalCircleInfinity} establishing
-infinitely many zeros on the critical circle --- with position and with
-abundance. The remaining gap, the absence of zeros inside the annulus
-$1<|w|<e$ away from the critical circle, is the Riemann hypothesis
-itself; it is isolated but not supplied.
-\end{altabstract}
 
-\begin{altkeywords}
-\kwd{riemann hypothesis}
-\kwd{riemann zeta function}
-\kwd{hidden-number coordinates}
-\kwd{critical circle}
-\kwd{formal verification}
-\end{altkeywords}
 
 \begin{AMSclass}
 \kwd{11M26}
