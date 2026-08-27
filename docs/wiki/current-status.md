@@ -294,3 +294,15 @@ stage: current
   Leibniz 误差夹逼) — η(s)=Σ(-1)^n(n+1)^{-s} 条件收敛的对齐语义级数骨架;
   AlignmentToCriticalBand 结构体 (外部输入: η 复侧条件收敛 (cos/sin 振荡非交错)
   + Abel 延拓 + 排斥因子 (1−2^{1−s}) 临界带恒非零 — 显式声明, 非 sorry)
+
+- R3 对齐模长机制 (Abundance §15, 无 sorry, 本日提交) — 圆外远处无零点的
+  **纯内禀证明**: 对齐 (部分和趋于 0) 的必要条件是首项可被其余项抵消;
+  σ ≥ 2 时 Σ_{n≥1}(n+1)^{-σ} ≤ 3/4 < 1 (逐项放大 1/(n+2)² ≤ 1/((n+1)(n+3))
+  + 望远镜 Σ = (1/2)(3/2−1/(M+1)−1/(M+2)) ≤ 3/4) ⟹ 所有部分和 ‖S_N‖ ≥ 1/4
+  (norm_add_le 反向三角 + norm_sum_le + norm_cpow_eq_rpow_re_of_pos)
+  ⟹ ‖ζ(s)‖ ≥ 1/4 ⟹ **2 ≤ Re s ⟹ ζ(s) ≠ 0** (zeta_ne_zero_of_two_le_re,
+  zeta_eq_tsum_one_div_nat_add_one_cpow + ge_of_tendsto) — 机制与欧拉乘积
+  正交 (对齐模长, 无解析延拓依赖); 另 η 实轴正性 alternating_harmonic_limit_pos
+  (交错调和极限 l ≥ 1/2, Leibniz 夹逼) — 命题甲 (圆外无零点) 的远圆部分
+  有了坐标系自己的内禀证明; 缺口不变: σ ∈ (1/2, 1) 圆环内无零点 = RH 核心,
+  无内禀通道 (IntrinsicZeroFree 诚实标注)

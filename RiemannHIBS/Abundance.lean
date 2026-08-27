@@ -26,6 +26,7 @@ import Mathlib.Analysis.Complex.CauchyIntegral
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
 import Mathlib.Analysis.Complex.Trigonometric
 import Mathlib.Analysis.SpecialFunctions.Complex.Log
+import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
 import Mathlib.NumberTheory.Harmonic.EulerMascheroni
 import Mathlib.NumberTheory.Harmonic.Bounds
@@ -1188,6 +1189,189 @@ structure AlignmentToCriticalBand where
   assemble : weight_skeleton → eta_complex_conditional_convergence → abel_continuation →
     repulsion_factor_nonzero → alignment_implies_zero
 
+
+-- R3 (攻坚): 对齐模长机制 — 圆外远处无零点的内禀证明
+--   对齐 (部分和趋于 0) 的必要条件: 首项必须可被其余项抵消
+--   若 Σ_{n≥1} ‖v_n‖ < ‖v_0‖ = 1, 则所有部分和 ≥ 1/4:
+--     |S_N| ≥ 1 − Σ_{n=1}^{N-1} (n+1)^{-σ}   (反向三角)
+--           ≥ 1 − Σ (n+1)^{-2}               (σ ≥ 2)
+--           ≥ 1 − Σ 1/((n+1)(n+3))           (逐项放大)
+--           ≥ 1 − 3/4 = 1/4                   (望远镜)
+--   ⟹ ζ(s) ≠ 0 — 纯三角 + 望远镜, 无欧拉乘积 (机制与经典正交)
+--   这是"命题甲 (圆外无零点)"的第一块纯内禀砖 (远圆 σ ≥ 2 部分)
+-- ============================================================
+
+-- 1. 每项模长: ‖1/(n+1)^s‖ = (n+1)^(-s.re)
+lemma term_norm_eq (s : ℂ) (n : ℕ) :
+    ‖(1 / ((n + 1 : ℂ) ^ s) : ℂ)‖ = (n + 1 : ℝ) ^ (-s.re) := by
+  have hcp : ‖((n + 1 : ℂ) ^ s)‖ = (n + 1 : ℝ) ^ s.re := by
+    simpa using (Complex.norm_cpow_eq_rpow_re_of_pos
+      (x := (n + 1 : ℝ)) (by positivity : 0 < (n + 1 : ℝ)) (y := s))
+  calc
+    ‖(1 / ((n + 1 : ℂ) ^ s) : ℂ)‖ = 1 / ‖((n + 1 : ℂ) ^ s)‖ := by
+      rw [norm_div, norm_one]
+    _ = 1 / (n + 1 : ℝ) ^ s.re := by
+      simpa using congrArg (fun x : ℝ => 1 / x) hcp
+    _ = (n + 1 : ℝ) ^ (-s.re) := by
+      rw [show (1 : ℝ) / (n + 1 : ℝ) ^ s.re = ((n + 1 : ℝ) ^ s.re)⁻¹ by
+        rw [div_eq_mul_inv, one_mul]]
+      exact (Real.rpow_neg (by positivity : 0 ≤ (n + 1 : ℝ)) s.re).symm
+
+-- 2. 反向三角: |S_N| ≥ 1 − Σ_{n=1}^{N-1} ‖v_n‖  (N ≥ 1)
+lemma partial_sum_norm_lower (s : ℂ) (N : ℕ) (hN : 1 ≤ N) :
+    ‖(∑ n ∈ Finset.range N, (1 / ((n + 1 : ℂ) ^ s) : ℂ))‖ ≥
+      1 - ∑ n ∈ Finset.range (N - 1), (n + 2 : ℝ) ^ (-s.re) := by
+  have hsplit : (∑ n ∈ Finset.range N, (1 / ((n + 1 : ℂ) ^ s) : ℂ)) =
+      (1 : ℂ) + ∑ n ∈ Finset.range (N - 1), (1 / ((n + 2 : ℂ) ^ s) : ℂ) := by
+    have hN' : N - 1 + 1 = N := by omega
+    rw [← hN', Finset.sum_range_succ']
+    simp [Complex.one_cpow]
+    rw [add_comm]
+    congr 1
+    apply Finset.sum_congr rfl
+    intro x hx
+    congr 1
+    ring
+  rw [hsplit]
+  -- |1 + A| ≥ |1| − |A|
+  have hrev : ‖(1 : ℂ) + ∑ n ∈ Finset.range (N - 1), (1 / ((n + 2 : ℂ) ^ s) : ℂ)‖ ≥
+      1 - ‖∑ n ∈ Finset.range (N - 1), (1 / ((n + 2 : ℂ) ^ s) : ℂ)‖ := by
+    -- 1 = ‖1‖ = ‖(1+Σ) − Σ‖ ≤ ‖1+Σ‖ + ‖Σ‖  ⟹  ‖1+Σ‖ ≥ 1 − ‖Σ‖
+    have h := norm_add_le
+      (a := (1 : ℂ) + ∑ n ∈ Finset.range (N - 1), (1 / ((n + 2 : ℂ) ^ s) : ℂ))
+      (b := -(∑ n ∈ Finset.range (N - 1), (1 / ((n + 2 : ℂ) ^ s) : ℂ)))
+    have hnorm1 : ‖(1 : ℂ)‖ = 1 := by simp
+    have hnormneg : ‖-(∑ n ∈ Finset.range (N - 1), (1 / ((n + 2 : ℂ) ^ s) : ℂ))‖ =
+        ‖∑ n ∈ Finset.range (N - 1), (1 / ((n + 2 : ℂ) ^ s) : ℂ)‖ := by simp
+    have h' : (1 : ℝ) ≤
+        ‖(1 : ℂ) + ∑ n ∈ Finset.range (N - 1), (1 / ((n + 2 : ℂ) ^ s) : ℂ)‖ +
+          ‖∑ n ∈ Finset.range (N - 1), (1 / ((n + 2 : ℂ) ^ s) : ℂ)‖ := by
+      simpa [hnorm1, hnormneg, add_assoc] using h
+    linarith
+  -- |A| ≤ Σ|项|
+  have hsum : ‖∑ n ∈ Finset.range (N - 1), (1 / ((n + 2 : ℂ) ^ s) : ℂ)‖ ≤
+      ∑ n ∈ Finset.range (N - 1), (n + 2 : ℝ) ^ (-s.re) := by
+    calc
+      ‖∑ n ∈ Finset.range (N - 1), (1 / ((n + 2 : ℂ) ^ s) : ℂ)‖ ≤
+          ∑ n ∈ Finset.range (N - 1), ‖(1 / ((n + 2 : ℂ) ^ s) : ℂ)‖ := by
+        exact norm_sum_le (Finset.range (N - 1)) (fun n : ℕ => (1 / ((n + 2 : ℂ) ^ s) : ℂ))
+      _ = ∑ n ∈ Finset.range (N - 1), (n + 2 : ℝ) ^ (-s.re) := by
+        apply Finset.sum_congr rfl
+        intro n hn
+        convert term_norm_eq s (n + 1) using 1
+        all_goals norm_num [Nat.cast_add, Nat.cast_one]
+        all_goals ring_nf
+  linarith
+
+-- 3. 逐项放大: (n+2)^{-2} ≤ 1/((n+1)(n+3))
+lemma inv_sq_le (n : ℕ) :
+    (n + 2 : ℝ) ^ (-2 : ℝ) ≤ 1 / (((n + 1 : ℕ) : ℝ) * ((n + 3 : ℕ) : ℝ)) := by
+  -- (n+2)^{-2} = 1/(n+2)^2
+  have hr : (n + 2 : ℝ) ^ (-2 : ℝ) = ((n + 2 : ℝ) ^ (2 : ℝ))⁻¹ :=
+    Real.rpow_neg (by positivity : 0 ≤ (n + 2 : ℝ)) (2 : ℝ)
+  rw [hr]
+  rw [Real.rpow_two]
+  -- 1/((n+2)^2) ≤ 1/((n+1)(n+3)) ⟺ (n+1)(n+3) ≤ (n+2)^2 (正数取倒数反序)
+  have hpos1 : 0 < ((n + 2 : ℝ) ^ 2) := by
+    have hz : (n + 2 : ℝ) ≠ 0 := by exact_mod_cast (by omega : n + 2 ≠ 0)
+    exact sq_pos_of_ne_zero hz
+  have hpos2 : 0 < (((n + 1 : ℕ) : ℝ) * ((n + 3 : ℕ) : ℝ)) := by
+    have h21 : (0 : ℝ) < ((n + 1 : ℕ) : ℝ) := by exact_mod_cast (by omega : 0 < n + 1)
+    have h23 : (0 : ℝ) < ((n + 3 : ℕ) : ℝ) := by exact_mod_cast (by omega : 0 < n + 3)
+    exact mul_pos h21 h23
+  have h := (inv_le_inv₀ (a := ((n + 2 : ℝ) ^ 2))
+    (b := (((n + 1 : ℕ) : ℝ) * ((n + 3 : ℕ) : ℝ))) hpos1 hpos2).mpr
+      (by norm_num [Nat.cast_add, Nat.cast_one]; nlinarith)
+  simpa using h
+
+-- 4. 望远镜: Σ_{n<M} 1/((n+1)(n+3)) = (1/2)(3/2 − 1/(M+1) − 1/(M+2)) ≤ 3/4
+lemma telescoping_sum_bound (M : ℕ) :
+    (∑ n ∈ Finset.range M, 1 / (((n + 1 : ℕ) : ℝ) * ((n + 3 : ℕ) : ℝ))) ≤ (3 : ℝ) / 4 := by
+  have hclosed : (∑ n ∈ Finset.range M, 1 / (((n + 1 : ℕ) : ℝ) * ((n + 3 : ℕ) : ℝ))) =
+      (1 / 2 : ℝ) * (1 + 1 / 2 - 1 / ((M + 1 : ℕ) : ℝ) - 1 / ((M + 2 : ℕ) : ℝ)) := by
+    induction M with
+    | zero => simp
+    | succ M ih =>
+        rw [Finset.sum_range_succ, ih]
+        -- 新项 = 1/((M+1)(M+3)); 闭式差 = (1/2)(1/(M+1) − 1/(M+3))
+        have hterm : 1 / (((M + 1 : ℕ) : ℝ) * ((M + 3 : ℕ) : ℝ)) =
+            (1 / 2 : ℝ) * (1 / ((M + 1 : ℕ) : ℝ) - 1 / ((M + 3 : ℕ) : ℝ)) := by
+          field_simp
+          norm_num
+        rw [hterm]
+        field_simp
+        ring
+  rw [hclosed]
+  have h1 : (0 : ℝ) ≤ 1 / ((M + 1 : ℕ) : ℝ) := by
+    exact div_nonneg (by norm_num) (Nat.cast_nonneg _)
+  have h2 : (0 : ℝ) ≤ 1 / ((M + 2 : ℕ) : ℝ) := by
+    exact div_nonneg (by norm_num) (Nat.cast_nonneg _)
+  nlinarith
+
+-- 5. 组装: 2 ≤ s.re ⟹ ∀N ≥ 1, ‖S_N‖ ≥ 1/4
+lemma partial_sum_bound_of_two_le_re (s : ℂ) (hs : 2 ≤ s.re) (N : ℕ) (hN : 1 ≤ N) :
+    ‖(∑ n ∈ Finset.range N, (1 / ((n + 1 : ℂ) ^ s) : ℂ))‖ ≥ (1 : ℝ) / 4 := by
+  have h1 := partial_sum_norm_lower s N hN
+  have hmono : (∑ n ∈ Finset.range (N - 1), (n + 2 : ℝ) ^ (-s.re)) ≤
+      (∑ n ∈ Finset.range (N - 1), (n + 2 : ℝ) ^ (-2 : ℝ)) := by
+    exact Finset.sum_le_sum (fun n hn =>
+      Real.rpow_le_rpow_of_exponent_le (by exact_mod_cast (by omega : 1 ≤ n + 2)) (by linarith))
+  have htel : (∑ n ∈ Finset.range (N - 1), (n + 2 : ℝ) ^ (-2 : ℝ)) ≤ (3 : ℝ) / 4 := by
+    calc
+      (∑ n ∈ Finset.range (N - 1), (n + 2 : ℝ) ^ (-2 : ℝ)) ≤
+          (∑ n ∈ Finset.range (N - 1), 1 / (((n + 1 : ℕ) : ℝ) * ((n + 3 : ℕ) : ℝ))) :=
+        Finset.sum_le_sum (fun n hn => inv_sq_le n)
+      _ ≤ (3 : ℝ) / 4 := telescoping_sum_bound (N - 1)
+  linarith
+
+-- 6. 极限传递: ‖ζ(s)‖ ≥ 1/4  (2 ≤ s.re)
+theorem zeta_norm_lower_of_two_le_re (s : ℂ) (hs : 1 < s.re) (hs2 : 2 ≤ s.re) :
+    ‖riemannZeta s‖ ≥ (1 : ℝ) / 4 := by
+  have hsum : Summable (fun n : ℕ => (1 / ((n + 1 : ℂ) ^ s) : ℂ)) := by
+    have h0 : Summable (fun n : ℕ => 1 / (n : ℂ) ^ s) :=
+      (Complex.summable_one_div_nat_cpow (p := s)).mpr (by linarith : 1 < s.re)
+    convert h0.comp_injective (i := Nat.succ) (fun ⦃a b⦄ h => Nat.succ.inj h) using 1
+    · ext n
+      simp
+  have hlim : Filter.Tendsto
+      (fun N : ℕ => ‖∑ n ∈ Finset.range N, (1 / ((n + 1 : ℂ) ^ s) : ℂ)‖)
+      Filter.atTop (𝓝 ‖∑' n : ℕ, (1 / ((n + 1 : ℂ) ^ s) : ℂ)‖) := by
+    exact hsum.hasSum.tendsto_sum_nat.norm
+  have hfin : (1 : ℝ) / 4 ≤ ‖∑' n : ℕ, (1 / ((n + 1 : ℂ) ^ s) : ℂ)‖ := by
+    refine ge_of_tendsto hlim ?_
+    filter_upwards [Filter.eventually_ge_atTop (1 : ℕ)] with N hN
+    exact partial_sum_bound_of_two_le_re s hs2 N hN
+  rw [← zeta_eq_tsum_one_div_nat_add_one_cpow (by linarith : 1 < s.re)] at hfin
+  simpa using hfin
+
+-- 7. 结论: 2 ≤ Re s ⟹ ζ(s) ≠ 0 (对齐模长机制, 内禀)
+theorem zeta_ne_zero_of_two_le_re (s : ℂ) (hs : 1 < s.re) (hs2 : 2 ≤ s.re) :
+    riemannZeta s ≠ 0 := by
+  have hnz : ‖riemannZeta s‖ ≠ 0 := by
+    have h := zeta_norm_lower_of_two_le_re s hs hs2
+    linarith
+  exact (norm_ne_zero_iff.mp hnz)
+
+-- 8. η 实轴正性 (σ=1 交错调和): 极限 l ≥ 1/2 > 0 (Leibniz 夹逼, 已证原子)
+theorem alternating_harmonic_limit_pos :
+    ∃ l : ℝ, 0 < l ∧
+      Filter.Tendsto (fun n : ℕ => ∑ i ∈ Finset.range n, (-1 : ℝ) ^ i * ((i + 1 : ℕ) : ℝ)⁻¹)
+        Filter.atTop (𝓝 l) := by
+  rcases alternating_harmonic_converges with ⟨l, hl⟩
+  refine ⟨l, ?_, hl⟩
+  have hle := leibniz_even_le_limit hl 1
+  have hsum2 : (∑ x ∈ Finset.range 2, (-1 : ℝ) ^ x * ((x + 1 : ℕ) : ℝ)⁻¹) = 1 / 2 := by
+    norm_num [Finset.sum_range_succ]
+  linarith
+
+-- 9. 声明: 内禀无零点的组装 + 缺口
+structure IntrinsicZeroFree where
+  -- 已证: σ ≥ 2 ⟹ 无零点 (对齐模长: 首项不可抵消, 部分和 ≥ 1/4)
+  far_circle_zero_free : Prop
+  -- 已证: η 实轴交错极限正 (Leibniz 夹逼, σ=1)
+  real_axis_eta_positive : Prop
+  -- 缺口 (RH 核心): σ ∈ (1/2, 1) 圆环内无零点 — 无内禀通道, 经典亦未解
+  annulus_zero_free : Prop
 
 end RiemannHIBS.Abundance
 
