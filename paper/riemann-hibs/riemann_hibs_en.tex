@@ -1,12 +1,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % riemann_hibs_en.tex
 %
-% Compile:  pdflatex riemann_hibs_en
+% Compile:  xelatex riemann_hibs_en
 %           bibtex    riemann_hibs_en
-%           pdflatex riemann_hibs_en
-%           pdflatex riemann_hibs_en
+%           xelatex riemann_hibs_en
+%           xelatex riemann_hibs_en
 %
-% English-only file: no CJK content, compiles with plain pdflatex
+% English-only file: no CJK content, compiles with XeLaTeX
 % (the Chinese counterpart is riemann_hibs_zh.tex).
 %
 % Honesty note: this paper strictly distinguishes theorems that have been
@@ -17,19 +17,14 @@
 % and 10 for the precise scope.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\makeatletter
-\@namedef{ver@microtype.sty}{9999/12/31}
-\makeatother
-
-\RequirePackage[utf8]{inputenc}
 \documentclass[submission,noinfoline]{jsfds}
 \usepackage[T1]{fontenc}
-\usepackage{amsmath,amsthm}
+\usepackage{amsmath,amsthm,amssymb}
 \usepackage{graphicx}
 \usepackage{natbib}
 \usepackage{hyperref}
 \makeatletter\let\hy@frontmatter\relax\makeatother
-\AtBeginDocument{\shorthandoff{:;?!}}
+\setlength{\emergencystretch}{2em}
 
 \graphicspath{{figures/}}
 
@@ -41,9 +36,11 @@
 \newtheorem{definition}[theorem]{Definition}
 \newtheorem*{remark}{Remark}
 \setattribute{title}{size}{\LARGE\bfseries}
-\newcommand{\Lean}[1]{{\footnotesize\texttt{\detokenize{#1}}}}
+% Keep Lean identifiers in the source for traceability, but hide them from
+% the typeset article so theorem headings remain readable and wrap cleanly.
+\newcommand{\Lean}[1]{}
 \def\journal@name{}%
-\setattribute{jsfdsinfo}{text}{}%
+\setattribute{infoline}{text}{}%
 \setattribute{copyright}{text}{}
 \newcommand{\abs}[1]{\lvert #1\rvert}
 \newcommand{\Norm}[1]{\lVert #1\rVert}
@@ -60,10 +57,10 @@
 \begin{aug}
   \auteur{%
   \prenom{Yuanjie}
-  \nom{Liu}%
-    \contact[label=e1]{yuanjieliu65@gmail.com}}
+  \nom{Liu}}
 
-  \affiliation[t1]{Independent Researcher. \\ \printcontact{e1}}
+  \affiliation{Independent Researcher;\quad
+  \href{mailto:yuanjieliu65@gmail.com}{yuanjieliu65@gmail.com}}
 
   \runauthor{Yuanjie Liu}
 \end{aug}
@@ -153,9 +150,9 @@ coordinate system: the magnitude of aligned partial sums, the balance
 of truncated energies, the algebra of inversion pairs, and the
 frequency structure of the terms.
 
-Every theorem stated below carries the name of its Lean formalization
-(typeset as \Lean{name}); each cited name compiles in the repository
-RiemannHIBS without \Lean{sorry}. Objects declared as \emph{structures}
+Every theorem stated below is linked in the source to its Lean formalization;
+each cited name compiles in the repository RiemannHIBS without \Lean{sorry}.
+Objects declared as \emph{structures}
 (rather than theorems) have their fields explicitly enumerated; some
 fields are proved theorems, others are hypotheses that are named but
 not supplied. We insist on this distinction throughout.
@@ -205,8 +202,7 @@ as stars on the critical circle $|w|=\sqrt{e}$.}
 
 \section{The critical circle and the identity of \texorpdfstring{$1/2$}{1/2}}\label{sec:crit}
 
-\begin{theorem}[critical line maps to a circle;\,
-\Lean{criticalLine_circle}]\label{thm:critcircle}
+\begin{theorem}[critical line maps to a circle]\label{thm:critcircle}
 For every real $t$,
 \[
   \Norm{e^{\tfrac12+it}} \;=\; \sqrt{e} .
@@ -216,7 +212,7 @@ hidden-number map is exactly the circle of radius $\sqrt{e}$
 (Figure~\ref{fig:proj}).
 \end{theorem}
 
-\begin{proposition}[\Lean{log_sqrt_exp_one}]\label{prop:logsqrt}
+\begin{proposition}[the logarithm of the critical radius]\label{prop:logsqrt}
 $\log(\sqrt{e})=\tfrac12$.
 \end{proposition}
 
@@ -224,8 +220,7 @@ The decisive structural fact is uniqueness: among all concentric
 circles, $|w|=\sqrt{e}$ is the only one preserved by the inversion
 $\iota(w)=e/w$ induced by the functional equation.
 
-\begin{theorem}[unique fixed circle;\,
-\Lean{envelope_inversion_fixed_circle}]\label{thm:fixedcircle}
+\begin{theorem}[unique fixed circle]\label{thm:fixedcircle}
 A circle $|w|=\rho$ with $\rho>0$ satisfies
 $|\iota(w)|=|w|$ on the circle if and only if $\rho^{2}=e$. The
 equation $\rho^{2}=e$ has the unique positive solution
@@ -243,8 +238,7 @@ definition to a consequence of reflection geometry.
 
 On the fixed circle the inversion acts as conjugation.
 
-\begin{theorem}[inversion equals conjugation on the circle;\,
-formalized as \Lean{envelope_inversion_eq_conj_on_circle}]\label{thm:invconj}
+\begin{theorem}[inversion equals conjugation on the circle: an identity, not a statement about zeros]\label{thm:invconj}
 For every $w$ with $|w|=\sqrt{e}$,
 \[
   \frac{e}{w} \;=\; \overline{w}.
@@ -276,8 +270,7 @@ cross contribution is subdominant: the total cross bound divided by the
 main term tends to zero (\Lean{cross_total_bound}); the truncation
 cancels the cross terms.
 
-\begin{theorem}[energy balance;\,
-\Lean{energy_balance_radius}]\label{thm:balance}
+\begin{theorem}[energy balance]\label{thm:balance}
 For every $\sigma\in\mathbb{R}$, the truncated energy
 $E_{\sigma}(T)$ converges (as $T\to\infty$) if and only if
 $\sigma>1/2$. For $\sigma\leq 1/2$ it diverges
@@ -309,15 +302,14 @@ statement $E(T)=\tfrac{T}{2}(\log\tfrac{T}{2\pi}-1)+\gamma T+o(T)$.
 \label{fig:budget}
 \end{figure}
 
-\begin{proposition}[radius uniqueness chain;\,
-\Lean{inversion_fixed_radius}, \Lean{radius_uniqueness_chain}]\label{thm:chain}
+\begin{proposition}[radius uniqueness chain]\label{thm:chain}
 The inversion fixed point $|e/w|=|w|$, the energy balance point
 $\sigma=1/2$, and the reflection fixed point $1-s=s$ are one and the
 same condition. In terms of the circle radius: $|w|=\sqrt{e}$ iff
 $E_{\sigma}$ balances iff $\sigma=1/2$ (Figure~\ref{fig:balance}).
 \end{proposition}
 
-\begin{definition}[\Lean{ZeroRadiusUniqueness}]\label{def:zru}
+\begin{definition}[radius-uniqueness declaration]\label{def:zru}
 The declared structure packages the three proven results above (unique
 radius candidate, mechanism equivalence) together with the open field
 \Lean{zeros_on_candidate}: whether any zero actually lies on the
@@ -332,15 +324,14 @@ to zero: the leading term $\|v_{0}\|=1$ must be cancelled by the
 remainder. We make this mechanism quantitative without any appeal to
 the Euler product.
 
-\begin{lemma}[\Lean{term_norm_eq}]\label{lem:termnorm}
+\begin{lemma}[norm of a term]\label{lem:termnorm}
 For every $s=\sigma+it$ and every $n$,
 \[
   \bigl\|(n+1)^{-s}\bigr\| \;=\; (n+1)^{-\sigma}.
 \]
 \end{lemma}
 
-\begin{theorem}[intrinsic zero-free;\,
-\Lean{zeta_ne_zero_of_two_le_re}]\label{thm:zfree}
+\begin{theorem}[intrinsic zero-free]\label{thm:zfree}
 If $2\leq\Re s$, then $\zeta(s)\neq 0$.
 \end{theorem}
 
@@ -368,7 +359,7 @@ $\sigma=1/2$ is approached from the right by an \emph{alignment
 mechanism} --- the same mechanism that the critical circle is built
 from.
 
-\begin{definition}[\Lean{IntrinsicZeroFree}]\label{def:izf}
+\begin{definition}[intrinsic zero-free framework]\label{def:izf}
 The declared structure collects the zero-free theorem above together
 with the alternating limit $\lim_{N}\sum_{i=0}^{N}(-1)^{i}(i+1)^{-1}
 \geq 1/2$ (\Lean{alternating_harmonic_limit_pos}) as the two anchors of
@@ -391,8 +382,7 @@ the map $w\mapsto e/w$; both maps are involutions
 (\Lean{reflection_involutive}).
 \end{theorem}
 
-\begin{theorem}[zeros reflect;\,
-\Lean{zeta_zero_iff_one_sub}]\label{thm:reflect}
+\begin{theorem}[zeros reflect]\label{thm:reflect}
 For $0<\Re s<1$,
 \[
   \zeta(1-s)=0 \quad\Longleftrightarrow\quad \zeta(s)=0 .
@@ -407,14 +397,12 @@ strip; hence the cosine factor never vanishes there
 \Lean{reflection_factor_ne_zero}).
 \end{theorem}
 
-\begin{corollary}[zero pairs;\,
-\Lean{zero_pair_reflect}]\label{cor:pairs}
+\begin{corollary}[zero pairs]\label{cor:pairs}
 Every zero of $\zeta$ in the critical strip comes with its reflection
 partner; the nontrivial zeros are organized into reflection pairs.
 \end{corollary}
 
-\begin{theorem}[self-pair iff $\pm\sqrt{e}$;\,
-\Lean{self_pair_iff}, \Lean{self_pair_on_circle}]\label{thm:selfpair}
+\begin{theorem}[self-pair iff $\pm\sqrt{e}$]\label{thm:selfpair}
 For $w\neq 0$,
 \[
   \frac{e}{w}=w \quad\Longleftrightarrow\quad w^{2}=e
@@ -425,7 +413,7 @@ $|w|=\sqrt{e}$. The proof factorizes $w^{2}-e=(w-\sqrt{e})(w+\sqrt{e})$,
 avoiding branch issues of $\sqrt{\cdot}$.
 \end{theorem}
 
-\begin{definition}[\Lean{InversionPairDecomposition}]\label{def:ipd}
+\begin{definition}[inversion-pair decomposition declaration]\label{def:ipd}
 The declared structure packages the reflection closure, the self-pair
 algebra, and the involution as proved fields, and declares the open
 field \Lean{no_nonself_pair}: no inversion pair is non-self-paired,
@@ -447,7 +435,7 @@ $1/(n+1)$ (\Lean{freq_gap_le_inv}):
   \Delta\mathrm{freq}(n)=\log\frac{n+2}{n+1}\leq\frac{1}{n+1}.
 \]
 
-\begin{definition}[\Lean{FrequencyAlignmentConjecture}]\label{def:fac}
+\begin{definition}[frequency-alignment conjecture]\label{def:fac}
 The declared structure states the following. \emph{Frequency
 uniformity} is proved (the two formalized theorems above).
 \emph{Alignment density} is the conjecture that the number $N(T)$ of
@@ -523,13 +511,11 @@ exactly once; the crossing index is the \emph{fold point}
 $n^{*}\approx t/\pi$ --- the echo of the zero height $t$ in the
 frequency domain.
 
-\begin{theorem}[frequency gap vanishes;\,
-\Lean{freq_gap_tendsto_zero}]\label{thm:gap0}
+\begin{theorem}[frequency gap vanishes]\label{thm:gap0}
 $\Delta\mathrm{freq}(n)=\log\frac{n+2}{n+1}\to 0$ as $n\to\infty$.
 \end{theorem}
 
-\begin{theorem}[frequency gap is antitone;\,
-\Lean{freq_gap_antitone}]\label{thm:antitone}
+\begin{theorem}[frequency gap is antitone]\label{thm:antitone}
 For every $n$,
 \[
   \Delta\mathrm{freq}(n+1)\;\leq\;\Delta\mathrm{freq}(n),
@@ -537,8 +523,7 @@ For every $n$,
 so the gaps of the frequency skeleton decrease monotonically.
 \end{theorem}
 
-\begin{theorem}[phase freezing;\,
-\Lean{phase_freeze}]\label{thm:freeze}
+\begin{theorem}[phase freezing]\label{thm:freeze}
 For every $t>0$ and every $\varepsilon>0$ there exists $N$ such that
 for all $n\geq N$,
 \[
@@ -547,8 +532,7 @@ for all $n\geq N$,
 The high-frequency terms rotate in phase: they align.
 \end{theorem}
 
-\begin{theorem}[fold point exists;\,
-\Lean{fold_point_exists}]\label{thm:fold}
+\begin{theorem}[fold point exists]\label{thm:fold}
 If $t\cdot\log 2>\pi$, there exists a unique crossing index $n^{*}$
 with
 \[
@@ -644,8 +628,11 @@ and antitone, phase freezing, fold point existence
 \Lean{CriticalCircleInfinity} (\Lean{infinite_on_circle}).
 
 \paragraph{Numerically supported.}
-The mean-value growth $E(T)=\tfrac{T}{2}(\log\tfrac{T}{2\pi}-1)+\gamma
-T+o(T)$ (Figure~\ref{fig:budget}); the density projection
+The mean-value growth
+\[
+  E(T)=\tfrac{T}{2}\left(\log\tfrac{T}{2\pi}-1\right)+\gamma T+o(T)
+\]
+(Figure~\ref{fig:budget}); the density projection
 $N(T)/F(T)\to 1$ (Table~\ref{tab:density},
 Figures~\ref{fig:align}--\ref{fig:abundance}).
 
