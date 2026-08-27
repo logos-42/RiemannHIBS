@@ -27,6 +27,7 @@ import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
 import Mathlib.Analysis.Complex.Trigonometric
 import Mathlib.Analysis.SpecialFunctions.Complex.Log
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
+import Mathlib.Analysis.SpecialFunctions.Gamma.Beta
 import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
 import Mathlib.NumberTheory.Harmonic.EulerMascheroni
 import Mathlib.NumberTheory.Harmonic.Bounds
@@ -1372,6 +1373,202 @@ structure IntrinsicZeroFree where
   real_axis_eta_positive : Prop
   -- 缺口 (RH 核心): σ ∈ (1/2, 1) 圆环内无零点 — 无内禀通道, 经典亦未解
   annulus_zero_free : Prop
+
+-- R4 (攻坚): 反演对分解 — 环内零点 = 反演对 ⊕ 圆上自配对
+--   反射零点等价 (临界带, 函数方程): ζ(1−s)=0 ⟺ ζ(s)=0
+--   (riemannZeta_one_sub + 因子非零: 2·(2π)^{-s}·Γ(s)·cos(πs/2) ≠ 0)
+--   隐数读法: 反射 s↦1−s = 反演 w↦e/w; 自配对 ⟺ w=±√e (圆上, 纯代数)
+--   命题甲压缩: 无非自配对反演对 ⟹ 全在不动圆上 ⟹ RH (机制环)
+-- ============================================================
+
+-- 1. cos(πs/2) ≠ 0 (临界带): Re cos(πs/2) = cos(πσ/2)·cosh(πt/2) > 0
+lemma cos_half_pi_s_ne_zero {s : ℂ} (hσ0 : 0 < s.re) (hσ1 : s.re < 1) :
+    Complex.cos ((Real.pi : ℂ) * s / 2) ≠ 0 := by
+  let z : ℂ := (Real.pi : ℂ) * s / 2
+  have hz : z = (z.re : ℂ) + z.im * Complex.I := by
+    rw [Complex.re_add_im]
+  have hcosre : (Complex.cos z).re = Real.cos z.re * Real.cosh z.im := by
+    rw [hz, Complex.cos_add_mul_I]
+    rw [← Complex.ofReal_cos, ← Complex.ofReal_cosh, ← Complex.ofReal_sin, ← Complex.ofReal_sinh]
+    rw [Complex.sub_re]
+    have h1 : ((Real.cos z.re : ℂ) * (Real.cosh z.im : ℂ)).re = Real.cos z.re * Real.cosh z.im := by
+      rw [← Complex.ofReal_mul, Complex.ofReal_re]
+    have h2 : ((Real.sin z.re : ℂ) * (Real.sinh z.im : ℂ) * Complex.I).re = 0 := by
+      rw [← Complex.ofReal_mul]
+      rw [Complex.mul_re]
+      simp [Complex.ofReal_re, Complex.ofReal_im]
+    rw [h1, h2]
+    simp [Complex.add_re, Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im]
+  have hzre : z.re = Real.pi * s.re / 2 := by
+    dsimp [z]
+    have hπre : (Real.pi : ℂ).re = Real.pi := by
+      simpa using (Complex.ofReal_re Real.pi)
+    have hπim : (Real.pi : ℂ).im = 0 := by
+      simpa using (Complex.ofReal_im Real.pi)
+    have hre1 : ((Real.pi : ℂ) * s).re = Real.pi * s.re := by
+      rw [Complex.mul_re]
+      rw [hπre, hπim]
+      ring
+    have him1 : ((Real.pi : ℂ) * s).im = Real.pi * s.im := by
+      rw [Complex.mul_im]
+      rw [hπre, hπim]
+      ring
+    have h2re : ((2 : ℂ)⁻¹).re = 1 / 2 := by
+      simpa using congrArg Complex.re (Complex.ofReal_inv (x := 2))
+    have h2im : ((2 : ℂ)⁻¹).im = 0 := by
+      simpa using congrArg Complex.im (Complex.ofReal_inv (x := 2))
+    -- (A/2).re = A.re/2 (A = (Real.pi:ℂ)*s)
+    have hdiv : ((Real.pi : ℂ) * s / 2).re = Real.pi * s.re / 2 := by
+      rw [div_eq_mul_inv]
+      rw [Complex.mul_re]
+      rw [hre1, him1, h2re, h2im]
+      ring
+    exact hdiv
+  have hcospos : 0 < Real.cos z.re := by
+    rw [hzre]
+    refine Real.cos_pos_of_mem_Ioo ⟨?_, ?_⟩
+    · have hneg : -(Real.pi / 2) < 0 := by
+        exact neg_lt_zero.mpr (div_pos Real.pi_pos (by norm_num : 0 < (2 : ℝ)))
+      have hpos : 0 < Real.pi * s.re / 2 :=
+        div_pos (mul_pos Real.pi_pos hσ0) (by norm_num : 0 < (2 : ℝ))
+      linarith
+    · have hlt : Real.pi * s.re < Real.pi := by
+        simpa [one_mul, mul_comm, mul_left_comm, mul_assoc] using
+          (mul_lt_mul_of_pos_right hσ1 Real.pi_pos)
+      have hlt2 : Real.pi * s.re * (2 : ℝ) < Real.pi * (2 : ℝ) := by
+        simpa [mul_comm, mul_left_comm, mul_assoc] using
+          (mul_lt_mul_of_pos_right hlt (by norm_num : 0 < (2 : ℝ)))
+      exact (div_lt_div_iff₀ (by norm_num : 0 < (2 : ℝ)) (by norm_num : 0 < (2 : ℝ))).mpr hlt2
+  have hcoshpos : 0 < Real.cosh z.im := Real.cosh_pos _
+  have hrepos : 0 < (Complex.cos z).re := by
+    rw [hcosre]
+    exact mul_pos hcospos hcoshpos
+  intro hz0
+  have hre0 : (Complex.cos z).re = 0 := by rw [hz0]; simp
+  linarith
+
+-- 2. 因子非零: 2·(2π)^{-s}·Γ(s)·cos(πs/2) ≠ 0 (临界带)
+lemma reflection_factor_ne_zero {s : ℂ} (hσ0 : 0 < s.re) (hσ1 : s.re < 1) :
+    (2 : ℂ) * ((2 : ℂ) * (Real.pi : ℂ)) ^ (-s) * Complex.Gamma s *
+      Complex.cos ((Real.pi : ℂ) * s / 2) ≠ 0 := by
+  have h2 : (2 : ℂ) ≠ 0 := by norm_num
+  have hc : ((2 : ℂ) * (Real.pi : ℂ)) ^ (-s) ≠ 0 := by
+    have h2p : (2 : ℂ) * (Real.pi : ℂ) ≠ 0 := by
+      have hπ : (Real.pi : ℂ) ≠ 0 := by simpa using (Complex.ofReal_ne_zero.mpr Real.pi_ne_zero)
+      exact mul_ne_zero (by norm_num) hπ
+    exact (Complex.cpow_ne_zero_iff (x := (2 : ℂ) * (Real.pi : ℂ)) (y := -s)).mpr (Or.inl h2p)
+  have hg : Complex.Gamma s ≠ 0 := Complex.Gamma_ne_zero_of_re_pos hσ0
+  have hcs : Complex.cos ((Real.pi : ℂ) * s / 2) ≠ 0 := cos_half_pi_s_ne_zero hσ0 hσ1
+  exact mul_ne_zero (mul_ne_zero (mul_ne_zero h2 hc) hg) hcs
+
+-- 3. 临界带反射零点等价: ζ(1−s)=0 ⟺ ζ(s)=0 (函数方程, mathlib)
+theorem zeta_zero_iff_one_sub {s : ℂ} (hσ0 : 0 < s.re) (hσ1 : s.re < 1) :
+    (riemannZeta (1 - s) = 0 ↔ riemannZeta s = 0) := by
+  have hs : ∀ n : ℕ, s ≠ -n := by
+    intro n hn
+    have hre : s.re = (-(n : ℂ)).re := by rw [hn]
+    have hle : (-(n : ℂ)).re ≤ 0 := by
+      rw [Complex.neg_re]
+      exact neg_nonpos.mpr (Nat.cast_nonneg n)
+    linarith
+  have hs' : s ≠ 1 := by
+    intro h
+    have : s.re = 1 := by simpa using congrArg Complex.re h
+    linarith
+  have hfe := riemannZeta_one_sub (s := s) hs hs'
+  have hF : (2 : ℂ) * ((2 : ℂ) * (Real.pi : ℂ)) ^ (-s) * Complex.Gamma s *
+      Complex.cos ((Real.pi : ℂ) * s / 2) ≠ 0 := reflection_factor_ne_zero hσ0 hσ1
+  constructor
+  · intro hz
+    rw [hfe] at hz
+    exact (mul_eq_zero.mp hz).resolve_left hF
+  · intro hz
+    rw [hfe]
+    simp [hz]
+
+-- 4. 反射零点闭合: 临界带零点在 s↦1−s 下成对
+theorem zero_pair_reflect {s : ℂ} (hσ0 : 0 < s.re) (hσ1 : s.re < 1)
+    (hz : riemannZeta s = 0) : riemannZeta (1 - s) = 0 :=
+  (zeta_zero_iff_one_sub hσ0 hσ1).mpr hz
+
+-- 5. 自配对 ⟺ w = ±√e (纯代数): w = e/w ⟺ w² = e
+theorem self_pair_iff (w : ℂ) (hw : w ≠ 0) :
+    ((Real.exp 1 : ℂ) / w = w) ↔ (w = Real.sqrt (Real.exp 1) ∨ w = -Real.sqrt (Real.exp 1)) := by
+  -- e/w = w ⟺ e = w²
+  have hmain : ((Real.exp 1 : ℂ) / w = w) ↔ ((Real.exp 1 : ℂ) = w * w) := by
+    constructor
+    · intro h
+      have : (Real.exp 1 : ℂ) = w * w := by
+        calc
+          (Real.exp 1 : ℂ) = w * ((Real.exp 1 : ℂ) / w) := by
+            rw [mul_div_cancel₀ _ hw]
+          _ = w * w := by rw [h]
+      exact this
+    · intro h
+      calc
+        (Real.exp 1 : ℂ) / w = (w * w) / w := by rw [h]
+        _ = w := by
+          rw [mul_div_cancel_left₀ w hw]
+  -- w² = e ⟺ w = ±√e: 因式分解 (w−√e)(w+√e) = w² − e = 0
+  have hsq : (Real.sqrt (Real.exp 1) : ℂ) * (Real.sqrt (Real.exp 1) : ℂ) = (Real.exp 1 : ℂ) := by
+    have hsqr : Real.sqrt (Real.exp 1) * Real.sqrt (Real.exp 1) = Real.exp 1 := by
+      rw [← pow_two]
+      exact Real.sq_sqrt (le_of_lt (Real.exp_pos 1))
+    rw [← Complex.ofReal_mul]
+    exact congrArg (fun x : ℝ => (x : ℂ)) hsqr
+  rw [hmain]
+  constructor
+  · intro h
+    -- e = w² ⟹ w² = e
+    have hw2 : w * w = (Real.exp 1 : ℂ) := h.symm
+    have hsq2 : (Real.sqrt (Real.exp 1) : ℂ) ^ 2 = (Real.exp 1 : ℂ) := by
+      have hsqr : Real.sqrt (Real.exp 1) ^ 2 = Real.exp 1 := by
+        exact Real.sq_sqrt (le_of_lt (Real.exp_pos 1))
+      rw [← Complex.ofReal_pow]
+      exact congrArg (fun x : ℝ => (x : ℂ)) hsqr
+    have hfac : (w - (Real.sqrt (Real.exp 1) : ℂ)) * (w + (Real.sqrt (Real.exp 1) : ℂ)) = 0 := by
+      ring_nf
+      rw [hsq2]
+      rw [← hw2]
+      ring
+    rcases mul_eq_zero.mp hfac with hz | hz
+    · left
+      exact sub_eq_zero.mp hz
+    · right
+      exact eq_neg_of_add_eq_zero_left hz
+  · intro h
+    rcases h with h | h
+    · rw [h]
+      exact hsq.symm
+    · rw [h]
+      have hneg : (-(Real.sqrt (Real.exp 1) : ℂ)) * (-(Real.sqrt (Real.exp 1) : ℂ)) =
+          (Real.sqrt (Real.exp 1) : ℂ) * (Real.sqrt (Real.exp 1) : ℂ) := by ring
+      exact hsq.symm.trans hneg.symm
+
+-- 6. 自配对 ⟹ 在圆上: w = e/w ⟹ ‖w‖ = √e (经 inversion_fixed_radius)
+theorem self_pair_on_circle (w : ℂ) (hw : w ≠ 0) (h : (Real.exp 1 : ℂ) / w = w) :
+    ‖w‖ = Real.sqrt (Real.exp 1) := by
+  have hnorm : ‖(Real.exp 1 : ℂ) / w‖ = ‖w‖ := by rw [h]
+  exact (inversion_fixed_radius w hw).mp hnorm
+
+-- 7. 反射对合: 1−(1−s) = s
+theorem reflect_involutive (s : ℂ) : 1 - (1 - s) = s := by ring
+
+-- 8. 声明: 反演对分解 — 无非自配对对 ⟹ 全在圆上 ⟹ RH
+structure InversionPairDecomposition where
+  -- 已证: 反射零点闭合 (zero_pair_reflect: ζ(1−s)=0 ⟸ ζ(s)=0, 临界带)
+  reflection_closed : Prop
+  -- 已证: 自配对 ⟺ w=±√e (self_pair_iff); 自配对 ⟹ |w|=√e (self_pair_on_circle)
+  self_pair_algebra : Prop
+  -- 已证: 反射对合 (reflect_involutive)
+  involution : Prop
+  -- 缺口 (RH 本身): 不存在非自配对反演对 (即所有零点对都在不动圆上自配对)
+  --   等价表述: 圆环 1<|w|<e 内无 |w|≠√e 的零点 — 与 zeta_zero_iff_one_sub
+  --   组合后即"零点 ⟹ Re s = 1/2" (hno) = 机制环最后一格
+  no_nonself_pair : Prop
+  -- 结论: 机制环 A⟺B⟺C⟺D (已证) 给出 no_nonself_pair ⟹ RH
+  rh : Prop
+  assemble : no_nonself_pair → rh
 
 end RiemannHIBS.Abundance
 

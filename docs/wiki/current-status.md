@@ -306,3 +306,15 @@ stage: current
   (交错调和极限 l ≥ 1/2, Leibniz 夹逼) — 命题甲 (圆外无零点) 的远圆部分
   有了坐标系自己的内禀证明; 缺口不变: σ ∈ (1/2, 1) 圆环内无零点 = RH 核心,
   无内禀通道 (IntrinsicZeroFree 诚实标注)
+
+- R4 反演对分解 (Abundance §16, 无 sorry, 本日提交) — 环内零点 = 反演对 ⊕
+  圆上自配对的精确形式化: **zeta_zero_iff_one_sub** (临界带反射零点等价:
+  ζ(1−s)=0 ⟺ ζ(s)=0, 经 mathlib riemannZeta_one_sub 函数方程 + 因子非零 —
+  Γ(s)≠0 经 Gamma_ne_zero_of_re_pos, cos(πs/2)≠0 经实部论证 Re cos(πs/2) =
+  cos(πσ/2)·cosh(πt/2) > 0 (cos_pos_of_mem_Ioo + cosh_pos), (2π)^{-s}≠0 经
+  cpow_ne_zero_iff) + **zero_pair_reflect** (零点在 s↦1−s 下成对, 隐数读法 =
+  反演 w↦e/w) + self_pair_iff (自配对 w=e/w ⟺ w²=e ⟺ w=±√e, 因式分解
+  (w−√e)(w+√e)=0) + self_pair_on_circle (自配对 ⟹ ‖w‖=√e) + reflect_involutive
+  (1−(1−s)=s) — **命题甲压缩为一句**: "不存在非自配对反演对" ⟹ 全在不动圆上
+  ⟹ RH (机制环); InversionPairDecomposition 诚实标注 (no_nonself_pair 即
+  环内无 |w|≠√e 零点 = RH 核心, 未证)
