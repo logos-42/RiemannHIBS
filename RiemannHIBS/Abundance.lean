@@ -890,6 +890,111 @@ theorem cross_total_bound (N : ℕ) (hN : 2 ≤ N) :
     _ = (N : ℝ) * Real.sqrt (N : ℝ) * (1 + Real.log (N : ℝ)) := by ring
 
 
+-- ============================================================
+-- R1 (task 2): 截断能量对角下界 (组合)
+--   ∫₀ᵀ|S_N|² ≥ T·Σ(n+1)^{-1} − ΣΣ|∫v_m conj v_n|
+--   交叉上界 ≤ 4·N·√N·(1+log N) (task 1)
+--   ⟹ 能量 ≥ T·log(N+1) − O(N^{1.5}·log N) — 对角主导 (N = √(T/2π))
+-- ============================================================
+
+-- 辅助: re 与 Finset 和交换
+lemma sum_re (s : Finset ℕ) (f : ℕ → ℂ) :
+    (∑ i ∈ s, f i).re = ∑ i ∈ s, (f i).re := by
+  refine Finset.induction_on s ?_ ?_
+  · simp
+  · intro a s has ih
+    simp [has, ih, Complex.add_re]
+
+-- 辅助: 积分与 re 交换 (RCLike.reCLM 连续线性)
+lemma integral_re_comm (f : ℝ → ℂ) (a b : ℝ)
+    (hf : IntervalIntegrable f MeasureTheory.volume a b) :
+    (∫ t in a..b, f t).re = ∫ t in a..b, (f t).re := by
+  have h := ((RCLike.reCLM : ℂ →L[ℝ] ℝ)).intervalIntegral_comp_comm hf
+  simpa using h.symm
+
+-- 逐点展开: ‖S_N‖² = Σ‖v_n‖² + Re(Σ_{m≠n} v_m conj v_n)
+lemma partialSum_sq_pointwise (N : ℕ) (t : ℝ) :
+    ‖∑ n ∈ Finset.range N, rotatingVec n t‖ ^ 2 =
+      (∑ n ∈ Finset.range N, ‖rotatingVec n t‖ ^ 2) +
+      (∑ m ∈ Finset.range N, ∑ n ∈ (Finset.range N).erase m,
+        (rotatingVec m t * conj (rotatingVec n t)).re) := by
+  let S : ℂ := ∑ n ∈ Finset.range N, rotatingVec n t
+  let f : ℕ → ℕ → ℂ := fun m n => rotatingVec m t * conj (rotatingVec n t)
+  have hsq : ‖S‖ ^ 2 = (S * conj S).re := by
+    rw [← Complex.normSq_eq_norm_sq]
+    rw [Complex.mul_conj]
+    simp
+  have hconj : conj S = ∑ n ∈ Finset.range N, conj (rotatingVec n t) := by
+    unfold S
+    rw [map_sum]
+  calc
+    ‖S‖ ^ 2 = (S * conj S).re := hsq
+    _ = (∑ m ∈ Finset.range N, ∑ n ∈ Finset.range N, f m n).re := by
+          have hprod : S * conj S = ∑ m ∈ Finset.range N, ∑ n ∈ Finset.range N, f m n := by
+            rw [hconj]
+            unfold f
+            rw [Finset.sum_mul]
+            apply Finset.sum_congr rfl
+            intro m hm
+            rw [Finset.mul_sum]
+          rw [hprod]
+    _ = (∑ m ∈ Finset.range N, ∑ n ∈ Finset.range N, (f m n).re) := by
+          rw [sum_re]
+          apply Finset.sum_congr rfl
+          intro m hm
+          rw [sum_re]
+    _ = (∑ n ∈ Finset.range N, (f n n).re) +
+        (∑ m ∈ Finset.range N, ∑ n ∈ (Finset.range N).erase m, (f m n).re) := by
+          calc
+            (∑ m ∈ Finset.range N, ∑ n ∈ Finset.range N, (f m n).re)
+              = ∑ m ∈ Finset.range N,
+                  ((f m m).re + ∑ n ∈ (Finset.range N).erase m, (f m n).re) := by
+                  apply Finset.sum_congr rfl
+                  intro m hm
+                  simpa [add_comm] using
+                    (Finset.sum_erase_add (Finset.range N) (fun n => (f m n).re) hm).symm
+              _ = (∑ m ∈ Finset.range N, (f m m).re) +
+                  (∑ m ∈ Finset.range N, ∑ n ∈ (Finset.range N).erase m, (f m n).re) := by
+                  rw [Finset.sum_add_distrib]
+              _ = (∑ n ∈ Finset.range N, (f n n).re) +
+                  (∑ m ∈ Finset.range N, ∑ n ∈ (Finset.range N).erase m, (f m n).re) := by
+                  congr 1
+    _ = (∑ n ∈ Finset.range N, ‖rotatingVec n t‖ ^ 2) +
+        (∑ m ∈ Finset.range N, ∑ n ∈ (Finset.range N).erase m,
+          (rotatingVec m t * conj (rotatingVec n t)).re) := by
+          unfold f
+          congr 1
+          apply Finset.sum_congr rfl
+          intro n hn
+          rw [Complex.mul_conj, Complex.normSq_eq_norm_sq]
+          exact Complex.ofReal_re (‖rotatingVec n t‖ ^ 2)
+
+-- 对角 (∫₀ᵀ 版): ∫₀ᵀ ‖v_n‖² = T·(n+1)^{-1}
+theorem diagonal_energy_half (n : ℕ) (T : ℝ) (hT : 0 ≤ T) :
+    (∫ t in (0 : ℝ)..T, ‖rotatingVec n t‖ ^ 2) = T * ((n + 1 : ℕ) : ℝ)⁻¹ := by
+  have hpt : ∀ t ∈ Set.uIcc 0 T, ‖rotatingVec n t‖ ^ 2 = ((n + 1 : ℕ) : ℝ)⁻¹ := by
+    intro t ht
+    unfold rotatingVec
+    rw [norm_mul]
+    have hnorm1 : ‖((Real.sqrt ((n + 1 : ℕ) : ℝ) : ℂ))⁻¹‖ = (Real.sqrt ((n + 1 : ℕ) : ℝ))⁻¹ := by
+      rw [norm_inv]
+      simpa [RCLike.norm_ofReal, Real.sqrt_nonneg]
+    have hnorm2 : ‖Complex.exp (Complex.I * ((Real.log ((n + 1 : ℕ) : ℝ) : ℂ) * (t : ℂ)))‖ = 1 := by
+      simpa [Complex.ofReal_mul, mul_comm, mul_assoc, mul_left_comm] using
+        (Complex.norm_exp_ofReal_mul_I (Real.log ((n + 1 : ℕ) : ℝ) * t))
+    rw [hnorm1, hnorm2, mul_one]
+    rw [inv_pow]
+    rw [Real.sq_sqrt (by positivity : 0 ≤ ((n + 1 : ℕ) : ℝ))]
+  calc
+    (∫ t in (0 : ℝ)..T, ‖rotatingVec n t‖ ^ 2)
+        = ∫ t in (0 : ℝ)..T, ((n + 1 : ℕ) : ℝ)⁻¹ := by
+            rw [intervalIntegral.integral_congr hpt]
+    _ = T * ((n + 1 : ℕ) : ℝ)⁻¹ := by
+            rw [intervalIntegral.integral_const]
+            rw [smul_eq_mul]
+            ring
+
+
 -- 12.13 能量平衡半径: Σ (n+1)^{-2σ} 收敛 ⟺ σ > 1/2
 --     (1/2 是能量的唯一平衡点 — 半径唯一性的能量骨架)
 theorem energy_balance_radius (σ : ℝ) :
