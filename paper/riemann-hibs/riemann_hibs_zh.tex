@@ -92,20 +92,14 @@
 本文在隐数坐标系 $w=e^{s}$ 中研究 $\zeta$ 函数。该变换把 $s$ 平面送到带整数层标的带孔 $w$ 平面。在此坐标系下，临界线变为由函数方程诱导的反演 $w\mapsto e/w$ 所固定的唯一圆 $|w|=\sqrt{e}$；$\log\sqrt{e}=1/2$ 被反射几何强制，而非约定。我们在此坐标系内证明了一批已在 Lean/MathLib 中机器验证（无 \Lean{sorry}）的定理：能量平衡判据（截断能量收敛当且仅当 $\sigma>1/2$）与临界半径作为反演、能量平衡、反射三者公共不动点的唯一性；内禀零域定理（$\Re s\geq 2$ 时 $\zeta(s)\neq 0$，由对齐部分和的模长得到，而非欧拉乘积）；临界带的反演对分解（$\zeta(1-s)=0\iff\zeta(s)=0$，且自配对当且仅当 $w=\pm\sqrt{e}$）；以及项的频率结构——间距趋于零、间距序列反单调、相位冻结、以及交错相位差变号的折返点 $n^{*}\approx t/\pi$ 的存在性。这些结果与数值支持的"对齐密度投影"以及一个被显式点名的外部输入（Hardy 的有界能量反证）组装为已声明的论证 \Lean{CriticalCircleInfinity}：临界圆上有无限多个零点——有位置、有丰度。剩余缺口——圆环 $1<|w|<e$ 内偏离临界圆处无零点——正是黎曼猜想本身；它被隔离出来，但未被供给。
 \end{abstract}
 
-\makeatletter\def\abstractname{Abstract}\makeatother
 \begin{keywords}
-\kwd{riemann hypothesis}
-\kwd{riemann zeta function}
-\kwd{hidden-number coordinates}
-\kwd{critical circle}
-\kwd{formal verification}
-\kwd{lean}
+\kwd{黎曼猜想}
+\kwd{黎曼 zeta 函数}
+\kwd{隐数坐标系}
+\kwd{临界圆}
+\kwd{形式化验证}
+\kwd{Lean}
 \end{keywords}
-
-\begin{altabstract}
-We study the zeta function in the hidden-number coordinate system $w=e^{s}$, which transports the $s$-plane to the punctured $w$-plane equipped with an integer sheet label. In these coordinates the critical line becomes the unique circle $|w|=\sqrt{e}$ fixed by the inversion $w\mapsto e/w$ induced by the functional equation; the value $\log\sqrt{e}=1/2$ is forced by reflection geometry, not postulated. Within this coordinate system we prove a body of machine-checked theorems, formalized in Lean/MathLib without \Lean{sorry}: the energy balance criterion (truncated energy converges if and only if $\sigma>1/2$) and the uniqueness of the critical radius as the simultaneous fixed point of inversion, energy balance, and reflection; an intrinsic zero-free theorem ($\zeta(s)\neq 0$ for $\Re s\geq 2$, obtained from the magnitude of aligned partial sums rather than the Euler product); the inversion-pair decomposition of the critical strip ($\zeta(1-s)=0\iff\zeta(s)=0$, with a self-pair iff $w=\pm\sqrt{e}$); and the frequency structure of the terms --- gaps tending to zero, antitone gap sequence, phase freezing, and the existence of a fold point $n^{*}\approx t/\pi$ where the alternating phase difference reverses sign. These results assemble, together with a numerically supported alignment-density projection and one explicitly named external input (Hardy's bounded-energy counterpositive), into a declared argument \Lean{CriticalCircleInfinity} establishing infinitely many zeros on the critical circle --- with position and with abundance. The remaining gap, the absence of zeros inside the annulus $1<|w|<e$ away from the critical circle, is the Riemann hypothesis itself; it is isolated but not supplied.
-\end{altabstract}
-
 
 \begin{AMSclass}
 \kwd{11M26}
