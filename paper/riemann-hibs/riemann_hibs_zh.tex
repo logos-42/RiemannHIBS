@@ -96,13 +96,13 @@ We study the zeta function in the hidden-number coordinate system $w=e^{s}$, whi
 
 \section{引言}\label{sec:intro}
 
-黎曼 $\zeta$ 函数 \cite{Riemann1859} 在负偶整数与临界带 $0<\Re s<1$ 中的某些点处取零。黎曼猜想断言一切非平凡零点都位于直线 $\Re s=1/2$ 上。其推论贯穿素数论 \citep{vonMangoldt1905,Hadamard1893}；其解析理论见 \citet{Titchmarsh1985} 与 \citet{Edwards1974}；现代综述见 \citet{Conrey2003}。该猜想至今未决。
+黎曼 $\zeta$ 函数 \cite{Riemann1859} 在负偶整数与临界带 $0<\Re s<1$ 中的某些点处取零。黎曼猜想断言一切非平凡零点都位于直线 $\Re s=1/2$ 上。其推论贯穿素数论 \citep{vonMangoldt1905,Hadamard1893,deLaValleePoussin1899}；该猜想等价于若干初等重述 \citep{vonKoch1901,Schoenfeld1976,Lagarias2002}。Hardy 证明临界线上有无限多个零点 \citep{Hardy1914}；此结果由 \citet{HardyLittlewood1921} 推广，并由 \citet{Selberg1942}、\citet{Levinson1974}、\citet{HeathBrown1979} 与 \citet{Conrey1989} 量化。Montgomery 的对相关 \citep{Montgomery1973,Montgomery1977} 与 \citet{Connes1999}、\citet{BombieriHejhal1995} 的谱观点提供了进一步结构，且该猜想已被数值验证到极大高度 \citep{PlattTrudgian2021}。其解析理论见 \citet{Titchmarsh1986}、\citet{Edwards1974}、\citet{IwaniecKowalski2004} 与 \citet{Iwaniec2014}；现代综述见 \citet{Conrey2003}。该猜想至今未决。
 
 本文通过坐标变换
 \[
   w \;=\; e^{s}, \qquad s=\log r+i\theta,
 \]
-即\emph{隐数坐标系}，来读 $\zeta$ 函数。虚方向变为按 $2\pi$ 取模的角度，平面展开为以整数标层的万有覆盖。在此坐标系下，函数方程化为纯反演 $w\mapsto e/w$，临界线变为圆 $|w|=\sqrt{e}$——该反演所固定的唯一圆。我们只用此坐标系的内禀机制研究 $\zeta$ 函数：对齐部分和的模长、截断能量的平衡、反演对的代数、以及项的频率结构。
+即我们此前工作 \citep{LiuXu2026bridge} 的\emph{隐数坐标系}，来读 $\zeta$ 函数。虚方向变为按 $2\pi$ 取模的角度，平面展开为以整数标层的万有覆盖。在此坐标系下，函数方程化为纯反演 $w\mapsto e/w$，临界线变为圆 $|w|=\sqrt{e}$——该反演所固定的唯一圆。我们只用此坐标系的内禀机制研究 $\zeta$ 函数：对齐部分和的模长、截断能量的平衡、反演对的代数、以及项的频率结构。
 
 下文每个定理都带有其 Lean 形式化的名字（以 \Lean{名字} 排版）；每个被引用的名字都在 RiemannHIBS 仓库中无 \Lean{sorry} 编译通过。被声明为\emph{结构体}（而非定理）的对象，其字段被显式枚举；部分字段是已证定理，其余是只命名不供给的假设。全文坚持这一区分。
 
