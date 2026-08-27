@@ -28,6 +28,7 @@ src_paper_fig1_zh,,,image,fig1_projection_cross_zh.png,paper/riemann-hibs/figure
 src_paper_fig8_en,,,image,fig8_static_en.png,paper/riemann-hibs/figures/fig8_static_en.png,new,paper/riemann-hibs/riemann_hibs_en.tex,论文图 8 英文版
 src_paper_fig8_zh,,,image,fig8_static_zh.png,paper/riemann-hibs/figures/fig8_static_zh.png,new,paper/riemann-hibs/riemann_hibs_zh.tex,论文图 8 中文版
 src_paper_pdf_zh,,,document,riemann_hibs_zh.pdf,paper/riemann-hibs/riemann_hibs_zh.pdf,new,,中文版编译产物
+src_paper_pdf_en,,,document,riemann_hibs_en.pdf,paper/riemann-hibs/riemann_hibs_en.pdf,new,,英文版编译产物
 src_paper_logo,,,image,sfds.png,paper/riemann-hibs/sfds.png,new,paper/riemann-hibs/riemann_hibs_en.tex,论文模板图标
 src_viz_fig11_abundance,,,image,fig11_zero_abundance.png,viz/fig11_zero_abundance.png,new,docs/wiki/current-status.md,零点丰度图原始图
 src_viz_fig12_enumeration,,,image,fig12_zero_enumeration.png,viz/fig12_zero_enumeration.png,new,docs/wiki/current-status.md,零点枚举图原始图

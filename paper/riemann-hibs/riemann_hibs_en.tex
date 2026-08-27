@@ -1,20 +1,11 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % riemann_hibs_en.tex
 %
-% Compile:  xelatex riemann_hibs_en
-%           bibtex    riemann_hibs_en
-%           xelatex riemann_hibs_en
-%           xelatex riemann_hibs_en
+% Compile with XeLaTeX, then BibTeX, followed by two XeLaTeX runs.
 %
-% English-only file: no CJK content, compiles with XeLaTeX
-% (the Chinese counterpart is riemann_hibs_zh.tex).
-%
-% Honesty note: this paper strictly distinguishes theorems that have been
-% fully formalized (every Lean name cited below compiles without `sorry`
-% in the repository RiemannHIBS) from open conjectures, numerically
-% supported statements, and externally supplied analytic inputs. It does
-% NOT claim a complete proof of the Riemann Hypothesis; see Sections 1
-% and 10 for the precise scope.
+% Logical scope.  This paper separates classical inputs, exact coordinate
+% translations, and open claims.  It does not present a new proof of the
+% Riemann hypothesis; the remaining open statement is isolated explicitly.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \documentclass[submission,noinfoline]{jsfds}
@@ -36,8 +27,7 @@
 \newtheorem{definition}[theorem]{Definition}
 \newtheorem*{remark}{Remark}
 \setattribute{title}{size}{\LARGE\bfseries}
-% Keep Lean identifiers in the source for traceability, but hide them from
-% the typeset article so theorem headings remain readable and wrap cleanly.
+% Lean names remain in the source as cross-references, but are not printed.
 \newcommand{\Lean}[1]{}
 \def\journal@name{}%
 \setattribute{infoline}{text}{}%
@@ -51,59 +41,43 @@
 \begin{document}
 \begin{frontmatter}
 
-\title{Infinitely Many Zeros on the Critical Circle: Hidden-Number Coordinates and the Riemann Hypothesis}
-\runtitle{Hidden-number coordinates and the critical circle}
+\title{The Riemann Zeta Function in Hidden-Number Coordinates:
+From Classical Inputs to the Critical-Circle Reduction}
+\runtitle{From classical inputs to the critical-circle reduction}
 
 \begin{aug}
   \auteur{%
-  \prenom{Yuanjie}
-  \nom{Liu}}
-
+    \prenom{Yuanjie}
+    \nom{Liu}}
   \affiliation{Independent Researcher;\quad
   \href{mailto:yuanjieliu65@gmail.com}{yuanjieliu65@gmail.com}}
-
   \runauthor{Yuanjie Liu}
 \end{aug}
 
 \begin{abstract}
-We study the zeta function in the hidden-number coordinate system
-$w=e^{s}$, which transports the $s$-plane to the punctured $w$-plane
-equipped with an integer sheet label. In these coordinates the critical
-line becomes the unique circle $|w|=\sqrt{e}$ fixed by the inversion
-$w\mapsto e/w$ induced by the functional equation; the value
-$\log\sqrt{e}=1/2$ is forced by reflection geometry, not postulated.
-Within this coordinate system we prove a body of machine-checked
-theorems, formalized in Lean/MathLib without \Lean{sorry}: the energy
-balance criterion (truncated energy converges if and only if
-$\sigma>1/2$) and the uniqueness of the critical radius as the
-simultaneous fixed point of inversion, energy balance, and reflection;
-an intrinsic zero-free theorem ($\zeta(s)\neq 0$ for $\Re s\geq 2$,
-obtained from the magnitude of aligned partial sums rather than the
-Euler product); the inversion-pair decomposition of the critical strip
-($\zeta(1-s)=0\iff\zeta(s)=0$, with a self-pair iff $w=\pm\sqrt{e}$);
-and the frequency structure of the terms --- gaps tending to zero,
-antitone gap sequence, phase freezing, and the existence of a fold
-point $n^{*}\approx t/\pi$ where the alternating phase difference
-reverses sign. These results assemble, together with a numerically
-supported alignment-density projection and one explicitly named
-external input (Hardy's bounded-energy counterpositive), into a
-declared argument \Lean{CriticalCircleInfinity} establishing
-infinitely many zeros on the critical circle --- with position and with
-abundance. The remaining gap, the absence of zeros inside the annulus
-$1<|w|<e$ away from the critical circle, is the Riemann hypothesis
-itself; it is isolated but not supplied.
+We give a logically ordered account of the hidden-number coordinate
+description of the Riemann zeta function. The argument starts with classical
+analytic facts: the functional equation, the zero-free half-plane, and
+Hardy's theorem on zeros on the critical line. The change of variables
+$w=e^s$ then translates reflection into the inversion $w\mapsto e/w$ and
+the critical line into the unique inversion-fixed circle
+$|w|=\sqrt e$. From these facts we derive the annular location and reflection
+pairing of nontrivial zeros, and Hardy's theorem transports directly to the
+statement that infinitely many lifted zeros lie over this circle. The energy and
+frequency calculations are included as exact coordinate diagnostics; they do
+not by themselves create zeros or prove a density law. The Riemann hypothesis
+is consequently isolated as the remaining assertion that every nontrivial
+reflection pair is self-paired. Lean identifiers are retained in the source
+for traceability but are suppressed in the typeset article.
 \end{abstract}
 
 \begin{keywords}
-\kwd{riemann hypothesis}
-\kwd{riemann zeta function}
+\kwd{Riemann hypothesis}
+\kwd{Riemann zeta function}
 \kwd{hidden-number coordinates}
 \kwd{critical circle}
 \kwd{formal verification}
-\kwd{lean}
 \end{keywords}
-
-
 
 \begin{AMSclass}
 \kwd{11M26}
@@ -112,560 +86,295 @@ itself; it is isolated but not supplied.
 \end{AMSclass}
 \end{frontmatter}
 
-\section{Introduction}\label{sec:intro}
+\section{Question, inputs, and logical order}\label{sec:intro}
 
-The Riemann zeta function $\zeta(s)$, introduced in \cite{Riemann1859},
-vanishes at the negative even integers and at certain points of the
-critical strip $0<\Re s<1$. The Riemann hypothesis asserts that all
-nontrivial zeros lie on the line $\Re s=1/2$. Its consequences permeate
-prime number theory \citep{vonMangoldt1905,Hadamard1893,
-deLaValleePoussin1899}, and the hypothesis is equivalent to several
-elementary reformulations \citep{vonKoch1901,Schoenfeld1976,Lagarias2002}.
-Hardy proved that infinitely many zeros lie on the critical line
-\citep{Hardy1914}; the result was extended by \citet{HardyLittlewood1921}
-and quantified by \citet{Selberg1942}, \citet{Levinson1974},
-\citet{HeathBrown1979}, and \citet{Conrey1989}. Montgomery's pair
-correlation \citep{Montgomery1973,Montgomery1977} and the spectral
-views of \citet{Connes1999} and \citet{BombieriHejhal1995} provide
-further structure, and the hypothesis has been verified numerically up
-to very large height \citep{PlattTrudgian2021}. Its analytical theory
-is consolidated in \citet{Titchmarsh1986}, \citet{Edwards1974},
-\citet{IwaniecKowalski2004}, and \citet{Iwaniec2014}; a modern survey
-is \citet{Conrey2003}. The hypothesis remains open.
-
-This paper reads the zeta function through the coordinate
-transformation
+The Riemann hypothesis concerns the nontrivial zeros of
+$\zeta(s)$. It asserts
 \[
-  w \;=\; e^{s}, \qquad s=\log r+i\theta,
+  0<\Re s<1,\quad \zeta(s)=0
+  \quad\Longrightarrow\quad \Re s=\tfrac12 .
 \]
-the \emph{hidden-number coordinate system} of our previous work
-\citep{LiuXu2026bridge}. The imaginary direction
-becomes an angle recorded modulo $2\pi$, so the plane unrolls into a
-universal cover whose sheets are indexed by integers. In these
-coordinates the functional equation becomes a pure inversion
-$w\mapsto e/w$, and the critical line becomes a circle
-$|w|=\sqrt{e}$ --- the unique circle fixed by that inversion. We study
-the zeta function exclusively through the intrinsic mechanisms of this
-coordinate system: the magnitude of aligned partial sums, the balance
-of truncated energies, the algebra of inversion pairs, and the
-frequency structure of the terms.
+The purpose of the present paper is not to replace the classical analytic
+theory with a list of formal names. It is to make the implication structure
+visible. We will use three kinds of statements:
 
-Every theorem stated below is linked in the source to its Lean formalization;
-each cited name compiles in the repository RiemannHIBS without \Lean{sorry}.
-Objects declared as \emph{structures}
-(rather than theorems) have their fields explicitly enumerated; some
-fields are proved theorems, others are hypotheses that are named but
-not supplied. We insist on this distinction throughout.
+\begin{description}
+\item[Classical inputs.] The functional equation, the standard zero-free
+regions, and Hardy's theorem are taken as known analytic results.
+\item[Exact deductions.] Coordinate changes, modulus identities, reflection
+pairing, and the equivalence between the critical-line and critical-circle
+descriptions are proved directly.
+\item[Open statements.] The exclusion of non-self-paired zeros in the
+critical annulus is exactly the Riemann hypothesis. Numerical density and
+energy heuristics are not used to hide this gap.
+\end{description}
 
-\section{The hidden-number coordinate system}\label{sec:coords}
+The rest of the paper follows this order: first the coordinate dictionary,
+then the deductions about the zero set, then the direct transport of Hardy's
+theorem, and finally the auxiliary energy/frequency diagnostics and the
+remaining open problem.
+
+\section{The coordinate dictionary}\label{sec:coords}
+
+Write $s=\sigma+it$ and introduce
+\[
+  \Phi(s)=e^s=w=e^\sigma e^{it}.
+\]
+The radius records the real part, while the argument records the imaginary
+part only modulo $2\pi$. Thus the natural domain is a logarithmic cover: a
+point of the cover remembers both $w\neq0$ and a sheet index. This is a
+change of coordinates, not an additional assumption about $\zeta$.
 
 \begin{definition}[hidden-number coordinates]\label{def:coords}
-The map $\Phi(s)=e^{s}$ sends $s=u+i\theta$ to $w=re^{i\varphi}$
-with $r=e^{u}$ and $\varphi=\theta\bmod 2\pi$. Because the angle
-forgets the sheet, the honest domain of $\Phi$ is the universal cover
-of $\mathbb{C}\setminus\{0\}$; a point of the cover is a pair
-$(w,k)$ with $k\in\mathbb{Z}$ recording the winding number.
+The hidden-number coordinate of $s=\sigma+it$ is the pair
+$(w,k)$ with $w=e^s$ and $k$ recording the chosen lift of $t$ modulo
+$2\pi$. In particular,
+\[
+  |w|=e^\sigma,\qquad \log|w|=\sigma .
+\]
 \end{definition}
 
-The transport of the Dirichlet series to these coordinates is the
-essential dictionary. The $n$-th term of the shifted series
-$\eta(s)=\sum_{n\geq 0}(-1)^{n}(n+1)^{-s}$ becomes a vector of locked
-length $(n+1)^{-\sigma}$ rotating with angular velocity
-$\log(n+1)$:
+The functional equation reflects $s$ to $1-s$. Under $\Phi$ this becomes
 \[
-  (n+1)^{-s} \;=\; (n+1)^{-\sigma}\cdot
-  \exp\bigl(-i\,t\log(n+1)\bigr),
-  \qquad s=\sigma+it .
+  \Phi(1-s)=e^{1-s}=\frac{e}{e^s}=\frac{e}{w}.
 \]
-Each sheet carries a genuine copy of the phase data, and consecutive
-leaves differ by the deck transformation $\theta\mapsto\theta+2\pi$.
+We therefore obtain the following exact dictionary:
+\[
+  s\longmapsto1-s
+  \qquad\Longleftrightarrow\qquad
+  w\longmapsto\iota(w):=\frac ew .
+\]
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.85\textwidth]{fig1_projection_cross_en}
-\caption{The hidden-number projection. The map $w=e^{s}$ sends the
-$s$-plane (left) to the punctured $w$-plane (right); vertical lines
-$\Re s=\sigma$ become circles $|w|=e^{\sigma}$, and the critical line
-$\sigma=1/2$ becomes the critical circle $|w|=\sqrt{e}$ (red).}
+\caption{The coordinate projection $w=e^s$. Vertical lines
+$\Re s=\sigma$ become circles $|w|=e^\sigma$; the critical line becomes
+$|w|=\sqrt e$.}
 \label{fig:proj}
 \end{figure}
+
+\section{The candidate circle forced by reflection}\label{sec:crit}
+
+We now derive the geometric candidate before discussing any zero. For real
+$t$,
+\[
+  \left|e^{1/2+it}\right|=e^{1/2}=\sqrt e.
+\]
+
+\begin{theorem}[the critical line maps to a circle]\label{thm:critcircle}
+The image of $\Re s=1/2$ under $w=e^s$ is exactly
+$|w|=\sqrt e$.
+\end{theorem}
+
+The inversion also determines this radius independently. If $|w|=\rho$,
+then $|\iota(w)|=e/\rho$. The circle is preserved precisely when
+$e/\rho=\rho$.
+
+\begin{proposition}[unique inversion-fixed circle]\label{prop:fixedcircle}
+Among circles centered at the origin, the only circle preserved by
+$\iota(w)=e/w$ is $|w|=\sqrt e$. Its logarithmic radius is
+$\log\sqrt e=1/2$.
+\end{proposition}
+
+\begin{remark}[geometry is not zero existence]\label{rem:twolayers}
+The proposition identifies the only possible self-reflection circle. It does
+not say that $\zeta$ vanishes at any point of the circle. The existence of
+zeros is a separate analytic question and will be supplied below by Hardy's
+classical theorem.
+\end{remark}
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.85\textwidth]{fig8_static_en}
-\caption{The zero spiral (static snapshot). Left: the image of the
-critical line is the helix of radius $\sqrt{e}$; the zeros
-$\gamma_1,\dots,\gamma_6$ lie on it. Right: the projection --- zeros
-as stars on the critical circle $|w|=\sqrt{e}$.}
+\caption{A static view of the logarithmic cover. The critical line lifts to
+a helix of radius $\sqrt e$ and projects to the critical circle.}
 \label{fig:cover}
 \end{figure}
 
-\section{The critical circle and the identity of \texorpdfstring{$1/2$}{1/2}}\label{sec:crit}
+\section{What the classical zero information implies}\label{sec:localization}
 
-\begin{theorem}[critical line maps to a circle]\label{thm:critcircle}
-For every real $t$,
+We next use known information about $\zeta$, in the direction needed for the
+Riemann hypothesis. The Euler product gives the standard zero-free region
+$\Re s\geq1$; the functional equation and the known trivial zeros handle
+the opposite side. Consequently every nontrivial zero lies in the critical
+strip:
 \[
-  \Norm{e^{\tfrac12+it}} \;=\; \sqrt{e} .
+  \zeta(s)=0\ \text{and $s$ nontrivial}
+  \quad\Longrightarrow\quad 0<\Re s<1.
 \]
-Hence the image of the critical line $\Re s=1/2$ under the
-hidden-number map is exactly the circle of radius $\sqrt{e}$
-(Figure~\ref{fig:proj}).
+Applying $|w|=e^{\Re s}$ gives the coordinate version
+\[
+  1<|w|<e.
+\]
+
+\begin{theorem}[reflection pairing]\label{thm:reflect}
+If $0<\Re s<1$ and $\zeta(s)=0$, then $\zeta(1-s)=0$, and conversely.
+In hidden-number coordinates the pair is $(w,e/w)$.
 \end{theorem}
 
-\begin{proposition}[the logarithm of the critical radius]\label{prop:logsqrt}
-$\log(\sqrt{e})=\tfrac12$.
-\end{proposition}
+This is a direct consequence of the functional equation after checking that
+its factors do not vanish in the open critical strip. It is a symmetry of the
+zero set, not yet a statement that the two members of a pair coincide.
 
-The decisive structural fact is uniqueness: among all concentric
-circles, $|w|=\sqrt{e}$ is the only one preserved by the inversion
-$\iota(w)=e/w$ induced by the functional equation.
-
-\begin{theorem}[unique fixed circle]\label{thm:fixedcircle}
-A circle $|w|=\rho$ with $\rho>0$ satisfies
-$|\iota(w)|=|w|$ on the circle if and only if $\rho^{2}=e$. The
-equation $\rho^{2}=e$ has the unique positive solution
-$\rho=\sqrt{e}$.
+\begin{theorem}[self-pairs and the critical circle]\label{thm:selfpair}
+For $w\neq0$,
+\[
+  \frac ew=w
+  \quad\Longleftrightarrow\quad
+  w^2=e
+  \quad\Longleftrightarrow\quad
+  w=\pm\sqrt e.
+\]
+Thus a self-paired zero, if present, lies on $|w|=\sqrt e$.
 \end{theorem}
 
-\begin{corollary}[why $1/2$ is structural;\,
-from Theorems~\ref{thm:fixedcircle} and \ref{thm:critcircle}]\label{cor:onesecond}
-If the reflection symmetry of the functional equation fixes any circle
-centered at the origin, that circle is uniquely $|w|=\sqrt{e}$, and its
-pullback to the $s$-plane is uniquely the line $\Re s=1/2$. Within the
-hidden-number coordinates, the location $1/2$ is upgraded from a
-definition to a consequence of reflection geometry.
+The preceding deductions give the exact reduction:
+
+\begin{corollary}[the remaining statement is RH]\label{cor:rh-reduction}
+For nontrivial zeros, the Riemann hypothesis is equivalent to the assertion
+that every reflection pair in $1<|w|<e$ is self-paired. Equivalently, there
+are no non-self-paired zeros away from $|w|=\sqrt e$.
 \end{corollary}
-
-On the fixed circle the inversion acts as conjugation.
-
-\begin{theorem}[inversion equals conjugation on the circle: an identity, not a statement about zeros]\label{thm:invconj}
-For every $w$ with $|w|=\sqrt{e}$,
-\[
-  \frac{e}{w} \;=\; \overline{w}.
-\]
-This is an identity holding at \emph{all} points of the circle; it is
-not a statement about zeros.
-\end{theorem}
-
-\begin{remark}[two layers of ``position'']\label{rem:twolayers}
-Corollary~\ref{cor:onesecond} proves layer 1: the \emph{identity} of
-the critical location --- if reflection symmetry fixes a circle, it
-must be this one. It does not prove layer 2: that any zero lies on that
-circle. The distinction is maintained throughout the paper.
-\end{remark}
-
-\section{Energy balance and the intrinsic radius}\label{sec:energy}
-
-Fix the truncation length $X(t)=\sqrt{t/2\pi}$ and define the truncated
-Dirichlet sum and its energy on a vertical segment:
-\[
-  S_{X(t)}(\sigma+it)=\sum_{n\leq X(t)}(n+1)^{-\sigma-it},
-  \qquad
-  E_{\sigma}(T)=\int_{0}^{T}\bigl|S_{X(t)}(\sigma+it)\bigr|^{2}\,dt .
-\]
-The diagonal and cross contributions are controlled by two formalized
-theorems: the diagonal integral grows exactly like the main term
-(\Lean{diagonal_energy_half}, \Lean{diagonal_integral}), while the
-cross contribution is subdominant: the total cross bound divided by the
-main term tends to zero (\Lean{cross_total_bound}); the truncation
-cancels the cross terms.
-
-\begin{theorem}[energy balance]\label{thm:balance}
-For every $\sigma\in\mathbb{R}$, the truncated energy
-$E_{\sigma}(T)$ converges (as $T\to\infty$) if and only if
-$\sigma>1/2$. For $\sigma\leq 1/2$ it diverges
-(\Lean{energy_diverges_below_balance}).
-\end{theorem}
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.85\textwidth]{fig14_en}
-\caption{Energy balance. Left: the three energy regimes; the truncated
-energy converges exactly for $\sigma>1/2$ (Lean-proved
-\Lean{energy_balance_radius}). Right: the balance point
-$\sigma=1/2$ coincides with the reflection fixed point, i.e.\ the
-critical circle $|w|=\sqrt{e}$.
-}
+\caption{The geometric and analytic scales in the coordinate picture. The
+reflection-fixed radius is $\sqrt e$, while the zero-free boundary
+$\Re s=1$ corresponds to $|w|=e$.}
 \label{fig:balance}
 \end{figure}
+
+\section{Abundance on the circle: the known theorem transported}\label{sec:abundance}
+
+The preceding sections identify and constrain the location. They do not
+produce a zero. For existence and abundance we now invoke the classical
+theorem of Hardy: infinitely many nontrivial zeros of $\zeta$ lie on the
+line $\Re s=1/2$ \citep{Hardy1914}.
+
+\begin{theorem}[Hardy's theorem in hidden-number coordinates]\label{thm:hardy-transport}
+There are infinitely many lifted zeros of $\zeta$ over the critical circle
+$|w|=\sqrt e$.
+\end{theorem}
+
+\begin{proof}
+Let $Z$ be the infinite set of zeros on the critical line supplied by
+Hardy's theorem. The logarithmic cover remembers the lifted height, and
+Theorem~\ref{thm:critcircle} sends every element of $Z$ to a lift over the
+circle $|w|=\sqrt e$. Hence the set of lifted circle zeros is infinite.
+\end{proof}
+
+This is a transport theorem, not a new proof of Hardy's result. It is the
+correct logical role of the hidden-number coordinates: they change the
+geometric language of a known abundance theorem while preserving its
+content.
+
+\section{Energy and frequency diagnostics}\label{sec:diagnostics}
+
+The coordinate system also exposes two useful diagnostics. They explain why
+$1/2$ is a natural scale and how height enters the finite approximants, but
+they must not be promoted to zero-existence arguments.
+
+For the Dirichlet terms,
+\[
+  (n+1)^{-s}=(n+1)^{-\sigma}
+  \exp\bigl(-it\log(n+1)\bigr),
+  \qquad
+  \bigl|(n+1)^{-s}\bigr|=(n+1)^{-\sigma}.
+\]
+On the critical line the squared lengths are $(n+1)^{-1}$, so the diagonal
+energy has the harmonic scale
+\[
+  \sum_{n\leq N}\bigl|(n+1)^{-1/2-it}\bigr|^2
+  =\sum_{n\leq N}\frac1{n+1}\sim\log N.
+\]
+This is an exact calculation about terms and finite sums. It is not an
+estimate for the analytically continued value of $\zeta$ in the critical
+strip.
+
+The consecutive logarithmic frequencies satisfy
+\[
+  \Delta\mathrm{freq}(n)=\log\frac{n+2}{n+1},\qquad
+  \Delta\mathrm{freq}(n)\longrightarrow0,\qquad
+  \Delta\mathrm{freq}(n+1)\leq\Delta\mathrm{freq}(n).
+\]
+For an alternating approximation the phase difference is
+\[
+  \Delta\theta_n=\pi-t\,\Delta\mathrm{freq}(n).
+\]
+When $t\log2>\pi$, this monotone quantity changes sign once; the crossing
+index is of order $t/\pi$. These identities describe the finite frequency
+skeleton and are useful for organizing numerical experiments.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.85\textwidth]{fig13_en}
-\caption{Energy budget of the truncation. The truncated-regime energy
-grows like the main term divided by two,
-$E(T)\approx \tfrac{T}{2}\log\tfrac{T}{2\pi}$ (B1), while the cross
-upper bound over the main term tends to zero (truncation
-cancellation). This is the numerical content behind the mean-value
-statement $E(T)=\tfrac{T}{2}(\log\tfrac{T}{2\pi}-1)+\gamma T+o(T)$.
-}
+\caption{A numerical energy budget for truncated sums. The plot illustrates
+the harmonic scale; it is not used as a substitute for a zero-counting
+theorem.}
 \label{fig:budget}
-\end{figure}
-
-\begin{proposition}[radius uniqueness chain]\label{thm:chain}
-The inversion fixed point $|e/w|=|w|$, the energy balance point
-$\sigma=1/2$, and the reflection fixed point $1-s=s$ are one and the
-same condition. In terms of the circle radius: $|w|=\sqrt{e}$ iff
-$E_{\sigma}$ balances iff $\sigma=1/2$ (Figure~\ref{fig:balance}).
-\end{proposition}
-
-\begin{definition}[radius-uniqueness declaration]\label{def:zru}
-The declared structure packages the three proven results above (unique
-radius candidate, mechanism equivalence) together with the open field
-\Lean{zeros_on_candidate}: whether any zero actually lies on the
-critical circle. The field is the Riemann hypothesis itself and is left
-honestly open.
-\end{definition}
-
-\section{Intrinsic zero-freeness by alignment magnitude}\label{sec:zfree}
-
-The Dirichlet series can vanish only if the partial sums can be aligned
-to zero: the leading term $\|v_{0}\|=1$ must be cancelled by the
-remainder. We make this mechanism quantitative without any appeal to
-the Euler product.
-
-\begin{lemma}[norm of a term]\label{lem:termnorm}
-For every $s=\sigma+it$ and every $n$,
-\[
-  \bigl\|(n+1)^{-s}\bigr\| \;=\; (n+1)^{-\sigma}.
-\]
-\end{lemma}
-
-\begin{theorem}[intrinsic zero-free]\label{thm:zfree}
-If $2\leq\Re s$, then $\zeta(s)\neq 0$.
-\end{theorem}
-
-\begin{proof}[Proof sketch]
-For $\sigma\geq 2$, the remainder is bounded by the telescoping series
-\[
-  \sum_{n\geq 1}(n+1)^{-\sigma}\;\leq\;
-  \sum_{n\geq 1}\frac{1}{(n+1)(n+3)}
-  \;=\;\frac12\Bigl(\frac32-\frac{1}{M+1}-\frac{1}{M+2}\Bigr)
-  \;\leq\;\frac34\;<\;1 .
-\]
-Hence every partial sum satisfies
-$\|S_{N}\|\geq 1-\tfrac34=\tfrac14>0$ by the reverse triangle
-inequality, so the series cannot converge to zero. The formalized proof
-passes from the uniform lower bound on partial sums to
-$\zeta(s)\neq 0$ via \Lean{ge_of_tendsto} on the tail estimates
-(\Lean{partial_sum_bound_of_two_le_re},
-\Lean{zeta_norm_lower_of_two_le_re}).
-\end{proof}
-
-The theorem is intrinsic: it uses only the magnitudes of the aligned
-terms in hidden-number coordinates, not the Euler product or any
-meromorphic machinery. Its significance is that the boundary
-$\sigma=1/2$ is approached from the right by an \emph{alignment
-mechanism} --- the same mechanism that the critical circle is built
-from.
-
-\begin{definition}[intrinsic zero-free framework]\label{def:izf}
-The declared structure collects the zero-free theorem above together
-with the alternating limit $\lim_{N}\sum_{i=0}^{N}(-1)^{i}(i+1)^{-1}
-\geq 1/2$ (\Lean{alternating_harmonic_limit_pos}) as the two anchors of
-the intrinsic regime.
-\end{definition}
-
-\section{Inversion pairs and the reflection decomposition}\label{sec:pairs}
-
-In hidden-number coordinates the functional equation pairs $s$ with
-$1-s$, i.e.\ $w$ with $e/w$ (Theorem~\ref{thm:map}):
-\[
-  e^{\,1-s} \;=\; \frac{e}{e^{s}} .
-\]
-In the critical strip the reflection preserves the zero set.
-
-\begin{theorem}[reflection as inversion]\label{thm:map}
-Under $w=e^{s}$, the reflection $s\mapsto 1-s$ corresponds exactly to
-the map $w\mapsto e/w$; both maps are involutions
-(\Lean{reflection_involutive}).
-\end{theorem}
-
-\begin{theorem}[zeros reflect]\label{thm:reflect}
-For $0<\Re s<1$,
-\[
-  \zeta(1-s)=0 \quad\Longleftrightarrow\quad \zeta(s)=0 .
-\]
-The proof combines MathLib's functional equation
-(\Lean{riemannZeta_one_sub}) with three nonzero factors:
-$\Gamma(s)$ (positive real part), $(2\pi)^{-s}$, and
-$\cos(\pi s/2)$, whose real part
-$\cos(\pi\sigma/2)\cosh(\pi t/2)>0$ is positive throughout the
-strip; hence the cosine factor never vanishes there
-(\Lean{cos_half_pi_s_ne_zero},
-\Lean{reflection_factor_ne_zero}).
-\end{theorem}
-
-\begin{corollary}[zero pairs]\label{cor:pairs}
-Every zero of $\zeta$ in the critical strip comes with its reflection
-partner; the nontrivial zeros are organized into reflection pairs.
-\end{corollary}
-
-\begin{theorem}[self-pair iff $\pm\sqrt{e}$]\label{thm:selfpair}
-For $w\neq 0$,
-\[
-  \frac{e}{w}=w \quad\Longleftrightarrow\quad w^{2}=e
-  \quad\Longleftrightarrow\quad w=\pm\sqrt{e},
-\]
-and in particular a self-paired zero lies on the critical circle
-$|w|=\sqrt{e}$. The proof factorizes $w^{2}-e=(w-\sqrt{e})(w+\sqrt{e})$,
-avoiding branch issues of $\sqrt{\cdot}$.
-\end{theorem}
-
-\begin{definition}[inversion-pair decomposition declaration]\label{def:ipd}
-The declared structure packages the reflection closure, the self-pair
-algebra, and the involution as proved fields, and declares the open
-field \Lean{no_nonself_pair}: no inversion pair is non-self-paired,
-equivalently no zero of the annulus $1<|w|<e$ lies away from the
-critical circle. The assembly field records the (already proved)
-closed mechanism cycle $A\Leftrightarrow B\Leftrightarrow C\Leftrightarrow D$,
-so that \Lean{no_nonself_pair} implies the Riemann hypothesis.
-\end{definition}
-
-\section{Alignment density: zeros as frequency-phase projections}\label{sec:density}
-
-The frequency skeleton of the coordinate system is exact and fully
-formalized: the span of the frequencies telescopes
-(\Lean{freq_span_telescopes}), and the frequency gap is bounded by
-$1/(n+1)$ (\Lean{freq_gap_le_inv}):
-\[
-  \sum_{i=0}^{N-1}\Delta\mathrm{freq}(i)=\log(N+1),
-  \qquad
-  \Delta\mathrm{freq}(n)=\log\frac{n+2}{n+1}\leq\frac{1}{n+1}.
-\]
-
-\begin{definition}[frequency-alignment conjecture]\label{def:fac}
-The declared structure states the following. \emph{Frequency
-uniformity} is proved (the two formalized theorems above).
-\emph{Alignment density} is the conjecture that the number $N(T)$ of
-zeros (alignment events) on the critical circle up to height $T$
-satisfies the frequency-phase projection
-\[
-  N(T)\;\approx\;F(T)\;=\;\frac{T}{2\pi}\Bigl(\log\frac{T}{2\pi}-1\Bigr),
-\]
-with no Stirling approximation needed. The field
-\emph{equidistribution needed} records honestly that a rigorous
-derivation requires an equidistribution/weighted Weyl criterion that
-MathLib does not currently formalize.
-\end{definition}
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.85\textwidth]{fig15_en}
-\caption{Alignment-density projection (R5). Top: the zero count
-$N(T)$ against the frequency-phase budget
-$F(T)=\tfrac{T}{2\pi}(\log\tfrac{T}{2\pi}-1)$; the ratio $N/F$ tends to
-$1$. Bottom: the inversion-pair decomposition, which lives in the
-critical strip only (R4 check).
-}
-\label{fig:align}
 \end{figure}
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.85\textwidth]{fig11_en}
-\caption{Zero abundance. Top: normalized zero spacings
-$\bar\delta_{n}=\Delta\gamma_{n}\cdot
-\tfrac{\log(\gamma_{n}/2\pi)}{2\pi}$ fluctuate around $1$ --- the
-frequency bandwidth inverse --- with mean $\approx 1$. Bottom: the
-count $N(T)$ against $F(T)=\tfrac{T}{2\pi}(\log\tfrac{T}{2\pi}-1)$.
-}
+\caption{Numerical spacing and frequency diagnostics. Such comparisons can
+suggest a density law but do not prove one.}
 \label{fig:abundance}
 \end{figure}
 
-\begin{table}[t]
-\centering
-\begin{tabular}{c|ccccc}
-$T$ & 100 & 400 & 800 & 1600 & 3200 \\\hline
-$N(T)$ & 29 & 202 & 491 & 1157 & 2666 \\
-$F(T)$ & 28.13 & 200.76 & 489.78 & 1156.07 & 2665.16 \\
-$N/F$ & 1.0310 & 1.0062 & 1.0025 & 1.0008 & 1.0003 \\
-\end{tabular}
-\caption{Alignment-density numerics (Figure~\ref{fig:align}): the ratio
-$N(T)/F(T)$ tends to $1$.}
-\label{tab:density}
-\end{table}
-
-\begin{remark}[the honest reading of R5c]\label{rem:r5c}
-Within the critical strip the Dirichlet partial sums do \emph{not} tend
-to zero at a zero: at $\gamma_{1}$ the numerical partial sum grows from
-$0.25$ ($N=10$) to $1.42$ ($N=400$). Zeros are alignment events of the
-\emph{analytic continuation}, not zeros of the partial sums; the
-alignment condition of the $\Re s>1$ regime cannot be transplanted into
-the strip verbatim. This is why the density projection remains a
-conjecture (Definition~\ref{def:fac}) rather than a theorem.
+\begin{remark}[why the diagnostics do not close RH]\label{rem:diagnostics}
+In the critical strip the Dirichlet series is not an interchangeable name
+for its analytic continuation. A finite partial sum can display alignment
+without being a zero of $\zeta$, and a harmonic energy divergence does not
+give a zero-counting estimate. The missing analytic bridge would require
+boundary estimates and an argument-principle or zero-counting theorem.
 \end{remark}
 
-\section{Frequency structure: gaps, freezing, and the fold point}\label{sec:freq}
+\section{Formalization and the exact boundary of the argument}\label{sec:honesty}
 
-We now study the frequency structure alone, without energy. The
-alternating phase difference between consecutive terms is
-\[
-  \Delta\theta_{n} \;=\; \pi - t\cdot\Delta\mathrm{freq}(n),
-  \qquad \Delta\mathrm{freq}(n)=\log\frac{n+2}{n+1}.
-\]
-Because the frequency gap is antitone and tends to zero, the
-phase difference is monotone increasing and crosses the value $0$
-exactly once; the crossing index is the \emph{fold point}
-$n^{*}\approx t/\pi$ --- the echo of the zero height $t$ in the
-frequency domain.
+The Lean development records many of the algebraic and order-theoretic
+components used above: the coordinate identities, the inversion map, the
+reflection involution, the self-pair algebra, the harmonic and frequency
+lemmas, and the elementary zero-free estimate in its stated domain. The
+source retains the corresponding identifiers such as
+\Lean{criticalLine_circle}, \Lean{zeta_zero_iff_one_sub}, and
+\Lean{freq_gap_tendsto_zero}; their absence from the typeset output keeps
+the mathematical prose readable.
 
-\begin{theorem}[frequency gap vanishes]\label{thm:gap0}
-$\Delta\mathrm{freq}(n)=\log\frac{n+2}{n+1}\to 0$ as $n\to\infty$.
-\end{theorem}
+The logical boundary is now explicit:
 
-\begin{theorem}[frequency gap is antitone]\label{thm:antitone}
-For every $n$,
-\[
-  \Delta\mathrm{freq}(n+1)\;\leq\;\Delta\mathrm{freq}(n),
-\]
-so the gaps of the frequency skeleton decrease monotonically.
-\end{theorem}
+\begin{enumerate}
+\item The change of variables derives the critical circle and explains why
+its logarithmic radius is $1/2$.
+\item Classical zero-free information derives the critical annulus, and the
+functional equation derives reflection pairs.
+\item Hardy's known theorem derives infinitely many circle zeros by direct
+transport.
+\item The Riemann hypothesis is the still-open exclusion of non-self-paired
+zeros in the annulus. Neither the coordinate change nor the diagnostic
+calculations prove that exclusion.
+\end{enumerate}
 
-\begin{theorem}[phase freezing]\label{thm:freeze}
-For every $t>0$ and every $\varepsilon>0$ there exists $N$ such that
-for all $n\geq N$,
-\[
-  t\cdot\Delta\mathrm{freq}(n)\;<\;\varepsilon .
-\]
-The high-frequency terms rotate in phase: they align.
-\end{theorem}
+Any future attempt to replace Hardy's input with an internal proof must supply
+the missing analytic bridge: a zero-counting or boundary-winding estimate for
+the analytically continued $\zeta$. Naming that requirement is part of the
+argument, not an omission in its presentation.
 
-\begin{theorem}[fold point exists]\label{thm:fold}
-If $t\cdot\log 2>\pi$, there exists a unique crossing index $n^{*}$
-with
-\[
-  \pi-t\cdot\Delta\mathrm{freq}(n^{*})\;\leq\;0\;<\;
-  \pi-t\cdot\Delta\mathrm{freq}(n^{*}+1),
-\]
-i.e.\ the alternating phase difference changes sign. Since
-$\Delta\mathrm{freq}(n)\approx 1/(n+1)$, the fold point satisfies
-$n^{*}\approx t/\pi$.
-\end{theorem}
+\section{Conclusion}\label{sec:conclusion}
 
-\begin{proof}[Proof sketch]
-The sequence $a_{n}=\pi-t\,\Delta\mathrm{freq}(n)$ is antitone
-(Theorem~\ref{thm:antitone}) and unbounded below; the crossing is
-obtained by \Lean{Nat.find} on the smallest index with $a_{n}\leq 0$,
-using the hypothesis $t\log 2>\pi$ to start the descent from $a_{0}$.
-\end{proof}
+The hidden-number coordinate $w=e^s$ reorganizes the known theory into a
+short deduction chain. Reflection becomes $w\mapsto e/w$; its unique fixed
+circle is $|w|=\sqrt e$; standard zero-free information places nontrivial
+zeros in $1<|w|<e$; the functional equation pairs them; and Hardy's theorem
+gives infinitely many lifted zeros over the fixed circle. The remaining off-circle
+exclusion is exactly the Riemann hypothesis. Energy and frequency structures
+clarify the coordinate geometry and guide computation, but they remain
+supporting diagnostics rather than unproved steps in the main deduction.
 
-The fold point is a purely hidden-number object: a zero of height $t$
-is reflected in the frequency domain by a reversal of the alternating
-phase at index $\approx t/\pi$. This is the frequency-side dual of the
-energy-side statement of Section~\ref{sec:energy}, and it is what makes
-the frequency structure a genuine coordinate-internal mechanism.
-
-\section{The assembled argument: infinitely many zeros on the critical circle}\label{sec:assembled}
-
-We assemble the results above into a complete argument --- with
-position and with abundance --- for the infinitude of zeros on the
-critical circle. The assembly is the declared structure
-\Lean{CriticalCircleInfinity}, whose fields are the following.
-
-\begin{description}
-\item[Position (\Lean{position_circle}).] The critical circle is
-$|w|=\sqrt{e}$: the unique inversion fixed circle
-(Theorem~\ref{thm:fixedcircle}), equal to the energy balance point
-(Theorem~\ref{thm:balance}, Proposition~\ref{thm:chain}) and to the
-reflection fixed point. Zeros on the circle are self-paired exactly at
-$\pm\sqrt{e}$ (Theorem~\ref{thm:selfpair}); all zeros form reflection
-pairs (Theorem~\ref{thm:reflect}).
-\item[Frequency (\Lean{frequency_fold}).] Every height $t$ produces a
-fold point $n^{*}\approx t/\pi$ (Theorem~\ref{thm:fold}): the
-alternating phase reverses there. High-frequency terms freeze into
-alignment (Theorem~\ref{thm:freeze}).
-\item[Energy (\Lean{energy_lower}, \Lean{mean_value}).] The truncated
-energy satisfies a lower bound (diagonal dominant, cross subdominant:
-Theorem~\ref{thm:balance} and \Lean{cross_total_bound}), and its mean
-value grows as $\tfrac{T}{2}(\log\tfrac{T}{2\pi}-1)+\gamma T+o(T)$
-(Figure~\ref{fig:budget}), the numerical content of the hidden
-mean-value theorem.
-\item[Density (\Lean{density_projection}).] Zero count
-$N(T)\approx F(T)=\tfrac{T}{2\pi}(\log\tfrac{T}{2\pi}-1)$
-(Definition~\ref{def:fac}, Table~\ref{tab:density},
-Figures~\ref{fig:align} and \ref{fig:abundance}).
-\item[Counterpositive (\Lean{bounded_energy_of_finite}).] \emph{External
-input, supplied by Hardy's theorem \citep{Hardy1914}:} if the alignment
-events were finite, the energy would be bounded.
-\item[Conclusion (\Lean{infinite_on_circle}).] The assembly map
-\Lean{assemble} combines the five fields:
-\[
-  \begin{array}{c}
-  \text{position}\;\wedge\;\text{frequency}\;\wedge\;\text{energy}
-  \;\wedge\;\text{density}\;\wedge\;\text{counterpositive}
-  \;\Longrightarrow\\[2pt]
-  \text{infinitely many alignment events on the critical circle}.
-  \end{array}
-\]
-\end{description}
-
-The conclusion is therefore: \emph{infinitely many zeros lie on the
-critical circle} --- their position is the unique fixed circle
-$\sqrt{e}$, and their abundance is governed by the frequency-phase
-projection $N(T)\approx F(T)$.
-
-\section{Honest boundaries and conclusion}\label{sec:honesty}
-
-We catalogue precisely what is proved, what is conjectured, and what is
-supplied.
-
-\paragraph{Formalized (Lean, no \Lean{sorry}).}
-The coordinate identities of Section~\ref{sec:crit}; the energy balance
-criterion and the radius uniqueness chain of Section~\ref{sec:energy};
-the intrinsic zero-free theorem $\zeta(s)\neq 0$ for $\Re s\geq 2$
-(Section~\ref{sec:zfree}); the reflection pair decomposition
-$\zeta(1-s)=0\iff\zeta(s)=0$ with self-pairs at $\pm\sqrt{e}$
-(Section~\ref{sec:pairs}); the frequency structure --- gaps vanishing
-and antitone, phase freezing, fold point existence
-(Section~\ref{sec:freq}); and the algebraic bridges between them.
-
-\paragraph{Declared structures with open fields.}
-\Lean{ZeroRadiusUniqueness} (\Lean{zeros_on_candidate}),
-\Lean{InversionPairDecomposition} (\Lean{no_nonself_pair}),
-\Lean{FrequencyAlignmentConjecture} (\Lean{alignment_density}),
-\Lean{CriticalCircleInfinity} (\Lean{infinite_on_circle}).
-
-\paragraph{Numerically supported.}
-The mean-value growth
-\[
-  E(T)=\tfrac{T}{2}\left(\log\tfrac{T}{2\pi}-1\right)+\gamma T+o(T)
-\]
-(Figure~\ref{fig:budget}); the density projection
-$N(T)/F(T)\to 1$ (Table~\ref{tab:density},
-Figures~\ref{fig:align}--\ref{fig:abundance}).
-
-\paragraph{Externally supplied.}
-Hardy's bounded-energy counterpositive
-(\Lean{bounded_energy_of_finite}), the only analytic input of the
-assembled argument; it is named and imported, not proved here.
-
-\paragraph{Not proved.}
-The absence of zeros in the annulus $1<|w|<e$ away from the critical
-circle --- the statement \Lean{no_nonself_pair} of
-Definition~\ref{def:ipd}. Within the hidden-number coordinates this is
-the Riemann hypothesis itself. The full strength of the present
-framework is the reduction: \emph{the hypothesis is equivalent to a
-single statement about inversion pairs, and everything else ---
-position, frequency, energy, density --- is assembled and formally
-verified.}
-
-\paragraph{Conclusion.}
-The hidden-number coordinate system $w=e^{s}$ reduces the Riemann
-hypothesis to a geometric statement about the unique inversion-fixed
-circle $|w|=\sqrt{e}$. The formalized corpus proves the position
-(energy balance, radius uniqueness, reflection pairs) and the frequency
-and energy mechanisms; the assembled argument
-\Lean{CriticalCircleInfinity} establishes infinitely many zeros on the
-critical circle, with position and with abundance, up to the single
-explicitly named external input. The final step --- every inversion
-pair is self-paired, i.e.\ no zero off the critical circle --- remains
-the hypothesis itself, now isolated as the unique open statement of the
-framework.
-
-All formalized results were developed in the interactive theorem prover
-Lean \citep{deMoura2015} against its mathematical library
-\citep{MathlibCommunity2020}.
+All formalized components were developed in Lean \citep{deMoura2015} with
+Mathlib \citep{MathlibCommunity2020}.
 
 \bibliography{biblio}
 
