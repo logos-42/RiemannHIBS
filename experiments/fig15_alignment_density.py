@@ -30,7 +30,7 @@ T = {
     "en": {
         "limit_label": "1 (conjectured limit)",
         "ratio_label": "N(T)/F(T)",
-        "xlabel_left": "T (高度)",
+        "xlabel_left": "T (height)",
         "ylabel_left": "N(T) / F(T)",
         "title_left": ("Alignment-density projection: zero count = "
                        "frequency-phase budget\n"
@@ -38,7 +38,7 @@ T = {
         "trivial_label": ("ζ(1+2k): inversion image of trivial zeros "
                           "(≠0, repulsion breaks pair)"),
         "pair_label": "|ζ(1−s)|: inversion image of strip zeros (≈0, paired)",
-        "ylabel_right": "|ζ| (对数)",
+        "ylabel_right": "|ζ| (log)",
         "title_right": "Inversion-pair decomposition: critical strip only (R4 check)",
     },
     "zh": {
