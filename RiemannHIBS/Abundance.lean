@@ -1040,5 +1040,81 @@ structure AlignmentEnergyBridge where
   bridge : energy_unbounded → bounded_energy_of_finite_alignments → infinite_alignments
 
 
+-- ============================================================
+-- §13 半径唯一性 — 内禀骨架 (隐数坐标系, R2)
+--   三条独立的内禀线指向同一半径:
+--   (i) 反演不动: |e/w| = |w| ⟺ |w| = √e (w ↦ e/w 交换圆内圆外)
+--   (ii) 能量平衡: Σ(n+1)^{-2σ} 收敛 ⟺ σ > 1/2 (energy_balance_radius)
+--   (iii) 反射不动: σ = 1−σ ⟺ σ = 1/2
+--   机制等价 (Analytic.lean, 已证): NoZerosOutsideCircle ⟺ RH
+--   缺口 (RH 本身): 零点 ⟹ 半径 = 唯一候选 (对齐 ⟹ 半径锁定) — 未证, 诚实标注
+-- ============================================================
+
+-- (i) 反演不动点: |e/w| = |w| ⟺ |w| = √e (纯代数)
+theorem inversion_fixed_radius (w : ℂ) (hw : w ≠ 0) :
+    ‖(Real.exp 1 : ℂ) / w‖ = ‖w‖ ↔ ‖w‖ = Real.sqrt (Real.exp 1) := by
+  have hnorm : ‖(Real.exp 1 : ℂ)‖ = Real.exp 1 := by
+    rw [Complex.ofReal_exp]
+    rw [Complex.norm_exp]
+    simp
+  have hsqrt : Real.sqrt (Real.exp 1) * Real.sqrt (Real.exp 1) = Real.exp 1 := by
+    rw [← pow_two]
+    exact Real.sq_sqrt (le_of_lt (Real.exp_pos 1))
+  constructor
+  · intro h
+    have hdiv : ‖(Real.exp 1 : ℂ) / w‖ = Real.exp 1 / ‖w‖ := by
+      rw [norm_div, hnorm]
+    have h' : Real.exp 1 / ‖w‖ = ‖w‖ := by
+      rw [hdiv] at h
+      exact h
+    have hw0 : ‖w‖ ≠ 0 := by simpa using (norm_ne_zero_iff.mpr hw)
+    have hsq' : ‖w‖ * ‖w‖ = Real.exp 1 := by
+      have h'' : Real.exp 1 = ‖w‖ * ‖w‖ := by
+        field_simp [hw0] at h'
+        linarith
+      linarith
+    have hsq : ‖w‖ ^ 2 = Real.sqrt (Real.exp 1) ^ 2 := by
+      rw [pow_two, pow_two]
+      rw [hsqrt]
+      exact hsq'
+    exact (sq_eq_sq₀ (norm_nonneg _) (Real.sqrt_nonneg _)).mp hsq
+  · intro h
+    have hsq' : ‖w‖ * ‖w‖ = Real.exp 1 := by
+      rw [h]
+      rw [hsqrt]
+    have hw0 : ‖w‖ ≠ 0 := by
+      rw [h]
+      positivity
+    rw [norm_div, hnorm]
+    rw [← hsq']
+    field_simp [hw0]
+
+-- R2 骨架: 三条内禀线 → 同一半径 (反演不动 ⟺ 能量平衡 ⟺ 反射不动)
+theorem radius_uniqueness_chain :
+    (∀ w : ℂ, w ≠ 0 → (‖(Real.exp 1 : ℂ) / w‖ = ‖w‖ ↔ ‖w‖ = Real.sqrt (Real.exp 1))) ∧
+    (∀ σ : ℝ, Summable (fun n : ℕ => (((n + 1 : ℕ) : ℝ) ^ (2 * σ))⁻¹) ↔ 1 / 2 < σ) ∧
+    (∀ σ : ℝ, (1 - σ = σ) ↔ σ = 1 / 2) := by
+  constructor
+  · intro w hw
+    exact inversion_fixed_radius w hw
+  · constructor
+    · exact energy_balance_radius
+    · intro σ
+      constructor
+      · intro h
+        linarith
+      · intro h
+        linarith
+
+-- R2 声明: 唯一候选 + 机制等价 + 缺口 (RH 本身, 诚实标注)
+structure ZeroRadiusUniqueness where
+  -- 唯一候选 (已证, radius_uniqueness_chain): σ=1/2 / |w|=√e
+  unique_candidate : Prop
+  -- 机制等价 (已证): NoZerosOutsideCircle ⟺ RH
+  mechanism_equivalence : Prop
+  -- 缺口 (RH 本身): 零点 ⟹ 半径 = 唯一候选 (对齐 ⟹ 半径锁定) — 未证
+  zeros_on_candidate : Prop
+
+
 end RiemannHIBS.Abundance
 

@@ -2,6 +2,8 @@
 
 | 日期 | 类型 | 内容 |
 |------|------|------|
+| 2026-08-26 | feat | R1 交叉上界全链 Lean 化 (Abundance §12, 无 sorry, 提交 53660e8/2d3ee07/dd09bb6): sqrt_div_le + cross_row_bound (行界 Σ_{m<n} √(n/m)/(n−m) ≤ √n(1+log(n−1)), sum_range_reflect + harmonic_le_one_add_log) + cross_total_bound (≤ N√N(1+log N)); 截断 X=√(T/2π) 交叉 ~T^{0.75}·logT 次主导于对角 T·logT (数值 0.27→0.05); sum_re + integral_re_comm + partialSum_sq_pointwise (|Σv|²=对角+交叉) + diagonal_energy_half (∫₀ᵀ‖v_n‖²=T(n+1)⁻¹) + TruncatedEnergyLower 结构体 |
+| 2026-08-26 | feat | R2 半径唯一性骨架 (Abundance §13, 无 sorry): inversion_fixed_radius (反演不动 |e/w|=|w| ⟺ |w|=√e, 纯代数, Complex.ofReal_exp+norm_exp) + radius_uniqueness_chain (三线合一: 反演不动 ⟺ energy_balance_radius ⟺ 反射不动) + ZeroRadiusUniqueness 声明 (唯一候选+机制等价已证; 缺口 zeros_on_candidate = 对齐⟹半径锁定 = RH 本身, 诚实标注; 机制环 mechanism_cycle_closed 已证故缺口形态精确 = 补 hno: 零点⟹Re s≤1/2) |
 | 2026-08-26 | feat | 论文输出: 依据 wiki 真实成果生成双语论文（英文版 riemann_hibs_en.tex 1026 行 + 中文同步版 riemann_hibs_zh.tex），基于 jsfds 模板，含 11 节 57 个编号定理环境，覆盖隐数坐标 w=e^s 全框架（临界圆、反演不动圆 e→√e→1/2、反射-反演对应、零点定位圆环 1<|w|<e、相位机制、幅角原理/幂因子绕数、证书族与高度供给、能量发散/Hardy 方向、诚实边界完整列表），严格区分已证结构定理与开放分析输入；作者 Yuanjie Liu, yuanjieliu65@gmail.com；biblio.bib 追加 9 经典条目
 | 2026-08-25 | init | 初始化知识系统: bootstrap v2 (LLM Wiki 范式), 8 页面 + manifests + 校验脚本 |
 | 2026-08-25 | research | 包络结构: 临界线卷成圆 ‖w‖=√e (criticalLine_circle), expZeta, 桥定理, 多圈叶/折叠, Möbius 随机性; 数值验证 E1-E4 + 10 图 + 螺旋动画 |

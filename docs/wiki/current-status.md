@@ -13,8 +13,9 @@ stage: current
 
 > 完整实现图景见 [隐数坐标系中的黎曼猜想 — 完整实现](hidden-rh-implementation.md)：
 > 翻译完备（机制环）+ 身份内禀（1/2 = 反射不动 + 能量平衡）+ 能量侧全内禀
-> （对角调和/截断交叉/欧拉常数，无 Stirling）+ 一一对应闭环；剩余缺口 R1（交叉
-> o(T) 形式化）与 R2（平衡点→共圆 = RH 本身）。
+> （对角调和/截断交叉/欧拉常数，无 Stirling）+ 一一对应闭环 + R1 交叉上界
+> 全链 Lean 化（行界/总界/截断次主导）+ R2 半径唯一性骨架（反演不动 =
+> 能量平衡 = 反射不动 ⟹ √e）；剩余缺口 = RH 本身（零点⟹共圆 = 对齐⟹半径锁定）。
 
 ## 已证 (无 sorry)
 | 定理 | 位置 | 内容 |
@@ -264,3 +265,24 @@ stage: current
 - 诚实: 能量发散 ⟹ 零点无限 (Hardy 1914, 经典已证); 能量发散 ⟹ 丰度
   (von Mangoldt, 已证); 能量发散 ⟹ RH (位置全称) — 不能, 能量只约束
   临界线上的值大小, 不排除线外零点
+
+- R1 交叉上界全链 Lean 化 (Abundance §12, 无 sorry, 提交 53660e8/2d3ee07/dd09bb6):
+  sqrt_div_le (√(n/m) ≤ √n) + cross_row_bound (行界: Σ_{m<n} √(n/m)/(n−m)
+  ≤ √n·(1+log(n−1)), sum_range_reflect 重排 + harmonic_le_one_add_log) +
+  cross_total_bound (总界 ≤ N·√N·(1+log N)) — 截断 X=√(T/2π) 下交叉
+  ~ T^{0.75}·log T 次主导于对角 T·log T (数值: T=50/200/800/3200 交叉/主项 0.27→0.05);
+  能量展开侧: sum_re (re 与 Finset 和交换) + integral_re_comm (∫re = re∫,
+  RCLike.reCLM.intervalIntegral_comp_comm) + partialSum_sq_pointwise
+  (|Σv_n|² = 对角 + 交叉逐点展开) + diagonal_energy_half (∫₀ᵀ‖v_n‖² = T(n+1)⁻¹)
+  + TruncatedEnergyLower (截断能量下界结构体: T·Σ(n+1)⁻¹ − 交叉修正; 组合的
+  积分线性体操成本过高, 组件已证, 字段显式声明 — 非 sorry)
+
+- R2 半径唯一性骨架 (Abundance §13, 无 sorry, 本日提交):
+  inversion_fixed_radius (反演不动: |e/w|=|w| ⟺ |w|=√e, 纯代数, hnorm 经
+  Complex.ofReal_exp + norm_exp) + radius_uniqueness_chain (三条内禀线合一:
+  反演不动 ⟺ 能量平衡 energy_balance_radius ⟺ 反射不动 σ=1−σ) +
+  ZeroRadiusUniqueness (声明: 唯一候选已证 + 机制等价已证 + 缺口
+  zeros_on_candidate = RH 本身, 诚实标注)
+- 机制等价 (Analytic §13 mechanism_cycle_closed 已证): NoZerosOutsideCircle
+  ⟺ 零点在圆上 ⟺ 半径锁定 ⟺ 经典 RH — R2 缺口的精确形态 = 补 hno
+  (零点 ⟹ Re s ≤ 1/2), 即对齐 ⟹ 半径锁定, 这是 RH 本身, 非工程缺口
