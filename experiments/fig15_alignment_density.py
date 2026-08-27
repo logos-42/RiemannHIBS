@@ -85,7 +85,7 @@ ax1.set_xscale("log")
 ax1.set_xlabel(T[LANG]["xlabel_left"])
 ax1.set_ylabel(T[LANG]["ylabel_left"])
 ax1.set_title(T[LANG]["title_left"])
-ax1.legend()
+ax1.legend(loc="lower center", ncol=2, fontsize=9)
 ax1.grid(alpha=0.3)
 
 # 右: 反演对分解对照
@@ -101,7 +101,7 @@ ax2.set_xticklabels([f"k={k}" for k in kvals])
 ax2.set_yscale("log")
 ax2.set_ylabel(T[LANG]["ylabel_right"])
 ax2.set_title(T[LANG]["title_right"])
-ax2.legend(fontsize=8)
+ax2.legend(loc="upper center", ncol=2, fontsize=8)
 ax2.grid(alpha=0.3)
 
 plt.tight_layout()
