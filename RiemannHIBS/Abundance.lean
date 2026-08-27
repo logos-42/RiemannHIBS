@@ -1596,4 +1596,205 @@ structure FrequencyAlignmentConjecture where
 
 
 
+-- R6 (攻坚): 频率结构 — 相位折返与冻结 (只看频率, 不看能量)
+--   频率间距: Δfreq(n) = log(n+2) − log(n+1) (freq_gap_le_inv 已证 ≤ 1/(n+1))
+--   相位差: η 交错项 Δθ_n = π − t·Δfreq(n) — 单调递增 (频率间距收缩)
+--   ⟹ 折返点 n* ≈ t/π 存在 (零点高度在频率域的回声)
+--   相位冻结: ζ 直和项 Δφ_n = t·Δfreq(n) 递减 → 0 (高频项同向叠加)
+-- ============================================================
+
+noncomputable def freq_gap (n : ℕ) : ℝ :=
+  Real.log ((n + 2 : ℕ) : ℝ) - Real.log ((n + 1 : ℕ) : ℝ)
+
+-- 1. 频率间距收缩到 0: log((n+2)/(n+1)) → 0
+lemma freq_gap_tendsto_zero : Filter.Tendsto freq_gap Filter.atTop (𝓝 0) := by
+  -- (n+2)/(n+1) → 1
+  have h : Filter.Tendsto (fun n : ℕ => ((n + 2 : ℕ) : ℝ) / ((n + 1 : ℕ) : ℝ))
+      Filter.atTop (𝓝 1) := by
+    have h1 : Filter.Tendsto (fun n : ℕ => (1 : ℝ) / ((n + 1 : ℕ) : ℝ))
+        Filter.atTop (𝓝 0) := by
+      have hfun : (fun n : ℕ => (1 : ℝ) / ((n + 1 : ℕ) : ℝ)) =
+          (fun n : ℕ => (1 : ℝ) / ((n : ℝ) + 1)) := by
+        funext n
+        norm_num [Nat.cast_add, Nat.cast_one]
+      rw [hfun]
+      exact tendsto_one_div_add_atTop_nhds_zero_nat
+    -- (n+2)/(n+1) = 1 + 1/(n+1)
+    have hnorm : (fun n : ℕ => ((n + 2 : ℕ) : ℝ) / ((n + 1 : ℕ) : ℝ)) =
+        (fun n : ℕ => 1 + (1 : ℝ) / ((n + 1 : ℕ) : ℝ)) := by
+      funext n
+      have hden : ((n + 1 : ℕ) : ℝ) ≠ 0 := by positivity
+      field_simp [hden]
+      exact_mod_cast (by omega : n + 2 = n + 1 + 1)
+    rw [hnorm]
+    simpa using h1.const_add 1
+  -- log 连续 (在 1 ≠ 0)
+  have hlog := Real.continuousAt_log (x := (1 : ℝ)) (by norm_num : (1 : ℝ) ≠ 0)
+  -- log((n+2)/(n+1)) = log(n+2) − log(n+1) = freq_gap n
+  have hlog' : (fun n : ℕ => Real.log (((n + 2 : ℕ) : ℝ) / ((n + 1 : ℕ) : ℝ))) = freq_gap := by
+    funext n
+    rw [Real.log_div (by positivity : ((n + 2 : ℕ) : ℝ) ≠ 0) (by positivity : ((n + 1 : ℕ) : ℝ) ≠ 0)]
+    rfl
+  -- log ∘ h → log 1 = 0
+  have hcomp : Filter.Tendsto (fun n : ℕ => Real.log (((n + 2 : ℕ) : ℝ) / ((n + 1 : ℕ) : ℝ)))
+      Filter.atTop (𝓝 (Real.log 1)) := h.log (by norm_num : (1 : ℝ) ≠ 0)
+  have hlog1 : Real.log 1 = 0 := by simp
+  rw [← hlog']
+  simpa [hlog1] using hcomp
+
+-- 2. 频率间距单调递减: Δfreq(n+1) ≤ Δfreq(n)
+lemma freq_gap_antitone (n : ℕ) : freq_gap (n + 1) ≤ freq_gap n := by
+  -- 归一化 Nat 算术: (n+1)+2 = n+3, (n+1)+1 = n+2 (定义性)
+  change Real.log ((n + 3 : ℕ) : ℝ) - Real.log ((n + 2 : ℕ) : ℝ) ≤
+         Real.log ((n + 2 : ℕ) : ℝ) - Real.log ((n + 1 : ℕ) : ℝ)
+  -- log((n+3)/(n+2)) ≤ log((n+2)/(n+1)) ⟺ (n+3)/(n+2) ≤ (n+2)/(n+1) (log 单调)
+  have hlog : Real.log (((n + 3 : ℕ) : ℝ) / ((n + 2 : ℕ) : ℝ)) ≤
+      Real.log (((n + 2 : ℕ) : ℝ) / ((n + 1 : ℕ) : ℝ)) := by
+    apply (Real.log_le_log_iff (by positivity : 0 < ((n + 3 : ℕ) : ℝ) / ((n + 2 : ℕ) : ℝ))
+      (by positivity : 0 < ((n + 2 : ℕ) : ℝ) / ((n + 1 : ℕ) : ℝ))).mpr
+    -- (n+3)/(n+2) ≤ (n+2)/(n+1) ⟺ (n+3)(n+1) ≤ (n+2)²
+    rw [div_le_div_iff₀ (by positivity : 0 < ((n + 2 : ℕ) : ℝ)) (by positivity : 0 < ((n + 1 : ℕ) : ℝ))]
+    norm_num [Nat.cast_add, Nat.cast_mul]
+    nlinarith
+  -- log 差形式 ⟸ log 比形式 (log_div 反向)
+  have hdiv1 : Real.log (((n + 3 : ℕ) : ℝ) / ((n + 2 : ℕ) : ℝ)) =
+      Real.log ((n + 3 : ℕ) : ℝ) - Real.log ((n + 2 : ℕ) : ℝ) :=
+    Real.log_div (by positivity : ((n + 3 : ℕ) : ℝ) ≠ 0) (by positivity : ((n + 2 : ℕ) : ℝ) ≠ 0)
+  have hdiv2 : Real.log (((n + 2 : ℕ) : ℝ) / ((n + 1 : ℕ) : ℝ)) =
+      Real.log ((n + 2 : ℕ) : ℝ) - Real.log ((n + 1 : ℕ) : ℝ) :=
+    Real.log_div (by positivity : ((n + 2 : ℕ) : ℝ) ≠ 0) (by positivity : ((n + 1 : ℕ) : ℝ) ≠ 0)
+  -- 目标 = hlog (经 hdiv1/hdiv2 的差形式)
+  calc
+    Real.log ((n + 3 : ℕ) : ℝ) - Real.log ((n + 2 : ℕ) : ℝ)
+        = Real.log (((n + 3 : ℕ) : ℝ) / ((n + 2 : ℕ) : ℝ)) := hdiv1.symm
+    _ ≤ Real.log (((n + 2 : ℕ) : ℝ) / ((n + 1 : ℕ) : ℝ)) := hlog
+    _ = Real.log ((n + 2 : ℕ) : ℝ) - Real.log ((n + 1 : ℕ) : ℝ) := hdiv2
+
+-- 3. 相位冻结: ∀ε>0, ∃N, ∀n≥N, t·Δfreq(n) < ε (t > 0)
+lemma phase_freeze (t : ℝ) (ht : 0 < t) (ε : ℝ) (hε : 0 < ε) :
+    ∃ N : ℕ, ∀ n : ℕ, N ≤ n → t * freq_gap n < ε := by
+  -- freq_gap → 0 ⟹ ∃N, ∀n≥N, |freq_gap n| < ε/t
+  have ht' : 0 < ε / t := div_pos hε ht
+  have hfin : ∃ N : ℕ, ∀ n : ℕ, N ≤ n → |freq_gap n| < ε / t := by
+    -- freq_gap → 0: 对 0 的邻域 (-δ, δ) 最终在内 (tendsto 定义)
+    have hball : ∀ᶠ y : ℝ in 𝓝 0, y ∈ Set.Ioo (-(ε / t)) (ε / t) := by
+      exact IsOpen.mem_nhds isOpen_Ioo (by simp [ht'])
+    have hev : ∀ᶠ n : ℕ in Filter.atTop, |freq_gap n| < ε / t := by
+      simpa [abs_lt] using (freq_gap_tendsto_zero.eventually hball)
+    rcases (Filter.eventually_atTop.mp hev) with ⟨N, hN⟩
+    exact ⟨N, hN⟩
+  rcases hfin with ⟨N, hN⟩
+  refine ⟨N, ?_⟩
+  intro n hn
+  -- t·freq_gap n < ε ⟸ freq_gap n < ε/t (t > 0)
+  have hlt : freq_gap n < ε / t := by
+    have habs := hN n hn
+    exact lt_of_abs_lt habs
+  -- freq_gap n 可能负? — t·freq_gap < ε: 若 freq_gap ≤ 0 则 t·freq_gap ≤ 0 < ε ✓; 若正则用 hlt
+  by_cases hnonneg : 0 ≤ freq_gap n
+  · -- t·freq_gap n ≤ t·(ε/t) = ε
+    have hle : t * freq_gap n < t * (ε / t) := by
+      exact mul_lt_mul_of_pos_left hlt ht
+    -- t·(ε/t) = ε
+    have htdiv : t * (ε / t) = ε := by
+      field_simp [ne_of_gt ht]
+    linarith
+  · -- freq_gap n < 0: t·freq_gap < 0 < ε
+    have hneg : t * freq_gap n < 0 := mul_neg_of_pos_of_neg ht (lt_of_not_ge hnonneg)
+    linarith
+
+-- 4. 折返点: t·log 2 > π ⟹ ∃n, Δθ_n ≤ 0 ∧ 0 < Δθ_{n+1}
+--    Δθ_n = π − t·freq_gap n — 单调递增 (freq_gap_antitone), 从负到正 ⟹ 变号
+lemma fold_point_exists (t : ℝ) (ht : t * Real.log 2 > Real.pi) :
+    ∃ n : ℕ, Real.pi - t * freq_gap n ≤ 0 ∧ 0 < Real.pi - t * freq_gap (n + 1) := by
+  -- Δθ_0 = π − t·log 2 < 0 (freq_gap 0 = log 2)
+  have h0 : Real.pi - t * freq_gap 0 < 0 := by
+    have hg0 : freq_gap 0 = Real.log 2 := by
+      rw [freq_gap]
+      norm_num
+    rw [hg0]
+    linarith
+  -- Δθ_n → π > 0 ⟹ ∃k, 0 < Δθ_k
+  have htend : Filter.Tendsto (fun n : ℕ => Real.pi - t * freq_gap n) Filter.atTop (𝓝 Real.pi) := by
+    -- π − t·freq_gap → π (freq_gap → 0)
+    have hcomp : Filter.Tendsto (fun n : ℕ => t * freq_gap n) Filter.atTop (𝓝 0) := by
+      simpa using freq_gap_tendsto_zero.const_mul t
+    simpa using (tendsto_const_nhds.sub hcomp)
+  have hpos_ev : ∀ᶠ n : ℕ in Filter.atTop, 0 < Real.pi - t * freq_gap n := by
+    -- π − t·freq_gap → π 且 0 < π: 最终 > 0
+    have hπ : ∀ᶠ y : ℝ in 𝓝 Real.pi, 0 < y := by
+      exact IsOpen.mem_nhds isOpen_Ioi (by positivity : 0 < Real.pi)
+    simpa using (htend.eventually hπ)
+  have hpos : ∃ k : ℕ, 0 < Real.pi - t * freq_gap k := by
+    rcases (Filter.eventually_atTop.mp hpos_ev) with ⟨K, hK⟩
+    exact ⟨K, hK K (le_rfl)⟩
+  -- 最小正点: Nat.find
+  let k := Nat.find hpos
+  have hk_spec : 0 < Real.pi - t * freq_gap k := Nat.find_spec hpos
+  have hk_min : ∀ m < k, ¬ 0 < Real.pi - t * freq_gap m := by
+    intro m hm
+    have hfm : m < Nat.find hpos → ¬ 0 < Real.pi - t * freq_gap m :=
+      Nat.find_min hpos
+    exact hfm (by simpa [k] using hm)
+  -- k ≥ 1 (Δθ_0 < 0)
+  have hk_ge : 1 ≤ k := by
+    dsimp [k]
+    by_contra h
+    have hk0 : Nat.find hpos = 0 := by omega
+    have h0' : Real.pi - t * freq_gap (Nat.find hpos) < 0 := by
+      rw [hk0]
+      exact h0
+    linarith [hk_spec]
+  -- 折返点 n = k−1: Δθ_{k−1} ≤ 0 ∧ 0 < Δθ_k
+  refine ⟨k - 1, ?_, ?_⟩
+  · -- Δθ_{k−1} ≤ 0
+    by_cases hk1 : k = 1
+    · -- k = 1: Δθ_0 ≤ 0 — 从 h0 (严格 < 0)
+      have hkm0 : k - 1 = 0 := by omega
+      rw [hkm0]
+      simp [freq_gap, Real.log_one, Nat.cast_add, Nat.cast_one] at h0 ⊢
+      norm_num
+      linarith
+    · -- k ≥ 2: k−1 < k ⟹ ¬(0 < Δθ_{k−1}) ⟹ Δθ_{k−1} ≤ 0
+      have hkm : k - 1 < k := by omega
+      have hnot := hk_min (k - 1) hkm
+      have hle0 : Real.pi - t * freq_gap (k - 1) ≤ 0 := le_of_not_gt hnot
+      exact hle0
+  · -- 0 < Δθ_k —— n+1 = (k−1)+1 = k
+    have hkm : (k - 1) + 1 = k := by omega
+    simpa [hkm] using hk_spec
+
+
+-- ============================================================
+-- §19 临界圆无限零点 — 完整论证 (互相参考 R1-R6)
+--   位置: R2 radius_uniqueness_chain (√e = 能量平衡 = 反演不动) +
+--         R4 zeta_zero_iff_one_sub (反射配对) + self_pair_on_circle
+--   频率: R6 fold_point_exists (相位折返 n*≈t/π) + phase_freeze (冻结尾)
+--   能量: R1 TruncatedEnergyLower (截断能量下界) + B3 均值定理
+--         E(T) = (T/2)(log(T/2π)−1) + γT + o(T) (diagonal_integral +
+--         harmonic_log_tendsto_euler 已证, 无 Stirling)
+--   密度: R5 FrequencyAlignmentConjecture (N(T)/F(T) → 1 数值)
+--   反证: Hardy 输入 (有限对齐 ⟹ 能量有界) — 外部输入结构体字段
+--   结论: 临界圆上无限对齐事件 (零点无限, 位置在圆上)
+-- ============================================================
+structure CriticalCircleInfinity where
+  -- R2+R4: 临界圆身份 (能量平衡/反演不动/反射不动 ⟹ √e) + 零点反射配对
+  position_circle : Prop
+  -- R6: 频率折返点 + 相位冻结尾 (相位旋转在 n* ≈ t/π 折返)
+  frequency_fold : Prop
+  -- R1: 截断能量下界 ∫₀ᵀ|S_X|² ≥ T·Σ(n+1)⁻¹ − 交叉修正 (交叉次主导)
+  energy_lower : Prop
+  -- B3: 均值定理 E(T) = (T/2)(log(T/2π)−1) + γT + o(T) (无 Stirling)
+  mean_value : Prop
+  -- R5: 对齐密度 = 频率相位投影 N(T)/F(T) → 1 (数值)
+  density_projection : Prop
+  -- Hardy 反证输入 (外部): 对齐事件有限 ⟹ 能量有界
+  bounded_energy_of_finite : Prop
+  -- 结论: 临界圆上无限多个对齐事件 (零点)
+  infinite_on_circle : Prop
+  -- 组装: 位置 + 频率 + 能量 + 密度 + 反证 ⟹ 无限
+  assemble : position_circle → frequency_fold → energy_lower → mean_value →
+    density_projection → bounded_energy_of_finite → infinite_on_circle
+
+
 end RiemannHIBS.Abundance
