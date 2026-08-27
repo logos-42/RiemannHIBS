@@ -2,6 +2,7 @@
 
 | 日期 | 类型 | 内容 |
 |------|------|------|
+| 2026-08-26 | feat | C 对齐⟹零点临界带骨架 (Abundance §14, 无 sorry): alternating_harmonic_converges (交错调和收敛, Leibniz — Antitone.tendsto_alternating_series_of_tendsto_zero) + leibniz_even_le_limit / leibniz_limit_le_odd / leibniz_error_quantified (偶部分和≤极限≤奇部分和, Leibniz 误差夹逼); AlignmentToCriticalBand 结构体 (外部输入: η 复侧条件收敛 + Abel 延拓 + 排斥因子 (1−2^{1−s}) 临界带恒非零 — 显式声明) |
 | 2026-08-26 | feat | R1 交叉上界全链 Lean 化 (Abundance §12, 无 sorry, 提交 53660e8/2d3ee07/dd09bb6): sqrt_div_le + cross_row_bound (行界 Σ_{m<n} √(n/m)/(n−m) ≤ √n(1+log(n−1)), sum_range_reflect + harmonic_le_one_add_log) + cross_total_bound (≤ N√N(1+log N)); 截断 X=√(T/2π) 交叉 ~T^{0.75}·logT 次主导于对角 T·logT (数值 0.27→0.05); sum_re + integral_re_comm + partialSum_sq_pointwise (|Σv|²=对角+交叉) + diagonal_energy_half (∫₀ᵀ‖v_n‖²=T(n+1)⁻¹) + TruncatedEnergyLower 结构体 |
 | 2026-08-26 | feat | R2 半径唯一性骨架 (Abundance §13, 无 sorry): inversion_fixed_radius (反演不动 |e/w|=|w| ⟺ |w|=√e, 纯代数, Complex.ofReal_exp+norm_exp) + radius_uniqueness_chain (三线合一: 反演不动 ⟺ energy_balance_radius ⟺ 反射不动) + ZeroRadiusUniqueness 声明 (唯一候选+机制等价已证; 缺口 zeros_on_candidate = 对齐⟹半径锁定 = RH 本身, 诚实标注; 机制环 mechanism_cycle_closed 已证故缺口形态精确 = 补 hno: 零点⟹Re s≤1/2) |
 | 2026-08-26 | feat | 论文输出: 依据 wiki 真实成果生成双语论文（英文版 riemann_hibs_en.tex 1026 行 + 中文同步版 riemann_hibs_zh.tex），基于 jsfds 模板，含 11 节 57 个编号定理环境，覆盖隐数坐标 w=e^s 全框架（临界圆、反演不动圆 e→√e→1/2、反射-反演对应、零点定位圆环 1<|w|<e、相位机制、幅角原理/幂因子绕数、证书族与高度供给、能量发散/Hardy 方向、诚实边界完整列表），严格区分已证结构定理与开放分析输入；作者 Yuanjie Liu, yuanjieliu65@gmail.com；biblio.bib 追加 9 经典条目

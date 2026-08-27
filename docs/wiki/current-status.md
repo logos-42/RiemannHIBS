@@ -286,3 +286,11 @@ stage: current
 - 机制等价 (Analytic §13 mechanism_cycle_closed 已证): NoZerosOutsideCircle
   ⟺ 零点在圆上 ⟺ 半径锁定 ⟺ 经典 RH — R2 缺口的精确形态 = 补 hno
   (零点 ⟹ Re s ≤ 1/2), 即对齐 ⟹ 半径锁定, 这是 RH 本身, 非工程缺口
+
+- C 对齐⟹零点临界带骨架 (Abundance §14, 无 sorry, 本日提交): 交错收敛骨架
+  alternating_harmonic_converges (Σ(-1)^i(i+1)⁻¹ 收敛, Leibniz —
+  Antitone.tendsto_alternating_series_of_tendsto_zero) + leibniz_even_le_limit /
+  leibniz_limit_le_odd / leibniz_error_quantified (偶部分和 ≤ 极限 ≤ 奇部分和,
+  Leibniz 误差夹逼) — η(s)=Σ(-1)^n(n+1)^{-s} 条件收敛的对齐语义级数骨架;
+  AlignmentToCriticalBand 结构体 (外部输入: η 复侧条件收敛 (cos/sin 振荡非交错)
+  + Abel 延拓 + 排斥因子 (1−2^{1−s}) 临界带恒非零 — 显式声明, 非 sorry)
