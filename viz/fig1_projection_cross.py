@@ -7,10 +7,39 @@ Right panel: the w-plane. The critical circle |w| = sqrt(e) (red);
 The point s0 = 1/2 + i t0 maps to w0 = e^{s0} on the critical circle.
 """
 import numpy as np
+import os
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.patches import Circle, FancyArrowPatch
+from matplotlib.patches import Circle
+
+LANG = os.environ.get("FIG_LANG", "en")
+
+T = {
+    "en": {
+        "title_s": r"$s$-plane: the critical line",
+        "title_w": r"$w$-plane: the critical circle",
+    },
+    "zh": {
+        "title_s": r"$s$ 平面：临界线",
+        "title_w": r"$w$ 平面：临界圆",
+    },
+}[LANG]
+
+# 中文字体 (zh 版需要)
+if LANG == "zh":
+    import matplotlib.font_manager as fm
+    for _fp in ("/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+                "/System/Library/Fonts/Hiragino Sans GB.ttc",
+                "/System/Library/Fonts/PingFang.ttc"):
+        try:
+            fm.fontManager.addfont(_fp)
+        except Exception:
+            pass
+    plt.rcParams["font.family"] = "sans-serif"
+    plt.rcParams["font.sans-serif"] = ["Arial Unicode MS", "Hiragino Sans GB",
+                                       "PingFang HK", "Songti SC"]
+    plt.rcParams["axes.unicode_minus"] = False
 
 e = np.e
 r_c = np.sqrt(e)          # sqrt(e) ≈ 1.6487
@@ -46,7 +75,7 @@ ax1.set_xlim(-1.4, 2.2)
 ax1.set_ylim(-8, 8)
 ax1.set_xlabel(r"$\mathrm{Re}\,s$", fontsize=13)
 ax1.set_ylabel(r"$\mathrm{Im}\,s$", fontsize=13)
-ax1.set_title(r"$s$-plane: the critical line", fontsize=14)
+ax1.set_title(T["title_s"], fontsize=14)
 ax1.set_aspect(0.35)
 ax1.grid(alpha=0.25)
 
@@ -68,21 +97,15 @@ ax2.plot([w0.real], [w0.imag], "o", color="#1f77b4", ms=8, zorder=5)
 ax2.annotate(r"$w = e^{s}$", (w0.real, w0.imag),
              textcoords="offset points", xytext=(12, 8),
              fontsize=13, color="#1f77b4")
-# map arrow s -> w
-arr = FancyArrowPatch((0.30, -0.25), (0.78, -0.25),
-                      transform=fig.transFigure,
-                      arrowstyle="-|>", mutation_scale=22,
-                      lw=2.0, color="0.35")
-fig.patches.append(arr)
-fig.text(0.54, 0.30, r"$w = e^{s}$", fontsize=14, color="0.25")
+# (map arrow removed per request)
 ax2.set_xlim(-3.4, 3.8)
 ax2.set_ylim(-3.4, 3.8)
 ax2.set_xlabel(r"$\mathrm{Re}\,w$", fontsize=13)
 ax2.set_ylabel(r"$\mathrm{Im}\,w$", fontsize=13)
-ax2.set_title(r"$w$-plane: the critical circle", fontsize=14)
+ax2.set_title(T["title_w"], fontsize=14)
 ax2.set_aspect("equal")
 ax2.grid(alpha=0.25)
 
 plt.tight_layout()
-plt.savefig("viz/fig1_projection_cross.png", dpi=200, bbox_inches="tight")
-print("written viz/fig1_projection_cross.png")
+plt.savefig(f"viz/fig1_projection_cross_{LANG}.png", dpi=200, bbox_inches="tight")
+print(f"written viz/fig1_projection_cross_{LANG}.png")

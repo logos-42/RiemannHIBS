@@ -13,7 +13,14 @@ B1 数学链 (本图数值验证):
      (单侧 Dirichlet 多项式贡献均值定理主项的一半; 另一半来自辅项)
   3. 交叉上界 ~ X(T)·log X(T) = √(T/2π)·log T — 次主导于对角
      (交叉/对角 → 0 当 T → ∞)
+
+双语模式: FIG_LANG=en|zh (默认 zh), 输出 viz/fig13_{en,zh}.png
 """
+import os
+LANG = os.environ.get("FIG_LANG", "zh")
+if LANG not in ("en", "zh"):
+    LANG = "zh"
+
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
@@ -31,6 +38,52 @@ plt.rcParams["font.family"] = "sans-serif"
 plt.rcParams["font.sans-serif"] = ["Arial Unicode MS", "Hiragino Sans GB",
                                   "PingFang HK", "Songti SC"]
 plt.rcParams["axes.unicode_minus"] = False
+
+# ---- 标注字典: 图中所有文字 (标题/图例/坐标轴/终端输出) ----
+T = {
+    "en": {
+        "E_energy":   "E(T) truncated partial-sum energy (numeric)",
+        "main_term":  "main term T\u00b7log(T/2\u03c0)",
+        "main_half":  "main term/2 (one-sided diagonal)",
+        "xlabel_left": "T (height)",
+        "ylabel_left": "Energy",
+        "title_left":  "B1: truncated-regime energy (X(t)=\u221a(t/2\u03c0))\n"
+                       "E(T) \u2248 main term/2 = (T/2)\u00b7log(T/2\u03c0)",
+        "ratio_main":  "E(T)/main term \u2192 0.5",
+        "cross_ratio": "cross upper bound/main term \u2192 0 (truncation cancellation)",
+        "ylabel_right": "Ratio",
+        "title_right": "Cross cancellation: E/main term \u2192 0.5 (diagonal dominant)\n"
+                       "cross upper bound/main term \u2192 0 (subdominant)",
+        "suptitle":    "fig13 (v2): B1 cross cancellation \u2014 truncation X(t)=\u221a(t/2\u03c0) "
+                       "makes cross terms subdominant\n"
+                       "Proved in Lean: rotating_integral_bound_min / log_one_add_ge_half /\n"
+                       "near_frequency_bound / cross_pair_bound_min (Abundance \u00a712)",
+        "print_summary": "T=1600: E={:.0f}, main term={:.0f}, E/main term={:.3f}",
+        "print_cross":   "cross upper bound/main term (T=1600): {:.3f} (\u21920 \u2713)",
+        "print_done":    "fig13_{}.png generated (v2 truncated regime)",
+    },
+    "zh": {
+        "E_energy":   "E(T) 截断部分和能量 (数值)",
+        "main_term":  "主项 T\u00b7log(T/2\u03c0)",
+        "main_half":  "主项/2 (单侧对角)",
+        "xlabel_left": "T (高度)",
+        "ylabel_left": "能量",
+        "title_left":  "B1: 截断 regime 能量 (X(t)=\u221a(t/2\u03c0))\n"
+                       "E(T) \u2248 主项/2 = (T/2)\u00b7log(T/2\u03c0)",
+        "ratio_main":  "E(T)/主项 \u2192 0.5",
+        "cross_ratio": "交叉上界/主项 \u2192 0 (截断相消)",
+        "ylabel_right": "比值",
+        "title_right": "交叉相消: E/主项 \u2192 0.5 (对角主导)\n"
+                       "交叉上界/主项 \u2192 0 (次主导)",
+        "suptitle":    "fig13 (v2): B1 交叉相消 \u2014 截断 X(t)=\u221a(t/2\u03c0) 使交叉次主导\n"
+                       "Lean 已证: rotating_integral_bound_min / log_one_add_ge_half /\n"
+                       "near_frequency_bound / cross_pair_bound_min (Abundance \u00a712)",
+        "print_summary": "T=1600: E={:.0f}, 主项={:.0f}, E/主项={:.3f}",
+        "print_cross":   "交叉上界/主项 (T=1600): {:.3f} (\u21920 \u2713)",
+        "print_done":    "fig13_{}.png 已生成 (v2 截断 regime)",
+    },
+}
+TR = T[LANG]
 
 def cutoff_energy(T, nsteps=1500):
     """E(T) = ∫₁ᵀ |Σ_{n≤√(t/2π)} n^{-1/2} e^{it log n}|² dt (数值)"""
@@ -61,32 +114,29 @@ cross_ratio = cross_est / main_arr
 fig, (a1, a2) = plt.subplots(1, 2, figsize=(13, 5.2))
 
 # 左: E(T) vs 主项 (T·log(T/2π)), 比值 → 0.5 (单侧对角 = 主项/2)
-a1.plot(Ts, E, "b-o", ms=5, lw=1.5, label="E(T) 截断部分和能量 (数值)")
-a1.plot(Ts, main_arr, "g--", lw=2, label="主项 T·log(T/2π)")
-a1.plot(Ts, main_arr / 2, "g:", lw=1.5, label="主项/2 (单侧对角)")
+a1.plot(Ts, E, "b-o", ms=5, lw=1.5, label=TR["E_energy"])
+a1.plot(Ts, main_arr, "g--", lw=2, label=TR["main_term"])
+a1.plot(Ts, main_arr / 2, "g:", lw=1.5, label=TR["main_half"])
 a1.axhline(0, color="k", lw=0.5)
-a1.set_xlabel("T (高度)"); a1.set_ylabel("能量")
-a1.set_title("B1: 截断 regime 能量 (X(t)=√(t/2π))\nE(T) ≈ 主项/2 = (T/2)·log(T/2π)")
+a1.set_xlabel(TR["xlabel_left"]); a1.set_ylabel(TR["ylabel_left"])
+a1.set_title(TR["title_left"])
 a1.legend(fontsize=8); a1.grid(True, alpha=0.3)
 
 # 右: 比值 → 0.5 与交叉占比 → 0
-a2.plot(Ts, ratio, "b-o", ms=5, lw=1.5, label="E(T)/主项 → 0.5")
+a2.plot(Ts, ratio, "b-o", ms=5, lw=1.5, label=TR["ratio_main"])
 a2.axhline(0.5, color="b", ls="--", lw=1, alpha=0.5)
 a2.plot(Ts, cross_ratio, "orange", "s--", ms=4, lw=1.5,
-        label="交叉上界/主项 → 0 (截断相消)")
+        label=TR["cross_ratio"])
 a2.axhline(0, color="k", lw=0.5)
-a2.set_xlabel("T"); a2.set_ylabel("比值")
-a2.set_title("交叉相消: E/主项 → 0.5 (对角主导)\n交叉上界/主项 → 0 (次主导)")
+a2.set_xlabel("T"); a2.set_ylabel(TR["ylabel_right"])
+a2.set_title(TR["title_right"])
 a2.legend(fontsize=8); a2.grid(True, alpha=0.3)
 
-fig.suptitle("fig13 (v2): B1 交叉相消 — 截断 X(t)=√(t/2π) 使交叉次主导\n"
-             "Lean 已证: rotating_integral_bound_min / log_one_add_ge_half /\n"
-             "near_frequency_bound / cross_pair_bound_min (Abundance §12)",
-             fontsize=11.5)
+fig.suptitle(TR["suptitle"], fontsize=11.5)
 fig.tight_layout(rect=[0, 0, 1, 0.88])
-fig.savefig("viz/fig13_energy_budget.png", dpi=150)
+fig.savefig(f"viz/fig13_{LANG}.png", dpi=150)
 plt.close(fig)
 
-print(f"T=1600: E={E[-1]:.0f}, 主项={main[-1]:.0f}, E/主项={ratio[-1]:.3f}")
-print(f"交叉上界/主项 (T=1600): {cross_ratio[-1]:.3f} (→0 ✓)")
-print(f"fig13_energy_budget.png 已生成 (v2 截断 regime)")
+print(TR["print_summary"].format(E[-1], main[-1], ratio[-1]))
+print(TR["print_cross"].format(cross_ratio[-1]))
+print(TR["print_done"].format(LANG))
