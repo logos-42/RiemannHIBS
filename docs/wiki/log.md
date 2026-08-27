@@ -53,7 +53,7 @@
 | 2026-08-27 | authorship | 双语论文补充隐数空间的前期工作与作者贡献说明：明确该坐标框架由论文作者在 `LiuXu2026bridge` 所对应的前期工作中提出并发展；正文补充半径、提升角坐标与叶编号的作用，并界定本篇是在既有构造上组织 $\zeta$ 零点论证，而非重新引入隐数空间 |
 | 2026-08-27 | docs | 恢复论文重排时误删的经典文献引用：引言重新引用 Riemann、零点分布、Hardy 及其后续定量结果、对相关/谱观点、数值验证和标准专著；双语构建各生成 26 条参考文献 |
 | 2026-08-27 | expansion | 扩充双语正文的解释性论证：增加隐数空间的覆盖表示与叶编号、反演不动圆的集合/点区分、圆环严格不等式来源、反射轨道与 RH 约化的双向说明、Hardy 传输中的提升含义、能量/频率诊断边界及 Lean 形式化层次说明；中英文干净构建通过 |
-| 2026-08-25 | research | 零点孤立已证: zeta_zero_isolated (identity theorem); 零点↔ℕ 一一对应孤立侧闭环; fig12 |
+| 2026-08-27 | publish | 论文发表（英文版, 人类身份）: aixiv.science **aixiv.260827.000002** (Under Review, CC-BY-4.0, Formal Sciences→Mathematics→Number theory) + 以太坊 EAS 主网 attestation **0xab83532e8be8cf882db70583a8cc8e2a9f9bb38135b5183ef6b53dbda5010133** (复用 schema #405 `string ipfsCid, string title, bytes32 sha256`; IPFS CID QmYRqinyW2m6tpdN8g2TuysiMrQUK3srij7nGBQFMSJQtk 已本地 pin; sha256 ac5a565f...; 钱包 0xb4e9dCF7...; 验证 https://easscan.org/attestation/view/0xab83532e8be8cf882db70583a8cc8e2a9f9bb38135b5183ef6b53dbda5010133). 记录: ~/.hermes/eas-bind/README.md; 脚本 eas-bind-paper.js (通用版) |
 | 2026-08-26 | research | draft 全部清理: 零点可数 (zero_set_countable) + 双射枚举 (zero_enumeration_of_infinite); Hardy 桥/丰度机制结构体化 (外部输入显式声明); 多值 log 单值化 (exp_log_sheet, 叶差 2πiℤ) |
 | 2026-08-26 | research | B 桥原子层: 临界叶能量展开 Lean 形式化 (对角调和+交叉旋转积分+上界); 发现逐项上界过粗, 交叉相消=真实缺口; fig13 |
 | 2026-08-26 | research | B1 交叉相消: 4 原子 Lean 化 (min 界/log 引理/近邻计数/分裂上界); 截断 X(t)=√(t/2π) 机制数值确认 (E/主项→0.5, 交叉/主项→0); fig13 v2 |

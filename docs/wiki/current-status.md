@@ -9,7 +9,12 @@ last_confirmed: 2026-08-25
 stage: current
 ---
 
-# 当前状态 (2026-08-26)
+# 当前状态 (2026-08-27)
+
+## 发表状态（2026-08-27）
+- **aixiv.science**: [aixiv.260827.000002](https://aixiv.science) — The Riemann Zeta Function in Hidden-Number Coordinates: From Classical Inputs to the Critical-Circle Reduction（英文版, 人类身份, CC-BY-4.0, Under Review）
+- **以太坊 EAS 主网**: attestation `0xab83532e8be8cf882db70583a8cc8e2a9f9bb38135b5183ef6b53dbda5010133` — https://easscan.org/attestation/view/0xab83532e8be8cf882db70583a8cc8e2a9f9bb38135b5183ef6b53dbda5010133（IPFS CID QmYRqinyW2m6tpdN8g2TuysiMrQUK3srij7nGBQFMSJQtk 已 pin, schema #405）
+- 元数据模板: `paper/riemann-hibs/aixiv_meta_rh_en.json`；脚本: `~/.hermes/eas-bind/eas-bind-paper.js`；完整记录: `~/.hermes/eas-bind/README.md`
 
 > 完整实现图景见 [隐数坐标系中的黎曼猜想 — 完整实现](hidden-rh-implementation.md)：
 > 翻译完备（机制环）+ 身份内禀（1/2 = 反射不动 + 能量平衡）+ 能量侧全内禀
