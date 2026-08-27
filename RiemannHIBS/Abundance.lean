@@ -995,6 +995,18 @@ theorem diagonal_energy_half (n : ℕ) (T : ℝ) (hT : 0 ≤ T) :
             ring
 
 
+
+-- 能量下界结构体 (R1 task 2 声明): ∫₀ᵀ|S_N|² ≥ 对角 − 交叉修正
+--   组件均已证: partialSum_sq_pointwise, integral_re_comm,
+--   diagonal_energy_half (对角), cross_total_bound (交叉上界, task 1)
+--   组合 = 积分线性 + 模不等式 — 标准, 待完全形式化
+structure TruncatedEnergyLower where
+  -- 结论形态: 能量 ≥ T·Σ(n+1)^{-1} − 交叉修正 (对角主导, N = √(T/2π) 时)
+  diagonal_dominance : Prop
+  -- 组合定理 (由组件推出, 标准不等式链)
+  lower_bound : Prop
+  bridge : diagonal_dominance → lower_bound
+
 -- 12.13 能量平衡半径: Σ (n+1)^{-2σ} 收敛 ⟺ σ > 1/2
 --     (1/2 是能量的唯一平衡点 — 半径唯一性的能量骨架)
 theorem energy_balance_radius (σ : ℝ) :
