@@ -112,10 +112,49 @@ critical annulus is exactly the Riemann hypothesis. Numerical density and
 energy heuristics are not used to hide this gap.
 \end{description}
 
+\paragraph{Bibliographic context.}
+The foundational memoir is Riemann's original work \citep{Riemann1859}.
+The zero distribution and its relation to prime counting are treated in
+classical work by von Mangoldt, Hadamard, and de la Vall{\'e}e Poussin
+\citep{vonMangoldt1905,Hadamard1893,deLaValleePoussin1899}; elementary
+equivalent formulations are discussed by von Koch, Schoenfeld, and Lagarias
+\citep{vonKoch1901,Schoenfeld1976,Lagarias2002}. Hardy's theorem gives the
+critical-line existence input used below \citep{Hardy1914}, with later
+quantitative developments by Hardy--Littlewood, Selberg, Levinson,
+Heath-Brown, and Conrey \citep{HardyLittlewood1921,Selberg1942,
+Levinson1974,HeathBrown1979,Conrey1989}. Pair-correlation and spectral
+perspectives are represented by Montgomery, Connes, and Bombieri--Hejhal
+\citep{Montgomery1973,Montgomery1977,Connes1999,BombieriHejhal1995}; large
+finite-height computations are reported by Platt and Trudgian
+\citep{PlattTrudgian2021}. Standard accounts and surveys include
+Edwards, Titchmarsh, Iwaniec--Kowalski, Iwaniec, and Conrey
+\citep{Edwards1974,Titchmarsh1986,IwaniecKowalski2004,Iwaniec2014,
+Conrey2003}.
+
 The rest of the paper follows this order: first the coordinate dictionary,
 then the deductions about the zero set, then the direct transport of Hardy's
 theorem, and finally the auxiliary energy/frequency diagnostics and the
 remaining open problem.
+
+This order is intentionally asymmetric. The $s$-plane is the place where
+the analytic facts about $\zeta$ are stated, whereas the $w$-plane is the
+place where the reflection geometry becomes transparent. We therefore do
+not begin by asking the coordinates to prove that a zero exists. We first
+ask what the change of coordinates preserves, then apply it to facts already
+known about the zero set, and only afterwards discuss the information that
+finite sums and numerical experiments can provide. This separation prevents
+a geometric picture from being mistaken for an analytic zero-counting
+argument.
+
+This order is intentionally asymmetric. The $s$-plane is the place where
+the analytic facts about $\zeta$ are stated, whereas the $w$-plane is the
+place where the reflection geometry becomes transparent. We therefore do
+not begin by asking the coordinates to prove that a zero exists. We first
+ask what the change of coordinates preserves, then apply it to facts already
+known about the zero set, and only afterwards discuss the information that
+finite sums and numerical experiments can provide. This separation prevents
+a geometric picture from being mistaken for an analytic zero-counting
+argument.
 
 \section{The coordinate dictionary}\label{sec:coords}
 
@@ -150,6 +189,58 @@ $2\pi$. In particular,
   |w|=e^\sigma,\qquad \log|w|=\sigma .
 \]
 \end{definition}
+
+More concretely, choose an angle $\theta\in[0,2\pi)$ and a sheet index
+$k\in\mathbb Z$. A point on the logarithmic cover can then be written as
+\[
+  w=re^{i\theta},\qquad
+  s=\log r+i(\theta+2\pi k),\qquad r>0.
+\]
+The projection forgets $k$, since all these lifts have the same image
+$w$. The cover does not identify the corresponding values of $s$: changing
+$k$ changes the height by $2\pi$ and records a different point upstairs.
+This is the precise sense in which the hidden-number space keeps information
+that is invisible in the punctured $w$-plane. It is also why the construction
+does not replace the zeta function by a new function. We still evaluate
+$\zeta$ at the lifted point $s$; only its radial and angular data are being
+stored in a different form.
+
+For the shifted Dirichlet terms, the same split reads
+\[
+  (n+1)^{-s}=(n+1)^{-\sigma}
+  \exp\bigl(-it\log(n+1)\bigr).
+\]
+The first factor is radial data and the second is lifted angular data. This
+identity is elementary, but it explains why the later energy and frequency
+calculations belong naturally after the geometric reduction: they inspect
+the two coordinates separately without yet making a claim about analytic
+continuation.
+
+More concretely, choose an angle $\theta\in[0,2\pi)$ and a sheet index
+$k\in\mathbb Z$. A point on the logarithmic cover can then be written as
+\[
+  w=re^{i\theta},\qquad
+  s=\log r+i(\theta+2\pi k),\qquad r>0.
+\]
+The projection forgets $k$, since all these lifts have the same image
+$w$. The cover does not identify the corresponding values of $s$: changing
+$k$ changes the height by $2\pi$ and records a different point upstairs.
+This is the precise sense in which the hidden-number space keeps information
+that is invisible in the punctured $w$-plane. It is also why the construction
+does not replace the zeta function by a new function. We still evaluate
+$\zeta$ at the lifted point $s$; only its radial and angular data are being
+stored in a different form.
+
+For the shifted Dirichlet terms, the same split reads
+\[
+  (n+1)^{-s}=(n+1)^{-\sigma}
+  \exp\bigl(-it\log(n+1)\bigr).
+\]
+The first factor is radial data and the second is lifted angular data. This
+identity is elementary, but it explains why the later energy and frequency
+calculations belong naturally after the geometric reduction: they inspect
+the two coordinates separately without yet making a claim about analytic
+continuation.
 
 The functional equation reflects $s$ to $1-s$. Under $\Phi$ this becomes
 \[
@@ -194,6 +285,14 @@ $\iota(w)=e/w$ is $|w|=\sqrt e$. Its logarithmic radius is
 $\log\sqrt e=1/2$.
 \end{proposition}
 
+There are two different meanings of ``fixed'' here. Setwise, the inversion
+preserves the circle of radius $\rho$ when it sends that circle back to the
+same circle. Pointwise, a particular point must satisfy $e/w=w$. The first
+condition selects the radius $\sqrt e$; the second selects only the two
+points $w=\pm\sqrt e$. Thus the critical circle is the unique geometric
+candidate for self-reflection, but it is not a claim that every point on
+the circle is fixed, nor that every point on it is a zero.
+
 \begin{remark}[geometry is not zero existence]\label{rem:twolayers}
 The proposition identifies the only possible self-reflection circle. It does
 not say that $\zeta$ vanishes at any point of the circle. The existence of
@@ -225,6 +324,15 @@ Applying $|w|=e^{\Re s}$ gives the coordinate version
   1<|w|<e.
 \]
 
+The strictness of this annular statement matters. The outer boundary
+$|w|=e$ corresponds to $\Re s=1$, where the Euler product gives zero-freeness
+in the usual formulation. The inner boundary $|w|=1$ corresponds to
+$\Re s=0$; after the trivial zeros and the exceptional points in the
+functional equation are separated, the nontrivial zeros are confined to the
+open strip. The coordinate change therefore transports a classical strip
+statement into an open annulus, but it does not sharpen the classical
+zero-free information by itself.
+
 \begin{theorem}[reflection pairing]\label{thm:reflect}
 If $0<\Re s<1$ and $\zeta(s)=0$, then $\zeta(1-s)=0$, and conversely.
 In hidden-number coordinates the pair is $(w,e/w)$.
@@ -233,6 +341,13 @@ In hidden-number coordinates the pair is $(w,e/w)$.
 This is a direct consequence of the functional equation after checking that
 its factors do not vanish in the open critical strip. It is a symmetry of the
 zero set, not yet a statement that the two members of a pair coincide.
+
+Geometrically, a zero away from the candidate circle comes with a distinct
+partner on the opposite side of the circle. The map $w\mapsto e/w$ exchanges
+radii $\rho$ and $e/\rho$ and preserves their product $e$. Only when
+$\rho=\sqrt e$ can the two radii agree. The analytic question left by the
+functional equation is therefore not whether reflection exists, but whether
+the zero set contains any genuinely non-self-paired orbit.
 
 \begin{theorem}[self-pairs and the critical circle]\label{thm:selfpair}
 For $w\neq0$,
@@ -253,6 +368,14 @@ For nontrivial zeros, the Riemann hypothesis is equivalent to the assertion
 that every reflection pair in $1<|w|<e$ is self-paired. Equivalently, there
 are no non-self-paired zeros away from $|w|=\sqrt e$.
 \end{corollary}
+
+This is a reduction rather than a solution. If one starts with the Riemann
+hypothesis, every nontrivial zero has $\Re s=1/2$ and hence lies on the
+circle. Conversely, if every reflection orbit in the annulus collapses to a
+self-pair, the algebra above forces $w^2=e$, and the corresponding lift has
+$\Re s=1/2$. The two directions use different ingredients: the first is the
+definition of the hypothesis in the original coordinate, while the second
+uses the reflection pairing and the self-pair calculation.
 
 \begin{figure}[t]
 \centering
@@ -287,6 +410,14 @@ correct logical role of the hidden-number coordinates: they change the
 geometric language of a known abundance theorem while preserving its
 content.
 
+The word ``lifted'' is important in this statement. The exponential map
+forgets heights modulo $2\pi$, while the hidden-number space retains the
+sheet on which a height occurs. Consequently the transport preserves the
+information needed to regard Hardy's infinitely many zeros as infinitely many
+objects upstairs, even when their projections are described only by the
+single radius $\sqrt e$. No new zero is manufactured by the projection; the
+existence and infinitude enter entirely through Hardy's theorem.
+
 \section{Energy and frequency diagnostics}\label{sec:diagnostics}
 
 The coordinate system also exposes two useful diagnostics. They explain why
@@ -310,6 +441,16 @@ This is an exact calculation about terms and finite sums. It is not an
 estimate for the analytically continued value of $\zeta$ in the critical
 strip.
 
+This distinction is the main reason for placing the diagnostics after the
+zero-set argument. In the half-plane of absolute convergence, a Dirichlet
+series and its partial sums can be compared by standard limiting arguments.
+In the critical strip, however, the analytically continued function is the
+object whose zeros are being studied. A finite vector sum may cancel while
+the corresponding value of the continuation is not zero, and an unbounded
+diagonal energy may coexist with substantial cross-term cancellation. The
+calculation identifies a scale; it does not supply the missing analytic
+bridge.
+
 The consecutive logarithmic frequencies satisfy
 \[
   \Delta\mathrm{freq}(n)=\log\frac{n+2}{n+1},\qquad
@@ -323,6 +464,14 @@ For an alternating approximation the phase difference is
 When $t\log2>\pi$, this monotone quantity changes sign once; the crossing
 index is of order $t/\pi$. These identities describe the finite frequency
 skeleton and are useful for organizing numerical experiments.
+
+The frequency statement has a similarly limited but useful role. It says
+that the logarithmic frequencies become locally closer as the index grows,
+so a high-height experiment contains long stretches in which adjacent phase
+increments are small. That observation can suggest where partial sums may
+show coherent motion or a fold. It does not say that such motion reaches the
+origin, and even reaching the origin for a truncation would still require a
+tail estimate before it could be identified with a zero of $\zeta$.
 
 \begin{figure}[t]
 \centering
@@ -359,6 +508,14 @@ source retains the corresponding identifiers such as
 \Lean{criticalLine_circle}, \Lean{zeta_zero_iff_one_sub}, and
 \Lean{freq_gap_tendsto_zero}; their absence from the typeset output keeps
 the mathematical prose readable.
+
+The formal names should consequently be read as a traceability layer, not as
+a substitute for hypotheses. A theorem about $e^s$ proves a coordinate
+identity; it does not import Hardy's theorem. A predicate describing an
+unbounded zero family records the shape of an analytic input; it does not
+provide an instance of that input. Keeping these levels separate is
+especially important for the final RH reduction, where the remaining
+statement is genuinely open.
 
 The logical boundary is now explicit:
 

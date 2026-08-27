@@ -352,3 +352,5 @@ stage: current
 - `Montgomery1973` 改为 `InProceedings`，`Selberg1942` 清理无 volume 的 `number` 字段；干净构建中 BibTeX 不再报告 empty journal 或 number/volume 警告。两版均由 tectonic（XeTeX）成功生成 PDF；剩余仅为旧版 `jsfds` 模板的 `frenchb` 弃用提示及少量字体/分页排版提示。
 - 双语论文现明确标注：隐数空间是论文作者在前期工作中提出并发展的坐标框架
   （`LiuXu2026bridge`），本篇是在该既有构造上组织 $\zeta$ 零点的论证；同时补充半径、提升角坐标和叶编号的几何作用，避免把前期工作误写成本文临时引入的记号。
+- 论文重排过程中曾被删去的经典文献引用已恢复到引言的对应论述中；Riemann、Hadamard、Hardy、Selberg、Montgomery、Conrey 等背景文献及专著均重新进入成稿，双语 BibTeX 输出各含 26 条参考文献。
+- 正文已扩充坐标覆盖、反演几何、圆环定位、Hardy 传输、能量/频率诊断和形式化边界的解释性过渡；英文版 10 页、中文版 8 页，保持“已知输入 → 严格推导 → 开放缺口”的阅读节奏。
