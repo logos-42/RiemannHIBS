@@ -15,3 +15,22 @@ src_e07af3f456,,,image,fig6_winding.png,viz/fig6_winding.png,new,docs/wiki/curre
 src_392daaaee0,,,image,fig7_three_views.png,viz/fig7_three_views.png,new,docs/wiki/current-status.md,fig7 三视图 (2250x780)
 src_43fe8f9db9,,,image,fig8_spiral_animation.gif,viz/fig8_spiral_animation.gif,new,docs/wiki/current-status.md,fig8 螺旋动画 (万有覆盖螺旋柱面, 1250x560)
 src_1c51b5fdbc,,,image,fig9_mobius_walk.png,viz/fig9_mobius_walk.png,new,docs/wiki/current-status.md,fig9 Möbius 行走 (1950x780)
+src_paper_fig11_en,,,image,fig11_en.png,paper/riemann-hibs/figures/fig11_en.png,new,paper/riemann-hibs/riemann_hibs_en.tex,论文图 11 英文版
+src_paper_fig11_zh,,,image,fig11_zh.png,paper/riemann-hibs/figures/fig11_zh.png,new,paper/riemann-hibs/riemann_hibs_zh.tex,论文图 11 中文版
+src_paper_fig13_en,,,image,fig13_en.png,paper/riemann-hibs/figures/fig13_en.png,new,paper/riemann-hibs/riemann_hibs_en.tex,论文图 13 英文版
+src_paper_fig13_zh,,,image,fig13_zh.png,paper/riemann-hibs/figures/fig13_zh.png,new,paper/riemann-hibs/riemann_hibs_zh.tex,论文图 13 中文版
+src_paper_fig14_en,,,image,fig14_en.png,paper/riemann-hibs/figures/fig14_en.png,new,paper/riemann-hibs/riemann_hibs_en.tex,论文图 14 英文版
+src_paper_fig14_zh,,,image,fig14_zh.png,paper/riemann-hibs/figures/fig14_zh.png,new,paper/riemann-hibs/riemann_hibs_zh.tex,论文图 14 中文版
+src_paper_fig15_en,,,image,fig15_en.png,paper/riemann-hibs/figures/fig15_en.png,new,paper/riemann-hibs/riemann_hibs_en.tex,论文图 15 英文版
+src_paper_fig15_zh,,,image,fig15_zh.png,paper/riemann-hibs/figures/fig15_zh.png,new,paper/riemann-hibs/riemann_hibs_zh.tex,论文图 15 中文版
+src_paper_fig1_en,,,image,fig1_projection_cross_en.png,paper/riemann-hibs/figures/fig1_projection_cross_en.png,new,paper/riemann-hibs/riemann_hibs_en.tex,论文图 1 英文版
+src_paper_fig1_zh,,,image,fig1_projection_cross_zh.png,paper/riemann-hibs/figures/fig1_projection_cross_zh.png,new,paper/riemann-hibs/riemann_hibs_zh.tex,论文图 1 中文版
+src_paper_fig8_en,,,image,fig8_static_en.png,paper/riemann-hibs/figures/fig8_static_en.png,new,paper/riemann-hibs/riemann_hibs_en.tex,论文图 8 英文版
+src_paper_fig8_zh,,,image,fig8_static_zh.png,paper/riemann-hibs/figures/fig8_static_zh.png,new,paper/riemann-hibs/riemann_hibs_zh.tex,论文图 8 中文版
+src_paper_pdf_zh,,,document,riemann_hibs_zh.pdf,paper/riemann-hibs/riemann_hibs_zh.pdf,new,,中文版编译产物
+src_paper_logo,,,image,sfds.png,paper/riemann-hibs/sfds.png,new,paper/riemann-hibs/riemann_hibs_en.tex,论文模板图标
+src_viz_fig11_abundance,,,image,fig11_zero_abundance.png,viz/fig11_zero_abundance.png,new,docs/wiki/current-status.md,零点丰度图原始图
+src_viz_fig12_enumeration,,,image,fig12_zero_enumeration.png,viz/fig12_zero_enumeration.png,new,docs/wiki/current-status.md,零点枚举图原始图
+src_viz_fig13_budget,,,image,fig13_energy_budget.png,viz/fig13_energy_budget.png,new,docs/wiki/current-status.md,能量预算图原始图
+src_viz_fig14_balance,,,image,fig14_energy_balance.png,viz/fig14_energy_balance.png,new,docs/wiki/current-status.md,能量平衡图原始图
+src_viz_fig15_density,,,image,fig15_alignment_density.png,viz/fig15_alignment_density.png,new,docs/wiki/current-status.md,对齐密度图原始图

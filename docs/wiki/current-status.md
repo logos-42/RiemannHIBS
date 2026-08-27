@@ -345,3 +345,10 @@ stage: current
   无 Stirling) + 密度 (R5 N/F→1) + Hardy 反证输入 (有限对齐 ⟹ 能量有界,
   外部结构体字段) ⟹ **临界圆上无限对齐事件** — 目标: 有位置 (√e) + 有丰度
   (无限); 链中每个环节都引用已证定理或显式外部输入, 无 sorry
+
+## 论文构建状态（2026-08-27）
+
+- `paper/riemann-hibs/riemann_hibs_en.tex` 与 `riemann_hibs_zh.tex` 均改为 XeLaTeX 编译路线；移除触发 Babel shorthand 错误的 `\shorthandoff{:;?!}`，并用正确的 `infoline` 属性关闭模板信息行，消除 `There's no line here to end`。
+- `\Lean{...}` 标识符继续保留在源码中用于追溯，但成稿中隐藏，避免下划线在移动参数中触发 `Missing $ inserted`，同时避免实现名称造成标题和正文溢出。
+- 中文版改用 `xeCJK`，本机优先使用 PingFang，Overleaf 使用 Noto/Fandol 回退字体；已检查输出页，中文标题、摘要和正文正常显示。
+- `Montgomery1973` 改为 `InProceedings`，`Selberg1942` 清理无 volume 的 `number` 字段；干净构建中 BibTeX 不再报告 empty journal 或 number/volume 警告。两版均由 tectonic（XeTeX）成功生成 PDF；剩余仅为旧版 `jsfds` 模板的 `frenchb` 弃用提示及少量字体/分页排版提示。
