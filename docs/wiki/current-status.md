@@ -243,6 +243,26 @@ chi_mod_decomp:   |χ(s)| = 2·(2π)^{−σ}·|Γ(s)|·|cos(πs/2)|
 
 **候选组合点 (探索, 未证):** A. 模平衡 × 零点重数 (配对零点重数一致, |χ| 的 σ-幂不排除); B. 折返窗口 n*≈t/π × 模平衡 (对齐窗口质量 Σ(n+1)^{−σ} vs 中心在原点 — 仍需尾项控制 = B 墙); C. 复数 Γ 递推下界 → |Γ(s)| 的 t-方向下界 → 代入 chi_mod_decomp → |χ| 的 t-幂 (不经 Stirling).
 
+## 数条数路线：复 Stirling 墙的初等化 (2026-09-01, leo 提议 + 推导验证, 未落码)
+
+**主张**: 用「数条数」(计数) 替换 ‖Γ(s)‖ 的 Stirling t-渐近这堵最后墙。
+
+**推导 (数值已验证)**: 从 Gauss 乘积 Γ(s)=lim n!n^s/∏(s+k) 取模取 log, 在 k≈t 劈开:
+- pieceA = σ·log T + log(T!) − (T+1)·log t → (σ−1/2)·log t + (1/2)·log(2π) − t  [整数 Stirling]
+- 两个 Riemann 和 (k≤t / k>t) 各含 arctan = π/2 (圆周闭合), 合 −πt/2 + t, 与 pieceA 的 −t 抵消
+- 结果 |Γ(σ+it)| = √(2π)·t^{σ−1/2}·e^{−πt/2}·(1+O(1/t))
+
+**π 的来源 = arctan = 圆周闭合**; **t^{σ−1/2} 的来源 = 纯计数簿记 (σ 数因子偏移)**。这是 leo「每弧度角动量 / 圆周=波长链闭合」的直接数学回响。
+
+**mathlib 侦察**: Gauss 乘积 ✅ (`Complex.GammaSeq_tendsto_Gamma`, Gamma/Beta.lean); 整数 Stirling ✅ (`factorial_isEquivalent_stirling` + `le_factorial_stirling`, Stirling.lean); 调和渐近 ✅ (repo `harmonic_log_tendsto_euler`). 缺的只有 Riemann 和 O(1/t) 误差控制 (欧拉-麦克劳林一阶/有界变差, 初等)。
+
+**诚实边界 (三层)**:
+1. 替换的是复 Stirling (鞍点/最速下降), 仍用整数 Stirling (Wallis, mathlib 已有)。「无 Stirling」精确化为「无复 Stirling」。
+2. 剩余新分析工作 = Riemann 和误差控制, 初等但琐, 未落码。
+3. **不拆排除墙**: 模平衡在零点处 0=0 退化, 即使拿到锐 |χ| ~ t^{σ−1/2}, 排除仍需无零点区域/零密度 (mathlib ❌)。这条路线拆的是 Γ t-渐近墙, 不是 RH 本身。
+
+**台阶1 落码进展 (2026-09-01)**: 数条数逼近排除墙的第一台阶 ζ(1+it)≠0 (= PNT 核心) 已落骨架 (Abundance §32, 无 sorry): `mertens_lambda_term_nonneg` (Λ 加权逐项非负, 真定理) + `mertens_lambda_sum_nonneg` (有限和非负) + `zeta_ne_zero_on_one_line` (结论 def) + `OneLineZeroFree` 结构体钉形状. mathlib 家底: ζ'/ζ = −Λ 级数 (`LSeries_vonMangoldt_eq_deriv_riemannZeta_div`) + Λ≥0 (`vonMangoldt_nonneg`) + ζ 单极点 (`tendsto_riemannZeta_sub_one_div`) 均已有. 完整证明仍缺: ζ'/ζ 级数实部提取 + 零点重数 logDeriv 行为 + σ→1⁺ 极限传递 (分析难点). 台阶1 之后到 RH (σ>1/2) 中间仍是零密度/均方+凸性墙, 数条数目前够不到.
+
 ## 候选机制 (等价/直觉, 非力迫)
 - **ξ 载体与能量发散链 (2026-08-26)**: §27 已落地 `xiEntire` 的整性、对称性及其与 `completedRiemannZeta`/ζ 的显式乘积关系，因而把“非平凡零点问题”压缩到整函数 ξ 的零点问题。需要注意：当前代码仍未完成“ξ 零点集无限”的 Hadamard 组合论证；临界带内 ξ=0 与 ζ=0 的双向桥也应以独立定理显式补齐，不能只凭注释中的“载体”二字视为已证。
 - **能量种子 (2026-08-26, 已证前半段)**: `critical_leaf_norm_locked` 给出临界叶每项模长 `(n+1)^(-1/2)`；`critical_leaf_diagonal_energy_term` 将平方范数化为 `(n+1)^(-1)`；`critical_leaf_diagonal_energy_diverges` 证明对应调和级数不收敛。完整链条仍缺均值公式 `∫₀ᵀ|ζ(1/2+it)|²dt ≈ cT log T` 以及 Hardy 的“有限零点反证 → 无限次过零”论证。

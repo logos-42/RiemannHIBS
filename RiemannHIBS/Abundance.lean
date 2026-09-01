@@ -36,6 +36,7 @@ import Mathlib.Analysis.PSeries
 import Mathlib.Topology.Algebra.InfiniteSum.NatInt
 import Mathlib.Analysis.SpecialFunctions.Pow.Asymptotics
 import Mathlib.NumberTheory.LSeries.Nonvanishing
+import Mathlib.NumberTheory.LSeries.Dirichlet
 
 open scoped Topology
 open scoped ComplexConjugate
@@ -3084,6 +3085,62 @@ theorem riemannHypothesis_iff_zeroFreeHalfPlane :
   constructor
   · exact riemannHypothesis_implies_zeroFreeHalfPlane
   · exact zeroFreeHalfPlane_implies_riemannHypothesis
+
+
+-- ============================================================
+-- §32 台阶1: ζ(1+it) ≠ 0 — 3-4-1 "数条数"论证的 Lean 骨架 (2026-09-01)
+--   Hadamard–de la Vallée Poussin: ζ(1+it)≠0 ⟺ PNT 核心. 纯计数论证:
+--   3-4-1 逐项非负 (每个素数幂 Λ(n) 的贡献非负) + 零点/极点重数簿记
+--   (单极点系数 3 vs 零点重数 4m, 4m−3>0 产生矛盾).
+--   数学 (σ>1, mathlib LSeries_vonMangoldt_eq_deriv_riemannZeta_div):
+--     −Re(3ζ'/ζ(σ) + 4ζ'/ζ(σ+it) + ζ'/ζ(σ+2it))
+--       = Σ Λ(n)·n^{−σ}·(3 + 4cos(t·log n) + cos(2t·log n)) ≥ 0
+--   反证 ζ(1+it₀)=0 重数 m: 和 ~ (3−4m)/(σ−1) → −∞ 若 m≥1, 与非负矛盾.
+--   本轮落码: 逐项非负 (真定理) + 结构体钉形状 (零点重数 logDeriv 行为
+--   与 σ→1⁺ 极限传递 = 显式外部输入 — mathlib 无零点重数理论).
+-- ============================================================
+
+-- 1. Λ 加权逐项非负 (真定理): 每个素数幂的 3-4-1 贡献非负
+theorem mertens_lambda_term_nonneg (σ t : ℝ) (n : ℕ) :
+    0 ≤ (ArithmeticFunction.vonMangoldt (n + 1) : ℝ) *
+      (n + 1 : ℝ) ^ (-σ) *
+      (3 + 4 * Real.cos (t * Real.log (n + 1 : ℝ)) +
+        Real.cos (2 * (t * Real.log (n + 1 : ℝ)))) := by
+  have hΛ : 0 ≤ (ArithmeticFunction.vonMangoldt (n + 1) : ℝ) :=
+    ArithmeticFunction.vonMangoldt_nonneg
+  have hpow : 0 ≤ (n + 1 : ℝ) ^ (-σ) :=
+    Real.rpow_nonneg (add_nonneg (Nat.cast_nonneg n) zero_le_one) (-σ)
+  have htrig := three_four_one_nonneg (t * Real.log (n + 1 : ℝ))
+  exact mul_nonneg (mul_nonneg hΛ hpow) htrig
+
+-- 2. 有限和非负 (真定理): 逐项非负 ⟹ 部分和非负 (Finset.sum_nonneg)
+theorem mertens_lambda_sum_nonneg (σ t : ℝ) (N : ℕ) :
+    0 ≤ Finset.sum (Finset.range N) (fun n => (ArithmeticFunction.vonMangoldt (n + 1) : ℝ) *
+      (n + 1 : ℝ) ^ (-σ) *
+      (3 + 4 * Real.cos (t * Real.log (n + 1 : ℝ)) +
+        Real.cos (2 * (t * Real.log (n + 1 : ℝ))))) := by
+  exact Finset.sum_nonneg fun n _ => mertens_lambda_term_nonneg σ t n
+
+-- 3. 台阶1 结论 (PNT 核心): ζ 在 σ=1 边界线无非零 t 的零点
+def zeta_ne_zero_on_one_line : Prop :=
+  ∀ t : ℝ, t ≠ 0 → riemannZeta (1 + (t : ℂ) * Complex.I) ≠ 0
+
+-- 4. 结构体钉形状: 3-4-1 数条数论证的完整依赖链
+structure OneLineZeroFree where
+  -- 已证 (mertens_lambda_term_nonneg): 3-4-1 逐项非负
+  term_nonneg : Prop
+  -- 已证 (mathlib LSeries_vonMangoldt_eq_deriv_riemannZeta_div):
+  --   ζ'/ζ = −L(Λ,·) 于 Re>1 — 把 logDeriv 接到 Λ 级数
+  log_deriv_dirichlet : Prop
+  -- 外部输入: ζ 在 s=1 单极点 → ζ'/ζ(σ) ~ −1/(σ−1) (σ→1⁺)
+  pole_log_deriv : Prop
+  -- 外部输入: ζ(1+it)=0 重数 m → ζ'/ζ(σ+it) ~ m/(σ−1) (σ→1⁺)
+  zero_log_deriv : Prop
+  -- 结论: ζ(1+it) ≠ 0 (台阶1 = PNT 核心)
+  conclusion : Prop
+  -- 组装: 逐项非负 + logDeriv 级数 + 极点/零点重数行为 ⟹ ζ(1+it)≠0
+  assemble : term_nonneg → log_deriv_dirichlet → pole_log_deriv →
+    zero_log_deriv → conclusion
 
 
 -- =============================...[truncated]
