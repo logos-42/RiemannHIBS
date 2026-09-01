@@ -242,13 +242,17 @@ stage: current
 - `hiddenZeta_eq_dirichletSeries` 与 `hiddenDirichletApproximant_tendsto_hiddenZeta`：在 `Re(s)>1` 绝对收敛区证明部分和确实趋近 ζ；
 - `critical_lifted_term_norm` 与 `critical_lifted_terms_not_summable`：在临界叶证明单项模长为 `(n+1)^(-1/2)` 且绝对值级数发散，正式确认普通绝对尾项排除路线不能跨过临界圆；
 - `hiddenEtaPartialSum_tends_some`：借用已形式化的 Abel/变差估计，在 `Re(s)>0` 证明交错 η 部分和趋于某个极限；但该极限与解析延拓 ζ 的等式以及统一非零下界仍未建立；
+- `hiddenEtaPartialSum_tends_mul_zeta`：在 `u>1/2`（即 `Re(s)>1`）把上述极限精确识别为 `(1−2^(1−s))ζ(s)`；这一步确认 η 的“极限存在”与 ζ 的连接在绝对收敛区成立，但没有越过临界带的延拓墙；
 - `radialEnergy`、`radialEnergy_nonneg` 与 `on_critical_line_of_radialEnergy_eq_zero`：完成正定路线的有限样本逻辑桥；若能从显式公式推出径向总能量为零，则样本中所有点都在临界线上，但“总能量恒为零”的公式尚未找到；
+- `radialEnergy_eq_zero_iff`：将有限样本版本补成双向等价：径向能量为零当且仅当样本所有点满足 `Re(s)=1/2`；缺口精确保留在“把 ζ 的零点样本/计数公式接入能量恒等式”，而不是正性本身；
+- `hiddenZeta_norm_lower_of_u_ge_three_halves` / `hiddenZeta_ne_zero_of_u_ge_three_halves`：将已知的 `Re(s)≥2` 下界传入隐数坐标，得到 `u≥3/2` 的远右半平面基准无零点结果；进一步证明 `zeta_sub_one_norm_le_three_fourths_of_re_ge_two` 与 `hiddenZeta_sub_one_norm_le_three_fourths_of_u_ge_three_halves`，即取 `A≡1` 时统一余项满足 `‖ζ−1‖≤3/4<1=‖A‖`，并由 `hiddenZeta_ne_zero_of_u_ge_three_halves_via_rouche` 得到真正的 Rouché 型排除；
 - `offCircleWindow`：固定径向距离 `delta` 与有限未折叠高度 `T` 的窗口；
 - `UniformApproximation` / `UniformNonvanishingCertificate`：将近似、余项和近似函数的统一下界分开记录；
 - `nonzero_of_uniform_certificate`：若整个窗口上 `‖F-A‖≤epsilon<‖A‖`，则 `F` 在窗口无零点；
+- `nonzero_approximants_can_converge_to_zero`：给出逐项非零却收敛到零的抽象反例，形式化说明“有限逼近都不为零 + 极限存在”不能推出极限不为零；
 - `radialEnergyAtom`：单个零点的径向偏差平方，非负且为零当且仅当 `Re(s)=1/2`。
 
-这一步的意义是把“无限逼近为什么不能排除”压成一个精确缺口：需要构造对所有高度和整个径向窗口有效的非零下界，不能只证明有限相位和趋近于零。当前文件已证明远离临界带的绝对收敛逼近，也已证明临界叶上的绝对尾项路线结构性失败；η 条件收敛可以跨过 `Re=1`，但只给出极限存在，不给出 ζ 的排除性下界。尚未提供 RH 所需的分析性排除证书。`lake build RiemannHIBS` 已通过。
+这一步的意义是把“无限逼近为什么不能排除”压成一个精确缺口：需要构造对所有高度和整个径向窗口有效的非零下界，不能只证明有限相位和趋近于零。当前文件已在 `u≥3/2` 形成了实际的 `A≡1` Rouché 证书；也已证明临界叶上的绝对尾项路线结构性失败。η 条件收敛可以跨过 `Re=1`，但只给出极限存在，不给出 ζ 的排除性下界。因而这轮成功扩大了远右排除的形式化边界，却没有向临界带推进，RH 所需的统一带内证书仍未提供。`lake build RiemannHIBS` 已通过。
 
 **模平衡恒等式 (已证, Abundance §23) — 排除论证的载体:**
 ```

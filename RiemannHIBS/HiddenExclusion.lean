@@ -148,6 +148,156 @@ theorem hiddenEtaPartialSum_tends_some {u theta : ℝ}
   refine ⟨a, ?_⟩
   simpa [hiddenEtaPartialSum, s, etaPartialSum] using ha
 
+-- 在绝对收敛区，η 部分和的极限可以精确识别为
+-- (1−2^(1−s))ζ(s)；这一步不能自动延伸到临界带。
+theorem hiddenEtaPartialSum_tends_mul_zeta {u theta : ℝ}
+    (hu : (1 / 2 : ℝ) < u) :
+    Tendsto (fun N : ℕ => hiddenEtaPartialSum N u theta) atTop
+      (nhds ((1 - (2 : ℂ) ^ (1 -
+        (((1 / 2 + u : ℝ) : ℂ) + Complex.I * (theta : ℂ)))) *
+          hiddenZeta u theta)) := by
+  let s : ℂ := (((1 / 2 + u : ℝ) : ℂ) + Complex.I * (theta : ℂ))
+  have hs : 1 < s.re := by
+    dsimp [s]
+    norm_num [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im]
+    linarith
+  have hsum := eta_summable_of_one_lt_re hs
+  have hlim := hsum.hasSum.tendsto_sum_nat
+  have hη : etaSeries s = (1 - (2 : ℂ) ^ (1 - s)) * riemannZeta s :=
+    eta_eq_mul_zeta hs
+  have hsumEq :
+      (∑' n : ℕ, (-1 : ℂ) ^ n * ((n + 1 : ℕ) : ℂ) ^ (-s)) =
+        etaSeries s := by
+    unfold etaSeries
+    apply tsum_congr
+    intro n
+    rw [Complex.cpow_neg]
+    rfl
+  change Tendsto (fun N : ℕ => hiddenEtaPartialSum N u theta) atTop
+    (nhds ((1 - (2 : ℂ) ^ (1 - s)) * riemannZeta s))
+  rw [← hη]
+  rw [← hsumEq]
+  simpa [hiddenEtaPartialSum, hiddenZeta, s, etaPartialSum, etaSeries,
+    div_eq_mul_inv, Complex.cpow_neg] using hlim
+
+-- 远右半平面的基准下界：u ≥ 3/2 等价于 Re(s) ≥ 2。
+theorem hiddenZeta_norm_lower_of_u_ge_three_halves {u theta : ℝ}
+    (hu : (3 / 2 : ℝ) ≤ u) :
+    ‖hiddenZeta u theta‖ ≥ (1 : ℝ) / 4 := by
+  let s : ℂ := (((1 / 2 + u : ℝ) : ℂ) + Complex.I * (theta : ℂ))
+  have hs : 1 < s.re := by
+    dsimp [s]
+    norm_num [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im]
+    linarith
+  have hs2 : 2 ≤ s.re := by
+    dsimp [s]
+    norm_num [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im]
+    linarith
+  simpa [hiddenZeta, s] using
+    (zeta_norm_lower_of_two_le_re s hs hs2)
+
+theorem hiddenZeta_ne_zero_of_u_ge_three_halves {u theta : ℝ}
+    (hu : (3 / 2 : ℝ) ≤ u) : hiddenZeta u theta ≠ 0 := by
+  exact norm_ne_zero_iff.mp (ne_of_gt
+    (lt_of_lt_of_le (by norm_num : (0 : ℝ) < 1 / 4)
+      (hiddenZeta_norm_lower_of_u_ge_three_halves hu)))
+
+-- 远右半平面中，去掉首项后的 ζ 尾项有统一的 3/4 上界。
+set_option maxHeartbeats 1000000 in
+theorem zeta_sub_one_norm_le_three_fourths_of_re_ge_two
+    {s : ℂ} (hs2 : (2 : ℝ) ≤ s.re) :
+    ‖riemannZeta s - 1‖ ≤ (3 : ℝ) / 4 := by
+  have hs : 1 < s.re := by linarith
+  have hsum : Summable (fun n : ℕ =>
+      (1 : ℂ) / (((n + 1 : ℕ) : ℂ) ^ s)) := by
+    have h0 : Summable (fun n : ℕ => (1 : ℂ) / ((n : ℂ) ^ s)) :=
+      (Complex.summable_one_div_nat_cpow (p := s)).mpr hs
+    convert h0.comp_injective (i := Nat.succ)
+      (fun ⦃a b⦄ h => Nat.succ.inj h) using 1
+  have hsplit :
+      (1 : ℂ) + ∑' n : ℕ, (1 : ℂ) / (((n + 2 : ℕ) : ℂ) ^ s) =
+        ∑' n : ℕ, (1 : ℂ) / (((n + 1 : ℕ) : ℂ) ^ s) := by
+    convert hsum.sum_add_tsum_nat_add 1 using 1 <;>
+      norm_num [Nat.cast_add, Nat.cast_one, add_assoc]
+  have hsplit' :
+      (1 : ℂ) + ∑' n : ℕ, (1 : ℂ) / (((n + 2 : ℕ) : ℂ) ^ s) =
+        ∑' n : ℕ, (1 : ℂ) / (((n : ℂ) + 1) ^ s) := by
+    simpa [Nat.cast_add, Nat.cast_one] using hsplit
+  have htail :
+      riemannZeta s - 1 =
+        ∑' n : ℕ, (1 : ℂ) / (((n + 2 : ℕ) : ℂ) ^ s) := by
+    rw [zeta_eq_tsum_one_div_nat_add_one_cpow hs]
+    rw [← hsplit']
+    ring
+  rw [htail]
+  have hnormSummable : Summable (fun n : ℕ =>
+      ‖(1 : ℂ) / (((n + 2 : ℕ) : ℂ) ^ s)‖) := by
+    have hshift : Summable (fun n : ℕ =>
+        (1 : ℂ) / (((n + 2 : ℕ) : ℂ) ^ s)) := by
+      exact (summable_nat_add_iff (G := ℂ)
+        (f := fun n : ℕ => (1 : ℂ) / (((n : ℕ) : ℂ) ^ s)) 2).mpr
+        ((Complex.summable_one_div_nat_cpow (p := s)).mpr hs)
+    exact hshift.norm
+  have hnorm : ‖∑' n : ℕ,
+      (1 : ℂ) / (((n + 2 : ℕ) : ℂ) ^ s)‖ ≤
+      ∑' n : ℕ, ‖(1 : ℂ) / (((n + 2 : ℕ) : ℂ) ^ s)‖ :=
+    norm_tsum_le_tsum_norm hnormSummable
+  have hnorm_eq : ∀ n : ℕ,
+      ‖(1 : ℂ) / (((n + 2 : ℕ) : ℂ) ^ s)‖ =
+        (n + 2 : ℝ) ^ (-s.re) := by
+    intro n
+    convert term_norm_eq s (n + 1) using 1
+    all_goals norm_num [Nat.cast_add, Nat.cast_one]
+    all_goals ring_nf
+  have htailReal : ∑' n : ℕ, (n + 2 : ℝ) ^ (-s.re) ≤ (3 : ℝ) / 4 := by
+    apply Real.tsum_le_of_sum_range_le
+    · intro n
+      positivity
+    · intro N
+      calc
+        ∑ n ∈ Finset.range N, (n + 2 : ℝ) ^ (-s.re) ≤
+            ∑ n ∈ Finset.range N, (n + 2 : ℝ) ^ (-2 : ℝ) := by
+          apply Finset.sum_le_sum
+          intro n hn
+          exact Real.rpow_le_rpow_of_exponent_le
+            (by exact_mod_cast (by omega : 1 ≤ n + 2)) (by linarith)
+        _ ≤ ∑ n ∈ Finset.range N,
+            1 / (((n + 1 : ℕ) : ℝ) * ((n + 3 : ℕ) : ℝ)) := by
+          apply Finset.sum_le_sum
+          intro n hn
+          exact inv_sq_le n
+        _ ≤ (3 : ℝ) / 4 := telescoping_sum_bound N
+  calc
+    ‖∑' n : ℕ, (1 : ℂ) / (((n + 2 : ℕ) : ℂ) ^ s)‖ ≤
+        ∑' n : ℕ, ‖(1 : ℂ) / (((n + 2 : ℕ) : ℂ) ^ s)‖ := hnorm
+    _ = ∑' n : ℕ, (n + 2 : ℝ) ^ (-s.re) := by
+      apply tsum_congr
+      intro n
+      exact hnorm_eq n
+    _ ≤ (3 : ℝ) / 4 := htailReal
+
+-- 把 A=1 的远右半平面证书提升到隐数坐标。
+theorem hiddenZeta_sub_one_norm_le_three_fourths_of_u_ge_three_halves
+    {u theta : ℝ} (hu : (3 / 2 : ℝ) ≤ u) :
+    ‖hiddenZeta u theta - 1‖ ≤ (3 : ℝ) / 4 := by
+  let s : ℂ := (((1 / 2 + u : ℝ) : ℂ) + Complex.I * (theta : ℂ))
+  have hs2 : (2 : ℝ) ≤ s.re := by
+    dsimp [s]
+    norm_num [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im]
+    linarith
+  simpa [hiddenZeta, s] using
+    (zeta_sub_one_norm_le_three_fourths_of_re_ge_two hs2)
+
+-- 这是一个实际的 Rouché 型排除结果，而不只是近似接口：A=1 的模长恒为 1，
+-- 余项统一小于 1，因此隐数远右半平面没有 ζ 零点。
+theorem hiddenZeta_ne_zero_of_u_ge_three_halves_via_rouche
+    {u theta : ℝ} (hu : (3 / 2 : ℝ) ≤ u) : hiddenZeta u theta ≠ 0 := by
+  intro hz
+  have h := hiddenZeta_sub_one_norm_le_three_fourths_of_u_ge_three_halves
+    (u := u) (theta := theta) hu
+  rw [hz] at h
+  norm_num at h
+
 -- 临界圆就是径向偏差为 0 的叶层。
 theorem radialDisplacement_eq_zero_iff (s : ℂ) :
     radialDisplacement s = 0 ↔ s.re = (1 / 2 : ℝ) := by
@@ -205,6 +355,24 @@ theorem nonzero_of_uniform_certificate
     simpa [norm_neg] using herr
   exact (not_le_of_gt (h.approximant_lower_bound p hp)) hA
 
+-- 逻辑反例：有限近似逐项非零且收敛，并不推出极限非零。
+-- 因而“部分和趋于某个极限”本身不能替代统一正下界。
+theorem nonzero_approximants_can_converge_to_zero :
+    ∃ f : ℕ → ℂ,
+      (∀ n, f n ≠ 0) ∧ Tendsto f atTop (nhds 0) := by
+  refine ⟨fun n => ((n + 1 : ℕ) : ℂ)⁻¹, ?_, ?_⟩
+  · intro n
+    apply inv_ne_zero
+    intro h
+    have h' := congrArg Complex.re h
+    have hn : (0 : ℝ) ≤ (n : ℝ) := by positivity
+    norm_num at h'
+    linarith
+  · simpa using
+      (Filter.tendsto_add_atTop_iff_nat
+        (f := fun n : ℕ => ((n : ℕ) : ℂ)⁻¹) 1).mpr
+        (tendsto_inv_atTop_nhds_zero_nat (𝕜 := ℂ))
+
 -- 径向能量的单点原子：非负，且只有落在临界线时才为零。
 def radialEnergyAtom (s : ℂ) : ℝ := (radialDisplacement s) ^ 2
 
@@ -240,6 +408,17 @@ theorem on_critical_line_of_radialEnergy_eq_zero
     exact (Finset.sum_eq_zero_iff_of_nonneg hterms).mp hsumzero s hs
   intro s hs
   exact (radialEnergyAtom_eq_zero_iff s).mp (hzeros s hs)
+
+theorem radialEnergy_eq_zero_iff
+    {Z : Finset ℂ} :
+    radialEnergy Z = 0 ↔ ∀ s ∈ Z, s.re = (1 / 2 : ℝ) := by
+  constructor
+  · exact on_critical_line_of_radialEnergy_eq_zero
+  · intro hall
+    unfold radialEnergy
+    apply Finset.sum_eq_zero
+    intro s hs
+    exact (radialEnergyAtom_eq_zero_iff s).mpr (hall s hs)
 
 -- 谱路线的最小接口：自伴性应当负责产生实谱，
 -- 这里仅保留“零点由实高度参数精确表示”的外部证书字段。
