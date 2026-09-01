@@ -34,10 +34,13 @@ import Mathlib.NumberTheory.Harmonic.Bounds
 import Mathlib.Data.Rat.BigOperators
 import Mathlib.Analysis.PSeries
 import Mathlib.Topology.Algebra.InfiniteSum.NatInt
+import Mathlib.Analysis.SpecialFunctions.Pow.Asymptotics
 
 open scoped Topology
 open scoped ComplexConjugate
+open scoped BigOperators
 open Set
+open Filter
 
 namespace RiemannHIBS.Abundance
 
@@ -2408,6 +2411,266 @@ theorem eta_bounded_variation (s : ℂ) (hs : 0 < s.re) :
   have hCsum : Summable (fun n : ℕ => C * (((n + 1 : ℕ) : ℝ)) ^ (-s.re - 1)) :=
     hsum.mul_left C
   exact Summable.of_nonneg_of_le (fun n => norm_nonneg _) hmain hCsum
+
+-- 25.6 b_n → 0: ‖(n+1)^{−s}‖ = (n+1)^{−σ} → 0  (σ>0)
+--   (tendsto_rpow_neg_atTop: x^{−σ} → 0 as x → ∞)
+theorem eta_tends_to_zero (s : ℂ) (hs : 0 < s.re) :
+    Tendsto (fun n : ℕ => ((n + 1 : ℕ) : ℂ) ^ (-s)) atTop (nhds 0) := by
+  have hpow : Tendsto (fun x : ℝ => x ^ (-s.re)) atTop (nhds 0) :=
+    tendsto_rpow_neg_atTop hs
+  have harg : Tendsto (fun n : ℕ => ((n + 1 : ℕ) : ℝ)) atTop atTop := by
+    rw [tendsto_atTop]
+    intro b
+    have hb' : ∃ N : ℕ, ∀ n ≥ N, b ≤ (n : ℝ) := by
+      exact (Filter.eventually_atTop.1 (tendsto_atTop.1 tendsto_natCast_atTop_atTop b))
+    refine (Filter.eventually_atTop.2 ?_)
+    rcases hb' with ⟨N, hN⟩
+    refine ⟨N, ?_⟩
+    intro n hn
+    have hbn : b ≤ (n : ℝ) := hN n hn
+    have hcast : ((n + 1 : ℕ) : ℝ) = (n : ℝ) + 1 := by norm_num
+    rw [hcast]
+    linarith
+  have hmain : Tendsto (fun n : ℕ => (((n + 1 : ℕ) : ℝ)) ^ (-s.re)) atTop (nhds 0) :=
+    hpow.comp harg
+  have hnorm : ∀ n : ℕ, ‖((n + 1 : ℕ) : ℂ) ^ (-s)‖ = (((n + 1 : ℕ) : ℝ)) ^ (-s.re) := by
+    intro n
+    exact Complex.norm_cpow_eq_rpow_re_of_pos (by positivity : 0 < ((n + 1 : ℕ) : ℝ)) (-s)
+  have hnorm_t : Tendsto (fun n : ℕ => ‖((n + 1 : ℕ) : ℂ) ^ (-s)‖) atTop (nhds 0) :=
+    hmain.congr' (by
+      filter_upwards with n
+      simpa using (hnorm n).symm)
+  exact tendsto_zero_iff_norm_tendsto_zero.mpr hnorm_t
+
+-- 25.7 部分和收敛 (η 条件收敛的正确形态 — 非 Summable, 因 ℂ 上 Summable ⟺ 绝对可和):
+--   ∃ a, ∑_{k<N} (−1)^k (k+1)^{−s} → a
+--   Cauchy 判定: tail = ‖∑_{k=n}^{m−1} (−1)^k b_k‖ ≤ ‖b_{m−1}‖ + Σ_{k=n}^{m−2}‖b_k−b_{k+1}‖
+--   (交替部分和模 ≤1 + Abel 分部求和), 两项各 → 0.
+lemma eta_partial_sum_diff (b : ℕ → ℂ) (m n : ℕ) (hnm : n ≤ m) :
+    Finset.sum (Finset.range m) (fun k => (-1 : ℂ) ^ k * b k)
+      - Finset.sum (Finset.range n) (fun k => (-1 : ℂ) ^ k * b k)
+      = Finset.sum (Finset.range (m - n)) (fun j => (-1 : ℂ) ^ (n + j) * b (n + j)) := by
+  have hsub : Finset.range n ⊆ Finset.range m := by
+    intro x hx
+    simp [Finset.mem_range] at hx ⊢
+    omega
+  have hIco : Finset.range m \ Finset.range n = Finset.Ico n m := by
+    ext k
+    simp [Finset.mem_Ico, Finset.mem_range]
+    omega
+  calc
+    Finset.sum (Finset.range m) (fun k => (-1 : ℂ) ^ k * b k)
+        - Finset.sum (Finset.range n) (fun k => (-1 : ℂ) ^ k * b k)
+        = Finset.sum (Finset.range m \ Finset.range n) (fun k => (-1 : ℂ) ^ k * b k) := by
+            have hss := (Finset.sum_sdiff (f := fun k : ℕ => (-1 : ℂ) ^ k * b k) hsub).symm
+            calc
+              Finset.sum (Finset.range m) (fun k => (-1 : ℂ) ^ k * b k)
+                  - Finset.sum (Finset.range n) (fun k => (-1 : ℂ) ^ k * b k)
+                  = (Finset.sum (Finset.range m \ Finset.range n) (fun k => (-1 : ℂ) ^ k * b k)
+                      + Finset.sum (Finset.range n) (fun k => (-1 : ℂ) ^ k * b k))
+                    - Finset.sum (Finset.range n) (fun k => (-1 : ℂ) ^ k * b k) := by
+                        rw [hss]
+              _ = Finset.sum (Finset.range m \ Finset.range n) (fun k => (-1 : ℂ) ^ k * b k) := by abel
+    _ = Finset.sum (Finset.Ico n m) (fun k => (-1 : ℂ) ^ k * b k) := by rw [hIco]
+    _ = Finset.sum (Finset.range (m - n)) (fun j => (-1 : ℂ) ^ (n + j) * b (n + j)) := by
+            rw [Finset.sum_Ico_eq_sum_range (fun k : ℕ => (-1 : ℂ) ^ k * b k) n m]
+
+lemma eta_tail_bound (b : ℕ → ℂ) (m n : ℕ) (hnm : n < m) :
+    ‖Finset.sum (Finset.range (m - n)) (fun k => (-1 : ℂ) ^ k * b (n + k))‖
+      ≤ ‖b (m - 1)‖ + Finset.sum (Finset.range (m - n - 1))
+          (fun k => ‖b (n + k) - b (n + k + 1)‖) := by
+  have hb' := alternating_sum_bound (fun k : ℕ => b (n + k)) (m - n - 1)
+  have hM : (m - n - 1) + 1 = m - n := by omega
+  have hn1 : n + (m - n - 1) = m - 1 := by omega
+  simpa [hM, hn1] using hb'
+
+-- 变差尾 ≤ W(m−1) − W(n), W(N) = Σ_{k<N}‖b_k−b_{k+1}‖  (n ≤ m−1)
+lemma eta_var_tail_le (b : ℕ → ℂ) (m n : ℕ) (hn : n ≤ m - 1) :
+    Finset.sum (Finset.range (m - n - 1)) (fun k => ‖b (n + k) - b (n + k + 1)‖)
+      ≤ Finset.sum (Finset.range (m - 1)) (fun k => ‖b k - b (k + 1)‖)
+        - Finset.sum (Finset.range n) (fun k => ‖b k - b (k + 1)‖) := by
+  let s : Finset ℕ := Finset.image (fun j : ℕ => n + j) (Finset.range (m - n - 1))
+  have hmap : s ⊆ Finset.range (m - 1) \ Finset.range n := by
+    intro k hk
+    rw [Finset.mem_sdiff]
+    constructor
+    · rw [Finset.mem_image] at hk
+      rcases hk with ⟨j, hj, hj_eq⟩
+      subst k
+      have hjlt : j < m - n - 1 := by simpa using hj
+      have hstep : n + j < n + (m - n - 1) := Nat.add_lt_add_left hjlt n
+      have hcalc : n + (m - n - 1) ≤ m - 1 := by
+        have hsub2 : m - n - 1 = m - 1 - n := by omega
+        rw [hsub2]
+        exact le_of_eq (Nat.add_sub_of_le hn)
+      exact Finset.mem_range.2 (lt_of_lt_of_le hstep hcalc)
+    · rw [Finset.mem_image] at hk
+      rcases hk with ⟨j, hj, hj_eq⟩
+      subst k
+      intro hmem
+      rw [Finset.mem_range] at hmem
+      omega
+  have hinj : Set.InjOn (fun j : ℕ => n + j) (↑(Finset.range (m - n - 1))) := by
+    intro a ha b hb hab
+    exact Nat.add_left_cancel hab
+  have hsum_eq :
+      Finset.sum (Finset.range (m - n - 1)) (fun k => ‖b (n + k) - b (n + k + 1)‖)
+        = Finset.sum s (fun k => ‖b k - b (k + 1)‖) := by
+    have hsi := Finset.sum_image (s := Finset.range (m - n - 1))
+      (g := fun j : ℕ => n + j) (f := fun y : ℕ => ‖b y - b (y + 1)‖) hinj
+    exact hsi.symm
+  calc
+    Finset.sum (Finset.range (m - n - 1)) (fun k => ‖b (n + k) - b (n + k + 1)‖)
+        = Finset.sum s (fun k => ‖b k - b (k + 1)‖) := hsum_eq
+    _ ≤ Finset.sum (Finset.range (m - 1) \ Finset.range n) (fun k => ‖b k - b (k + 1)‖) := by
+            exact Finset.sum_le_sum_of_subset_of_nonneg hmap
+              (by intro k hkt hks; exact norm_nonneg (b k - b (k + 1)))
+    _ = Finset.sum (Finset.range (m - 1)) (fun k => ‖b k - b (k + 1)‖)
+        - Finset.sum (Finset.range n) (fun k => ‖b k - b (k + 1)‖) := by
+            have hss := Finset.sum_sdiff (f := fun k : ℕ => ‖b k - b (k + 1)‖)
+              (by intro x hx; exact Finset.mem_range.2 (lt_of_lt_of_le (Finset.mem_range.1 hx) hn))
+            rw [← hss]
+            abel
+
+-- 25.7 辅助: 部分和差的界 (m > n)
+--   ‖S_m − S_n‖ ≤ ‖b_{m−1}‖ + (W(m−1) − W(n)), W(N) = Σ_{k<N}‖b_k−b_{k+1}‖
+lemma eta_partial_diff_bound (b : ℕ → ℂ) (m n : ℕ) (hnm : n < m) :
+    ‖Finset.sum (Finset.range m) (fun k => (-1 : ℂ) ^ k * b k)
+        - Finset.sum (Finset.range n) (fun k => (-1 : ℂ) ^ k * b k)‖
+      ≤ ‖b (m - 1)‖
+        + (Finset.sum (Finset.range (m - 1)) (fun k => ‖b k - b (k + 1)‖)
+          - Finset.sum (Finset.range n) (fun k => ‖b k - b (k + 1)‖)) := by
+  have hdiff := eta_partial_sum_diff b m n (le_of_lt hnm)
+  have hsign :
+      ‖Finset.sum (Finset.range (m - n)) (fun j => (-1 : ℂ) ^ (n + j) * b (n + j))‖
+        = ‖Finset.sum (Finset.range (m - n)) (fun j => (-1 : ℂ) ^ j * b (n + j))‖ := by
+    calc
+      ‖Finset.sum (Finset.range (m - n)) (fun j => (-1 : ℂ) ^ (n + j) * b (n + j))‖
+          = ‖Finset.sum (Finset.range (m - n)) (fun j => (-1 : ℂ) ^ n * ((-1 : ℂ) ^ j * b (n + j)))‖ := by
+              congr 1
+              apply Finset.sum_congr rfl
+              intro j hj
+              rw [pow_add]
+              ring
+      _ = ‖(-1 : ℂ) ^ n * Finset.sum (Finset.range (m - n)) (fun j => (-1 : ℂ) ^ j * b (n + j))‖ := by
+              rw [← Finset.mul_sum]
+      _ = ‖(-1 : ℂ) ^ n‖ * ‖Finset.sum (Finset.range (m - n)) (fun j => (-1 : ℂ) ^ j * b (n + j))‖ := by
+              rw [norm_mul]
+      _ = ‖Finset.sum (Finset.range (m - n)) (fun j => (-1 : ℂ) ^ j * b (n + j))‖ := by
+              rw [norm_pow]
+              norm_num
+  calc
+    ‖Finset.sum (Finset.range m) (fun k => (-1 : ℂ) ^ k * b k)
+        - Finset.sum (Finset.range n) (fun k => (-1 : ℂ) ^ k * b k)‖
+        = ‖Finset.sum (Finset.range (m - n)) (fun j => (-1 : ℂ) ^ (n + j) * b (n + j))‖ := by
+            rw [hdiff]
+    _ = ‖Finset.sum (Finset.range (m - n)) (fun j => (-1 : ℂ) ^ j * b (n + j))‖ := hsign
+    _ ≤ ‖b (m - 1)‖ + Finset.sum (Finset.range (m - n - 1))
+            (fun k => ‖b (n + k) - b (n + k + 1)‖) := eta_tail_bound b m n hnm
+    _ ≤ ‖b (m - 1)‖
+            + (Finset.sum (Finset.range (m - 1)) (fun k => ‖b k - b (k + 1)‖)
+              - Finset.sum (Finset.range n) (fun k => ‖b k - b (k + 1)‖)) := by
+            simpa [add_comm] using add_le_add_left (eta_var_tail_le b m n (by omega : n ≤ m - 1)) (‖b (m - 1)‖)
+
+-- 25.7 η 部分和收敛 (η 条件收敛, 0<Re s):
+--   Abel 部分和机制 (§24) + 总变差可和 (25.5) + 项趋于零 (25.6) ⟹ Cauchy ⟹ 收敛 (ℂ 完备)
+theorem eta_partial_sums_converge (s : ℂ) (hs : 0 < s.re) :
+    ∃ a : ℂ,
+      Tendsto (fun n : ℕ =>
+        Finset.sum (Finset.range n) (fun k => (-1 : ℂ) ^ k * ((k + 1 : ℕ) : ℂ) ^ (-s)))
+        atTop (nhds a) := by
+  let b : ℕ → ℂ := fun k => ((k + 1 : ℕ) : ℂ) ^ (-s)
+  let S : ℕ → ℂ := fun n => Finset.sum (Finset.range n) (fun k => (-1 : ℂ) ^ k * b k)
+  have hbv : Summable (fun n : ℕ => ‖b n - b (n + 1)‖) := by
+    change Summable (fun n : ℕ => ‖((n + 1 : ℕ) : ℂ) ^ (-s) - ((n + 2 : ℕ) : ℂ) ^ (-s)‖)
+    exact eta_bounded_variation s hs
+  have hb0 : Tendsto (fun n : ℕ => ‖b n‖) atTop (nhds 0) := by
+    change Tendsto (fun n : ℕ => ‖((n + 1 : ℕ) : ℂ) ^ (-s)‖) atTop (nhds 0)
+    exact (tendsto_zero_iff_norm_tendsto_zero.mp (eta_tends_to_zero s hs))
+  let W : ℕ → ℝ := fun N => Finset.sum (Finset.range N) (fun k => ‖b k - b (k + 1)‖)
+  have hWcau : CauchySeq W := hbv.hasSum.tendsto_sum_nat.cauchySeq
+  have hWcau' : ∀ ε : ℝ, 0 < ε → ∃ N : ℕ, ∀ m ≥ N, ∀ n ≥ N, |W m - W n| < ε := by
+    intro ε hε
+    rcases (Metric.cauchySeq_iff.1 hWcau) ε hε with ⟨N, hN⟩
+    refine ⟨N, ?_⟩
+    intro m hm n hn
+    have hdist : dist (W m) (W n) < ε := hN m hm n hn
+    simpa [dist_eq_norm, Real.norm_eq_abs] using hdist
+  have hb0' : ∀ ε : ℝ, 0 < ε → ∃ N : ℕ, ∀ n ≥ N, ‖b n‖ < ε := by
+    intro ε hε
+    rcases (Metric.tendsto_atTop.mp hb0) ε hε with ⟨N, hN⟩
+    refine ⟨N, ?_⟩
+    intro n hn
+    have hdist : dist (‖b n‖) 0 < ε := hN n hn
+    simpa using hdist
+  have hcauchy : CauchySeq S := by
+    rw [Metric.cauchySeq_iff]
+    intro ε hε
+    have hε2 : 0 < ε / 4 := by positivity
+    rcases hb0' (ε / 4) hε2 with ⟨N₁, hN₁⟩
+    rcases hWcau' (ε / 4) hε2 with ⟨N₂, hN₂⟩
+    let N : ℕ := max N₁ (N₂ + 1) + 1
+    have hN₁le : N ≥ N₁ + 1 := by
+      dsimp [N]
+      have h := le_max_left N₁ (N₂ + 1)
+      omega
+    have hN₂le : N ≥ N₂ + 2 := by
+      dsimp [N]
+      have h := le_max_right N₁ (N₂ + 1)
+      omega
+    refine ⟨N, ?_⟩
+    intro m hm n hn
+    have hmN₁ : m - 1 ≥ N₁ := by omega
+    have hnN₁ : n - 1 ≥ N₁ := by omega
+    have hmN₂ : m ≥ N₂ := by omega
+    have hnN₂ : n ≥ N₂ := by omega
+    have hm1N₂ : m - 1 ≥ N₂ := by omega
+    have hn1N₂ : n - 1 ≥ N₂ := by omega
+    have hb01 : ‖b (m - 1)‖ < ε / 4 := hN₁ (m - 1) hmN₁
+    have hb02 : ‖b (n - 1)‖ < ε / 4 := hN₁ (n - 1) hnN₁
+    have hW1 : |W (m - 1) - W n| < ε / 4 := hN₂ (m - 1) hm1N₂ n hnN₂
+    have hW2 : |W (n - 1) - W m| < ε / 4 := hN₂ (n - 1) hn1N₂ m hmN₂
+    by_cases hmn : m ≥ n
+    · by_cases hm0 : m = n
+      · subst m
+        simpa [S, dist_self] using hε
+      · have hgt : n < m := lt_of_le_of_ne hmn (by intro hnm; exact hm0 hnm.symm)
+        have hb' := eta_partial_diff_bound b m n hgt
+        have hWle : Finset.sum (Finset.range (m - 1)) (fun k => ‖b k - b (k + 1)‖)
+              - Finset.sum (Finset.range n) (fun k => ‖b k - b (k + 1)‖)
+              ≤ |W (m - 1) - W n| := by
+          dsimp [W]
+          have hsub : Finset.sum (Finset.range (m - 1)) (fun k => ‖b k - b (k + 1)‖)
+                - Finset.sum (Finset.range n) (fun k => ‖b k - b (k + 1)‖) ≥ 0 :=
+            sub_nonneg.mpr (Finset.sum_le_sum_of_subset_of_nonneg
+              (by intro x hx; exact Finset.mem_range.2 (lt_of_lt_of_le (Finset.mem_range.1 hx) (by omega : n ≤ m - 1)))
+              (by intro k hkt hks; exact norm_nonneg (b k - b (k + 1))))
+          rw [abs_of_nonneg hsub]
+        have hsum : ‖b (m - 1)‖
+              + (Finset.sum (Finset.range (m - 1)) (fun k => ‖b k - b (k + 1)‖)
+                - Finset.sum (Finset.range n) (fun k => ‖b k - b (k + 1)‖)) < ε := by
+          nlinarith [hb01, hW1, hWle]
+        rw [dist_eq_norm]
+        exact lt_of_le_of_lt hb' hsum
+    · have hmn' : m < n := by omega
+      have hb' := eta_partial_diff_bound b n m hmn'
+      have hWle : Finset.sum (Finset.range (n - 1)) (fun k => ‖b k - b (k + 1)‖)
+            - Finset.sum (Finset.range m) (fun k => ‖b k - b (k + 1)‖)
+            ≤ |W (n - 1) - W m| := by
+        dsimp [W]
+        have hsub : Finset.sum (Finset.range (n - 1)) (fun k => ‖b k - b (k + 1)‖)
+              - Finset.sum (Finset.range m) (fun k => ‖b k - b (k + 1)‖) ≥ 0 :=
+          sub_nonneg.mpr (Finset.sum_le_sum_of_subset_of_nonneg
+            (by intro x hx; exact Finset.mem_range.2 (lt_of_lt_of_le (Finset.mem_range.1 hx) (by omega : m ≤ n - 1)))
+            (by intro k hkt hks; exact norm_nonneg (b k - b (k + 1))))
+        rw [abs_of_nonneg hsub]
+      have hsum : ‖b (n - 1)‖
+        + (Finset.sum (Finset.range (n - 1)) (fun k => ‖b k - b (k + 1)‖)
+          - Finset.sum (Finset.range m) (fun k => ‖b k - b (k + 1)‖)) < ε := by
+        nlinarith [hb02, hW2, hWle]
+      rw [dist_eq_norm, norm_sub_rev]
+      exact lt_of_le_of_lt hb' hsum
+  exact cauchySeq_tendsto_of_complete hcauchy
 
 
 -- ============================================================
