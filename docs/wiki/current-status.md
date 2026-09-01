@@ -164,7 +164,7 @@ stage: current
 **1/2 特殊的五条独立刻画 (全是位置/临界性, 排除 0 条):** ① 反射不动点 σ=1−σ; ② 反演不动圆 ρ²=e; ③ 能量收敛阈值 Σn^{-2σ} 收敛 ⟺ σ>1/2; ④ 均方相变 (σ>1/2: ζ(2σ)T; σ=1/2: T log T; σ<1/2: T^{2−2σ}); ⑤ Γ 比退化 (t/2)^{σ−1/2}=1. (③④同一件事: σ>1/2 的均方系数就是 ζ(2σ)=Σn^{-2σ}, 其在 σ=1/2 的极点正是 log T 来源 — 能量工作是真的, 但 certificate 的是**临界性**不是**排除**.)
 
 **缺的不是「再多证几条同类型」, 是一条严格的不等式.** 攻坚排序:
-- **A. 缺口① (bookkeeping, 可做)**: η 条件收敛 + ζ=η/(1−2^{1−s}) 在 0<σ<1 成立 — 让「对齐」语言在临界带良定 (现只有 Re>1 版). 做完不给 RH 加任何东西, 只是让字典不出错.
+- **A. 缺口① (bookkeeping) — ✅ 已 Lean 化 (Abundance §21, 2026-09-01)**: `etaPartialSum` (η 部分和 = 交错 × cpow, 对齐语言语法对象) + `eta_summable_of_one_lt_re` (**真定理**: Re>1 绝对收敛 — ‖项‖=(n+1)^{−σ} 经 `Complex.norm_cpow_eq_rpow_re_of_pos` + p 级数 `Real.summable_nat_rpow_inv` + `comp_injective` 平移) + `EtaCriticalStripBridge` 结构体: **临界带 0<σ<1 的条件收敛 + 延拓等式 η=(1−2^{1−s})ζ = 显式外部输入** (mathlib 无复数 Dirichlet/Abel 测试, 诚实标注). 对齐语言在临界带的良定 = Re>1 已证 + 两个显式输入; 字典不出错, 不给 RH 加任何东西.
 - **B. 真正的墙**: σ>1/2 上 ζ≠0 — 需 AFE 余项控制/零密度/Lindelöf 级估计 — **这就是 RH 本身**.
 - **C. 坐标能给的最好东西**: 把 B 写成「ρ≠√e 时 (t/2)^{log(ρ/√e)} 的不对称无法被主和抵消」— 缺口最精确定位, 仍要 B 的估计才能活. **✅ 已 Lean 化 (Abundance §20)**: `asym_exp_log_rho` (指数坐标恒等式 σ−1/2=log(ρ/√e), 已证) + `gamma_reflection_mod` (反射公式模, 已证) + `GammaRatioAsymmetry` 结构体 (Stirling 比 = 显式外部输入, 诚实标注 mathlib 无).
 

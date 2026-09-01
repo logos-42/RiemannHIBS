@@ -1849,4 +1849,58 @@ structure GammaRatioAsymmetry where
   assemble : gamma_ratio_asymptotic → exponent_coordinate → asymmetry_off_circle
 
 
+-- ============================================================
+-- §21 (A) η 临界带桥 — 对齐语言在临界带的良定 (2026-09-01)
+--   Re>1 版本 (eta_eq_mul_zeta, Analytic.lean) 已落地; 临界带 0<σ<1 的
+--   「对齐」语义需: ①η 条件收敛 (复数 Dirichlet/Abel 测试 — mathlib 无);
+--   ②延拓等式 η=(1−2^{1−s})ζ (解析延拓/Abel 定理). 二者均非概念不可能,
+--   是 mathlib 基建缺失 — 显式声明为输入, 不装证 (A 是 bookkeeping,
+--   做完不给 RH 加任何东西, 只是让字典不出错).
+-- ============================================================
+
+-- 1. η 部分和: 对齐语言的语法对象 (交错 × cpow)
+noncomputable def etaPartialSum (s : ℂ) (N : ℕ) : ℂ :=
+  ∑ n ∈ Finset.range N, (-1 : ℂ) ^ n * ((n + 1 : ℕ) : ℂ) ^ (-s)
+
+-- 2. Re>1 绝对收敛 (真定理): ‖(−1)^n·(n+1)^{−s}‖ = (n+1)^{−σ}, p 级数 σ>1
+theorem eta_summable_of_one_lt_re {s : ℂ} (hs : 1 < s.re) :
+    Summable (fun n : ℕ => (-1 : ℂ) ^ n * ((n + 1 : ℕ) : ℂ) ^ (-s)) := by
+  refine Summable.of_norm ?_
+  have hnorm : ∀ n : ℕ,
+      ‖(-1 : ℂ) ^ n * ((n + 1 : ℕ) : ℂ) ^ (-s)‖ = ((n + 1 : ℕ) : ℝ) ^ (-s.re) := by
+    intro n
+    rw [norm_mul]
+    have hneg : ‖(-1 : ℂ) ^ n‖ = 1 := by
+      rw [norm_pow]
+      norm_num
+    rw [hneg, one_mul]
+    exact Complex.norm_cpow_eq_rpow_re_of_pos (by positivity : 0 < ((n + 1 : ℕ) : ℝ)) (-s)
+  have hbase : Summable (fun m : ℕ => (((m : ℕ) : ℝ) ^ s.re)⁻¹) :=
+    (Real.summable_nat_rpow_inv).mpr hs
+  have hshift : Summable (fun n : ℕ => ((((n + 1 : ℕ) : ℝ) ^ s.re)⁻¹)) := by
+    exact hbase.comp_injective (fun a b h => by omega)
+  have hsum : Summable (fun n : ℕ => ‖(-1 : ℂ) ^ n * ((n + 1 : ℕ) : ℂ) ^ (-s)‖) := by
+    refine hshift.congr ?_
+    intro n
+    rw [hnorm n]
+    rw [Real.rpow_neg (by positivity : 0 ≤ ((n + 1 : ℕ) : ℝ))]
+  exact hsum
+
+-- 3. A 声明: η 临界带桥 — 对齐语言在临界带良定
+structure EtaCriticalStripBridge where
+  -- 已证: Re>1 绝对收敛 (eta_summable_of_one_lt_re)
+  absolute_convergence_R1 : Prop
+  -- 已证: η 部分和 = 交错 × cpow (对齐语法对象, etaPartialSum)
+  align_syntax : Prop
+  -- 外部输入: 临界带 0<σ<1 η 条件收敛 (复数 Dirichlet/Abel 测试, mathlib 无)
+  conditional_convergence_strip : Prop
+  -- 外部输入: 延拓等式 η=(1−2^{1−s})ζ 在临界带 (Abel 定理/解析延拓)
+  continuation_eq_strip : Prop
+  -- 结论: 对齐语言在临界带良定 (ζ=0 ⟺ 对齐 在 0<σ<1)
+  align_well_defined_strip : Prop
+  -- 组装: Re>1 已证 + 临界带两个输入 ⟹ 良定
+  assemble : absolute_convergence_R1 → align_syntax → conditional_convergence_strip →
+    continuation_eq_strip → align_well_defined_strip
+
+
 end RiemannHIBS.Abundance
