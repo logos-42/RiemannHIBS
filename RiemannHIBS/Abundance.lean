@@ -2740,4 +2740,53 @@ theorem gamma_norm_ge_y_pow {x y : ℝ} (hx : 0 < x) (n : ℕ) :
             ring_nf
 
 
+-- ============================================================
+-- §27 Γ 比的精确恒等式 — 反射 + 加倍, 无 Stirling (2026-09-01)
+--   Γ(s/2)/Γ((1−s)/2) = √π / (2^s · sin(πs/2) · Γ(1−s))
+--   把 R7 的 Γ 比 (Stirling 渐近 ~ (t/2)^{σ−1/2}) 精确化: 这是精确代数恒等式,
+--   不依赖任何渐近. 取模后 |Γ(s/2)|/|Γ((1−s)/2)| = √π/(2^σ·|sin(πs/2)|·|Γ(1−s)|)
+--   — 不对称量 σ−1/2 的精确载体 (经 sin 与 Γ(1−s) 的模).
+-- ============================================================
+
+theorem gamma_ratio_exact {s : ℂ} (hs : Complex.sin ((Real.pi : ℂ) * s / 2) ≠ 0)
+    (hg0 : Complex.Gamma ((1 - s) / 2) ≠ 0) (hg1 : Complex.Gamma (1 - s) ≠ 0)
+    (hg2 : Complex.Gamma (1 - s / 2) ≠ 0) :
+    Complex.Gamma (s / 2) / Complex.Gamma ((1 - s) / 2) =
+      (Real.sqrt (Real.pi) : ℂ) / ((2 : ℂ) ^ s * Complex.sin ((Real.pi : ℂ) * s / 2) * Complex.Gamma (1 - s)) := by
+  have href := Complex.Gamma_mul_Gamma_one_sub (s / 2)
+  have hdup : Complex.Gamma ((1 - s) / 2) * Complex.Gamma (1 - s / 2) =
+      Complex.Gamma (1 - s) * (2 : ℂ) ^ s * (Real.sqrt (Real.pi) : ℂ) := by
+    have h := Complex.Gamma_mul_Gamma_add_half ((1 - s) / 2)
+    rw [show ((1 - s) / 2 + 1 / 2 : ℂ) = 1 - s / 2 by ring] at h
+    rw [show (2 * ((1 - s) / 2) : ℂ) = 1 - s by ring] at h
+    rw [show ((1 : ℂ) - (1 - s)) = s by ring] at h
+    simpa [mul_comm, mul_left_comm, mul_assoc] using h
+  have hmain : Complex.Gamma (s / 2) * (2 : ℂ) ^ s * Complex.sin ((Real.pi : ℂ) * s / 2) * Complex.Gamma (1 - s) =
+      (Real.sqrt (Real.pi) : ℂ) * Complex.Gamma ((1 - s) / 2) := by
+    apply mul_right_cancel₀ hg2
+    calc
+      Complex.Gamma (s / 2) * (2 : ℂ) ^ s * Complex.sin ((Real.pi : ℂ) * s / 2) * Complex.Gamma (1 - s) * Complex.Gamma (1 - s / 2)
+          = (Real.pi : ℂ) / Complex.sin ((Real.pi : ℂ) * s / 2) * (2 : ℂ) ^ s * Complex.sin ((Real.pi : ℂ) * s / 2) * Complex.Gamma (1 - s) := by
+              have href' : Complex.Gamma (s / 2) * Complex.Gamma (1 - s / 2) =
+                  (Real.pi : ℂ) / Complex.sin ((Real.pi : ℂ) * s / 2) := by
+                simpa [show (Real.pi : ℂ) * (s / 2) = (Real.pi : ℂ) * s / 2 by ring] using href
+              rw [← href']
+              ring
+      _ = (Real.pi : ℂ) * (2 : ℂ) ^ s * Complex.Gamma (1 - s) := by
+              field_simp [hs]
+      _ = (Real.sqrt (Real.pi) : ℂ) * Complex.Gamma ((1 - s) / 2) * Complex.Gamma (1 - s / 2) := by
+              rw [show (Real.sqrt (Real.pi) : ℂ) * Complex.Gamma ((1 - s) / 2) * Complex.Gamma (1 - s / 2) =
+                  (Real.sqrt (Real.pi) : ℂ) * (Complex.Gamma ((1 - s) / 2) * Complex.Gamma (1 - s / 2)) by rw [mul_assoc]]
+              rw [hdup]
+              ring_nf
+              rw [show ((Real.sqrt (Real.pi) : ℝ) : ℂ) ^ 2 = (Real.pi : ℂ) by
+                rw [← Complex.ofReal_pow, Real.sq_sqrt (le_of_lt Real.pi_pos)]]
+              ring
+  have h2 : (2 : ℂ) ^ s ≠ 0 := by
+    rw [Complex.cpow_def_of_ne_zero (by norm_num : (2 : ℂ) ≠ 0)]
+    exact Complex.exp_ne_zero _
+  rw [div_eq_div_iff hg0 (mul_ne_zero (mul_ne_zero h2 hs) hg1)]
+  simpa [mul_comm, mul_left_comm, mul_assoc] using hmain
+
+
 end RiemannHIBS.Abundance
