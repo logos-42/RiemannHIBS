@@ -1800,4 +1800,53 @@ structure CriticalCircleInfinity where
     density_projection → bounded_energy_of_finite → infinite_on_circle
 
 
+-- ============================================================
+-- §20 (R7) Γ 不对称量 — 缺口精确定位 (2026-09-01, leo 推导)
+--   推导: 函数方程 Λ(s)=Λ(1−s) 的 Γ 侧不对称, 由 Stirling:
+--     |Γ(s/2)| / |Γ((1−s)/2)| ~ (t/2)^{σ−1/2} = (t/2)^{log(ρ/√e)},  ρ=|w|
+--   这是全装置唯一的 σ-不对称量; 反射把 ρ 配到 e/ρ, 两侧质量恰在 ρ=√e
+--   时相等. 排除性论证 (RH = 环内无离圆零点) 必须经过它 — B 墙的坐标形态.
+--   逻辑类型: 恒等式/丰度/临界性三条已具备, 唯独缺「排除」; 排除的入口
+--   就是这条不对称量 (Stirling 级输入, mathlib 无 — P1–P3 诚实边界).
+--   另: RS 主和截断 N=⌊√(t/2π)⌋ ≪ 频率折返点 n*≈t/π (t=1000: 12.6 vs 318),
+--   折返点落在被丢弃的发散尾部 — fold_point_exists 与零点联系未建立.
+-- ============================================================
+
+-- 1. 坐标恒等式: 不对称指数 σ − 1/2 = log(ρ/√e), 其中 ρ = |w| = e^σ
+theorem asym_exp_log_rho (σ : ℝ) :
+    σ - (1 / 2 : ℝ) = Real.log (Real.exp σ / Real.sqrt (Real.exp 1)) := by
+  rw [Real.log_div (ne_of_gt (Real.exp_pos σ)) (ne_of_gt (by positivity : 0 < Real.sqrt (Real.exp 1)))]
+  rw [Real.log_exp]
+  have hlog : Real.log (Real.sqrt (Real.exp 1)) = 1 / 2 := by
+    rw [Real.log_sqrt (le_of_lt (Real.exp_pos 1))]
+    rw [Real.log_exp]
+  rw [hlog]
+
+-- 2. 反射公式的模形式: |Γ(s/2)|·|Γ(1−s/2)| = π / |sin(πs/2)|
+--    (mathlib Complex.Gamma_mul_Gamma_one_sub 的模版本)
+theorem gamma_reflection_mod (s : ℂ) :
+    ‖Complex.Gamma (s / 2)‖ * ‖Complex.Gamma (1 - s / 2)‖ =
+      ‖(Real.pi : ℂ) / Complex.sin ((Real.pi : ℂ) * (s / 2))‖ := by
+  calc
+    ‖Complex.Gamma (s / 2)‖ * ‖Complex.Gamma (1 - s / 2)‖
+        = ‖Complex.Gamma (s / 2) * Complex.Gamma (1 - s / 2)‖ := by
+            rw [← norm_mul]
+    _ = ‖(Real.pi : ℂ) / Complex.sin ((Real.pi : ℂ) * (s / 2))‖ := by
+            rw [Complex.Gamma_mul_Gamma_one_sub]
+
+-- 3. R7 声明: Γ 比不对称 — 缺口精确定位 (结构体骨架, Stirling 为外部输入)
+structure GammaRatioAsymmetry where
+  -- 已证: 指数坐标恒等式 σ−1/2 = log(ρ/√e) (asym_exp_log_rho)
+  exponent_coordinate : Prop
+  -- 已证: 反射公式模 (gamma_reflection_mod)
+  reflection_mod : Prop
+  -- 外部输入 (Stirling, mathlib 无 — P1–P3 边界):
+  --   |Γ(s/2)| / |Γ((1−s)/2)| ~ (t/2)^{σ−1/2}
+  gamma_ratio_asymptotic : Prop
+  -- 缺口定位: σ≠1/2 ⟹ 比≠1 ⟹ 反射两侧质量不等; 排除离圆零点需此输入 (B 墙)
+  asymmetry_off_circle : Prop
+  -- 组装: 渐近 + 指数坐标 ⟹ 离圆零点处 Γ 侧不对称 (仍赖 Stirling, 不装证)
+  assemble : gamma_ratio_asymptotic → exponent_coordinate → asymmetry_off_circle
+
+
 end RiemannHIBS.Abundance
