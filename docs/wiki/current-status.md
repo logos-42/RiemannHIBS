@@ -286,6 +286,16 @@ chi_mod_decomp:   |χ(s)| = 2·(2π)^{−σ}·|Γ(s)|·|cos(πs/2)|
 
 **台阶1 落码进展 (2026-09-01)**: 数条数逼近排除墙的第一台阶 ζ(1+it)≠0 (= PNT 核心) 已落骨架 (Abundance §32-33, 无 sorry): `mertens_lambda_term_nonneg` (Λ 加权逐项非负, 真定理) + `mertens_lambda_sum_nonneg` (有限和非负) + **`re_cpow_neg`/`re_cpow_neg_mul_I` (实部提取桥: Re((n+1)^{−s}) = (n+1)^{−σ}·cos(−s.im·log(n+1)), 真定理)** + **`mertens_three_four_one_re_nonneg` (3-4-1 实部非负真版本)** + `zeta_ne_zero_on_one_line` (结论 def) + `OneLineZeroFree` 结构体钉形状. mathlib 家底: ζ'/ζ = −Λ 级数 (`LSeries_vonMangoldt_eq_deriv_riemannZeta_div`) + Λ≥0 (`vonMangoldt_nonneg`) + ζ 单极点 (`tendsto_riemannZeta_sub_one_div`) 均已有. 完整证明仍缺: 零点重数 logDeriv 行为 + σ→1⁺ 极限传递 (分析难点). 台阶1 之后到 RH (σ>1/2) 中间仍是零密度/均方+凸性墙, 数条数目前够不到.
 
+## 正定能量路线：显式公式 + 正性 + 总量为零 (2026-09-01, leo 指示主路线)
+
+**决策**: 放弃"有限 Dirichlet 部分和统一逼近 ζ 再排除"(临界带结构性失败: 不绝对收敛 + 近似可能接近零), 改攻"正定能量": 零点 ρ = 1/2+u+iθ, 构造 E_T = Σ_{|θ_ρ|≤T} K_T(θ_ρ)·u_ρ², K_T>0. 若从显式公式(素数侧/ξ 积分侧)推出 E_T=0, 则每项 K·u²=0 ⟹ u=0 ⟹ 零点在临界线. **排除结构 = 显式公式 + 正性 + 总量为零 ⟹ 径向偏移为零**; 三条腿独立可攻, 不再混在"无限逼近"里.
+
+**Lean 落码 (RiemannHIBS/RadialEnergy.lean, 无 sorry, 全量 6450 jobs)**: `criticalBandZero` + `weightedRadialEnergy` (有限零点多重集加权能量) + `on_critical_line_of_weighted_energy_eq_zero` (**真定理**: 正定核 + 能量零 ⟹ 每项 u=0) + `zeros_on_critical_line_of_energy_zero` (组合 ⟹ Re=1/2) + `tentKernel` (三角核正定实例) + `RadialExplicitFormula` 结构体 (K,T 参数化钉形状) + `zeros_on_critical_line_of_explicit_formula` (条件定理: tentKernel + 能量零 ⟹ 零点在临界线).
+
+**诚实边界**: 显式公式 (E_T=0 的来源) 是外部输入未构造 — 本轮完成的是排除的逻辑骨架 + 正定核实例 + 条件定理, 把缺口压成单个显式公式. 下一轮: 从 ξ 的积分表示/素数侧攻显式公式, 或按迭代顺序推进 (核 → 结构 → 条件定理已完, 剩显式公式本身).
+
+**修正 (leo 批评, 2026-09-01)**: ①`energy_zero` 字段删除 — 把 "E_T=0" 放进假设 = 把 RH 放进假设 (显式公式解析侧是非零量, 由素数/Γ/ξ 积分决定), 循环假设不增加排除能力; ②`RadialExplicitFormula` 改非空接口 (Z,K,T 参数化): `zero_side : weightedRadialEnergy Z K = analyticValue` + `analytic_side : analyticValue = primeSide` — 字段是真等式, 真正依赖 Z,K; ③主排除结构改为**正性矛盾** (Weil/Li 判据): 离圆零点 ⟹ ∃f, zeroSide f < 0, 而显式公式给 zeroSide f = analyticSide f ≥ 0, 矛盾 ⟹ 无离圆零点. `WeilPositivityCertificate` 结构体 + `no_off_circle_zero_of_weil_certificate` (真定理) 已落码 (WeilPositivity.lean, 编译通过). 三个字段 (explicit_identity / analytic_nonneg / off_circle_witness) 均为外部输入 — 是真正的 RH 难点, 不假装闭合.
+
 ## 谱方法：Hilbert–Pólya 约化 (2026-09-01, 新方向)
 
 **评估**: 超双指数/高阶 Householder 迭代是 ∃ 型(逼近已知零点), RH 是 ∀ 型(所有零点在临界线) — 量词不同, 提高收敛阶不解决 RH (leo 粘贴讨论结论). **真正方向 = Hilbert–Pólya 谱方法**: 若存在自伴算子 H 使 Spec(H) = 零点虚部集, 则自伴⟹谱实⟹零点形如 1/2+iγ⟹RH. 与隐数/谱框架天然连接.
