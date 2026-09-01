@@ -1943,4 +1943,33 @@ structure ZeroFreeHalfPlane where
     zero_density_input → rh_half_plane
 
 
+-- ============================================================
+-- §23 模平衡 — 函数方程的内禀恒等式 (排除论证的载体, 2026-09-01)
+--   χ(s) = 2·(2π)^{−s}·Γ(s)·cos(πs/2): 唯一携带 σ-幂的传输因子.
+--   模平衡 |ζ(1−s)| = |χ(s)|·|ζ(s)| 是「离圆零点排除」的候选载体:
+--   |χ(σ+it)| ~ C_σ·t^{σ−1/2} (Stirling), 故 σ>1/2 侧模 = 增长因子 × σ<1/2 侧模.
+--   此处只钉下恒等式本身 (纯函数方程取模, 可证); 渐近仍是 Stirling 输入.
+--   下一步 (内禀排除的 t-方向): 复数 Γ 递推下界 |Γ(x+n+iy)| ≥ |y|^n·|Γ(x+iy)|
+--   (gamma_ge_pow_mul_self 的复推广 — x-方向 → t-方向), 才能不经 Stirling 进入模平衡.
+-- ============================================================
+
+-- 1. 模平衡: |ζ(1−s)| = |χ(s)|·|ζ(s)| (函数方程取模)
+theorem zeta_mod_balance {s : ℂ} (hs : ∀ n : ℕ, s ≠ -↑n) (hs' : s ≠ 1) :
+    ‖riemannZeta (1 - s)‖ =
+      ‖(2 : ℂ) * (2 * (Real.pi : ℂ)) ^ (-s) * Complex.Gamma s * Complex.cos ((Real.pi : ℂ) * s / 2)‖ *
+        ‖riemannZeta s‖ := by
+  rw [riemannZeta_one_sub hs hs']
+  rw [norm_mul]
+
+-- 2. χ 模分解: |χ(s)| = 2·(2π)^{−σ}·|Γ(s)|·|cos(πs/2)|
+theorem chi_mod_decomp (s : ℂ) :
+    ‖(2 : ℂ) * (2 * (Real.pi : ℂ)) ^ (-s) * Complex.Gamma s * Complex.cos ((Real.pi : ℂ) * s / 2)‖ =
+      (2 : ℝ) * (2 * (Real.pi : ℝ)) ^ (-s.re) * ‖Complex.Gamma s‖ * ‖Complex.cos ((Real.pi : ℂ) * s / 2)‖ := by
+  rw [norm_mul, norm_mul, norm_mul]
+  rw [show ‖(2 : ℂ)‖ = 2 by norm_num]
+  rw [show (2 * (Real.pi : ℂ) : ℂ) = ((2 * Real.pi : ℝ) : ℂ) by norm_num]
+  rw [Complex.norm_cpow_eq_rpow_re_of_pos (by positivity : 0 < 2 * (Real.pi : ℝ)) (-s)]
+  rw [Complex.neg_re]
+
+
 end RiemannHIBS.Abundance
