@@ -1972,4 +1972,509 @@ theorem chi_mod_decomp (s : ℂ) :
   rw [Complex.neg_re]
 
 
+-- ============================================================
+-- §24 (A-gate) 复值 Abel 分部求和 — 排除性论证的入口闸门 (2026-09-01)
+--   地位: [A] 是两条链的共同钥匙 —
+--     (i) Hadamard 链的 [A] (条带内 ζ 上界);
+--     (ii) §21 η 临界带桥的 conditional_convergence_strip.
+--   没有它, 任何排除性估计 (零密度 / 无零点区域 / Lindelöf) 都进不了场.
+--   ───────────────────────────────────────────────────────────
+--   诚实边界 (务必读): 本节证明的是**工具**, 不是 RH.
+--     闸门通了 ≠ 走到底. [A] 之后仍需 [B] Γ 上界 (初等推导已给出, 未落码)、
+--     [C][E] 组合与 Borel–Carathéodory 应用、零密度输入. 且 Hadamard 链走完
+--     只复现 Hadamard 1893 (非平凡零点无限多), 不证 RH.
+--   ───────────────────────────────────────────────────────────
+--   24.1 abelPartialSum / abelPartialSum_succ (部分和与其递推)
+--   24.2 abel_sum_by_parts (Abel 分部求和恒等式 — 纯代数)
+--   24.3 alternating_abel_norm_le_one (交错部分和模 ≤ 1)
+--   24.4 alternating_sum_bound (Dirichlet 型主估计 — 本节核心)
+--   24.5 AbelGate (闸门声明: 已证工具 + 两个具体估计为显式输入)
+-- ============================================================
+
+-- 24.1 Abel 部分和: A_n = Σ_{k≤n} a_k
+noncomputable def abelPartialSum (a : ℕ → ℂ) (n : ℕ) : ℂ :=
+  ∑ k ∈ Finset.range (n + 1), a k
+
+-- 递推: A_{n+1} = A_n + a_{n+1}
+lemma abelPartialSum_succ (a : ℕ → ℂ) (n : ℕ) :
+    abelPartialSum a (n + 1) = abelPartialSum a n + a (n + 1) := by
+  unfold abelPartialSum
+  rw [Finset.sum_range_succ]
+
+-- 24.2 Abel 分部求和恒等式 (核心, 纯代数):
+--   Σ_{n≤M} a_n b_n = A_M·b_M + Σ_{n<M} A_n·(b_n − b_{n+1})
+--   证明: a_n = A_n − A_{n−1} 代入后望远镜; 此处对 M 归纳 + ring.
+theorem abel_sum_by_parts (a b : ℕ → ℂ) (M : ℕ) :
+    (∑ n ∈ Finset.range (M + 1), a n * b n)
+      = abelPartialSum a M * b M
+        + ∑ n ∈ Finset.range M, abelPartialSum a n * (b n - b (n + 1)) := by
+  induction M with
+  | zero =>
+      simp [abelPartialSum]
+  | succ M ih =>
+      calc
+        (∑ n ∈ Finset.range (Nat.succ M + 1), a n * b n)
+            = (∑ n ∈ Finset.range (M + 1), a n * b n) + a (M + 1) * b (M + 1) := by
+                rw [Finset.sum_range_succ]
+        _ = (abelPartialSum a M * b M
+              + ∑ n ∈ Finset.range M, abelPartialSum a n * (b n - b (n + 1)))
+              + a (M + 1) * b (M + 1) := by rw [ih]
+        _ = abelPartialSum a (M + 1) * b (M + 1)
+              + ∑ n ∈ Finset.range (M + 1), abelPartialSum a n * (b n - b (n + 1)) := by
+                rw [abelPartialSum_succ]
+                conv_rhs => rw [Finset.sum_range_succ]
+                ring
+
+-- 24.3 交错部分和的模 ≤ 1: a_k = (−1)^k 时 A_n = (1 − (−1)^{n+1})/2 ∈ {0,1}
+lemma alternating_abel_twice (n : ℕ) :
+    abelPartialSum (fun k : ℕ => (-1 : ℂ) ^ k) n * 2 = 1 - (-1 : ℂ) ^ (n + 1) := by
+  induction n with
+  | zero =>
+      norm_num [abelPartialSum]
+  | succ n ih =>
+      calc
+        abelPartialSum (fun k : ℕ => (-1 : ℂ) ^ k) (n + 1) * 2
+            = (abelPartialSum (fun k : ℕ => (-1 : ℂ) ^ k) n + (-1 : ℂ) ^ (n + 1)) * 2 := by
+                rw [abelPartialSum_succ]
+        _ = abelPartialSum (fun k : ℕ => (-1 : ℂ) ^ k) n * 2
+              + (-1 : ℂ) ^ (n + 1) * 2 := by ring
+        _ = (1 - (-1 : ℂ) ^ (n + 1)) + (-1 : ℂ) ^ (n + 1) * 2 := by rw [ih]
+        _ = 1 + (-1 : ℂ) ^ (n + 1) := by ring
+        _ = 1 - (-1 : ℂ) ^ (n + 2) := by
+              rw [show n + 2 = (n + 1) + 1 by omega, pow_succ]
+              ring
+
+theorem alternating_abel_norm_le_one (n : ℕ) :
+    ‖abelPartialSum (fun k : ℕ => (-1 : ℂ) ^ k) n‖ ≤ 1 := by
+  have h2 := alternating_abel_twice n
+  have htwice : ‖abelPartialSum (fun k : ℕ => (-1 : ℂ) ^ k) n * (2 : ℂ)‖
+      = ‖abelPartialSum (fun k : ℕ => (-1 : ℂ) ^ k) n‖ * 2 := by
+    rw [norm_mul]
+    norm_num
+  have hpow : ‖(-1 : ℂ) ^ (n + 1)‖ = 1 := by
+    rw [norm_pow]
+    norm_num
+  have hle : ‖(1 : ℂ) - (-1 : ℂ) ^ (n + 1)‖ ≤ 2 := by
+    calc
+      ‖(1 : ℂ) - (-1 : ℂ) ^ (n + 1)‖
+          ≤ ‖(1 : ℂ)‖ + ‖(-1 : ℂ) ^ (n + 1)‖ := norm_sub_le _ _
+      _ = 2 := by rw [norm_one, hpow]; norm_num
+  have hmain : ‖abelPartialSum (fun k : ℕ => (-1 : ℂ) ^ k) n‖ * 2 ≤ 1 * 2 := by
+    calc
+      ‖abelPartialSum (fun k : ℕ => (-1 : ℂ) ^ k) n‖ * 2
+          = ‖abelPartialSum (fun k : ℕ => (-1 : ℂ) ^ k) n * (2 : ℂ)‖ := by rw [htwice]
+      _ = ‖1 - (-1 : ℂ) ^ (n + 1)‖ := by rw [h2]
+      _ ≤ 2 := hle
+      _ = 1 * 2 := by norm_num
+  nlinarith [hmain]
+
+-- 24.4 交错和的主估计 (Dirichlet 判别法的定量形态 — 本节核心):
+--   ‖Σ_{n≤M} (−1)^n b_n‖ ≤ ‖b_M‖ + Σ_{n<M} ‖b_n − b_{n+1}‖
+--   这是把「交错级数收敛」变成一条**可用定量不等式**的那一步:
+--   右端只含 b 的末项与总变差, 与项数 M 无关 ⟹ 直接给 Cauchy 型尾估计.
+theorem alternating_sum_bound (b : ℕ → ℂ) (M : ℕ) :
+    ‖∑ n ∈ Finset.range (M + 1), (-1 : ℂ) ^ n * b n‖
+      ≤ ‖b M‖ + ∑ n ∈ Finset.range M, ‖b n - b (n + 1)‖ := by
+  let a : ℕ → ℂ := fun k => (-1 : ℂ) ^ k
+  change ‖∑ n ∈ Finset.range (M + 1), a n * b n‖
+      ≤ ‖b M‖ + ∑ n ∈ Finset.range M, ‖b n - b (n + 1)‖
+  rw [abel_sum_by_parts a b M]
+  calc
+    ‖abelPartialSum a M * b M
+        + ∑ n ∈ Finset.range M, abelPartialSum a n * (b n - b (n + 1))‖
+        ≤ ‖abelPartialSum a M * b M‖
+          + ‖∑ n ∈ Finset.range M, abelPartialSum a n * (b n - b (n + 1))‖ :=
+            norm_add_le _ _
+    _ ≤ ‖abelPartialSum a M * b M‖
+          + ∑ n ∈ Finset.range M, ‖abelPartialSum a n * (b n - b (n + 1))‖ := by
+            have hsum : ‖∑ n ∈ Finset.range M, abelPartialSum a n * (b n - b (n + 1))‖
+                ≤ ∑ n ∈ Finset.range M, ‖abelPartialSum a n * (b n - b (n + 1))‖ := by
+              exact norm_sum_le _ _
+            exact add_le_add (le_refl _) hsum
+    _ = ‖abelPartialSum a M‖ * ‖b M‖
+          + ∑ n ∈ Finset.range M, ‖abelPartialSum a n‖ * ‖b n - b (n + 1)‖ := by
+            simp [norm_mul]
+    _ ≤ 1 * ‖b M‖ + ∑ n ∈ Finset.range M, 1 * ‖b n - b (n + 1)‖ := by
+            apply add_le_add
+            · exact mul_le_mul_of_nonneg_right (alternating_abel_norm_le_one M) (norm_nonneg _)
+            · apply Finset.sum_le_sum
+              intro n hn
+              exact mul_le_mul_of_nonneg_right (alternating_abel_norm_le_one n) (norm_nonneg _)
+    _ = ‖b M‖ + ∑ n ∈ Finset.range M, ‖b n - b (n + 1)‖ := by simp
+
+-- 24.5 A 闸门声明: 已证工具 + 两个具体估计为显式输入
+--   注意: bounded_variation 与 tends_to_zero 是对**具体序列** b_n=(n+1)^{−s}
+--   的估计, 不是 Abel 机制的一部分 — 它们是下一步要补的对象 (复 MVT /
+--   指数估计 |1−e^z| ≤ |z|e^{|z|}), 此处显式声明, 不装证.
+structure AbelGate where
+  -- 已证: Abel 分部求和恒等式 (abel_sum_by_parts)
+  abel_identity : Prop
+  -- 已证: 交错部分和模 ≤ 1 (alternating_abel_norm_le_one)
+  alternating_bounded : Prop
+  -- 已证: 交错和主估计 (alternating_sum_bound) — 本节核心工具
+  alternating_estimate : Prop
+  -- 外部输入: 总变差可和 Σ_n ‖b_n − b_{n+1}‖ < ∞
+  --   (b_n=(n+1)^{−s} 时 ≲ ‖s‖·Σ(n+1)^{−σ−1} < ∞, σ>0)
+  bounded_variation : Prop
+  -- 外部输入: b_n → 0 (b_n=(n+1)^{−s} 时即 (n+1)^{−σ}→0, σ>0 — 初等)
+  tends_to_zero : Prop
+  -- 结论 1: η(s) 条件收敛 ⟹ §21 的对齐语言在临界带良定
+  eta_conditional : Prop
+  -- 结论 2: ζ 条带增长上界 [A] — Hadamard 链的一条腿
+  strip_growth : Prop
+  -- 组装 (η 侧): 机制 + 两个估计 ⟹ η 条件收敛
+  assemble_eta : abel_identity → alternating_bounded → alternating_estimate →
+    bounded_variation → tends_to_zero → eta_conditional
+  -- 组装 (增长侧): 恒等式 + 主估计 + 变差 ⟹ 条带增长上界
+  assemble_strip : abel_identity → alternating_estimate → bounded_variation →
+    strip_growth
+
+
+-- ============================================================
+-- §25 (bounded_variation 落码) — 把 η 条件收敛从「外部输入」变成「定理」 (2026-09-01)
+--   目标: AbelGate.bounded_variation / tends_to_zero 对具体序列
+--   b_n = (n+1)^{−s} 给出**真证明**, 使 η(s) 在 0<σ<1 的条件收敛成为定理.
+--   ───────────────────────────────────────────────────────────
+--   数学路径 (无 Stirling, 纯初等):
+--     ① 全局指数估计 ‖exp w − 1‖ ≤ 2·‖w‖·exp‖w‖ (25.1)
+--     ② cpow → exp: (n+1)^{−s} = exp(−s·log(n+1)) (底正实, 无分支) (25.2)
+--     ③ 精确步: 差分 = exp(z')·(exp(z−z')−1), 取模 ⟹
+--        ‖b_n−b_{n+1}‖ ≤ (n+2)^{−σ}·2·‖s‖·log((n+2)/(n+1))·exp(‖s‖·log((n+2)/(n+1)))
+--     ④ 简化: log((n+2)/(n+1)) ≤ 1/(n+1), ≤ log 2; exp(·) ≤ exp(‖s‖·log 2)
+--        ⟹ ‖b_n−b_{n+1}‖ ≤ 2‖s‖·exp(‖s‖·log 2)·(n+1)^{−σ−1}
+--     ⑤ Σ(n+1)^{−σ−1} < ∞ (σ>0, p 级数) ⟹ Summable (25.5)
+--     ⑥ b_n → 0 (25.6); 区间 Abel + 25.1 机制 ⟹ η 条件收敛 (25.7)
+--   ───────────────────────────────────────────────────────────
+--   诚实边界: 本节做的是**工具 + 收敛性**, 不是 RH.
+--     η 条件收敛 ⟹ §21 的对齐语言在临界带良定 (bookkeeping).
+--     它不给任何排除性信息 (排除仍需 [B] Γ 上界 / [C][E] / 零密度).
+-- ============================================================
+
+-- 25.1 全局指数估计: ‖exp w − 1‖ ≤ 2·‖w‖·exp‖w‖ (任意 w)
+--   ‖w‖≤1: mathlib norm_exp_sub_one_le (≤2‖w‖), 2‖w‖ ≤ 2‖w‖·exp‖w‖
+--   ‖w‖≥1: 三角不等式 + ‖exp w‖ ≤ exp‖w‖ + 1 ≤ exp‖w‖ ⟹ 2exp‖w‖ ≤ 2‖w‖exp‖w‖
+theorem complex_exp_sub_one_norm_le_two (w : ℂ) :
+    ‖Complex.exp w - 1‖ ≤ 2 * ‖w‖ * Real.exp ‖w‖ := by
+  by_cases hw : ‖w‖ ≤ 1
+  · have h1 : ‖Complex.exp w - 1‖ ≤ 2 * ‖w‖ := Complex.norm_exp_sub_one_le hw
+    have hone : 1 ≤ Real.exp ‖w‖ := Real.one_le_exp (norm_nonneg w)
+    have h2 : 2 * ‖w‖ ≤ 2 * ‖w‖ * Real.exp ‖w‖ := by
+      nlinarith [hone, norm_nonneg w]
+    exact h1.trans h2
+  · have hge : 1 ≤ ‖w‖ := le_of_not_ge hw
+    have hnorm : ‖Complex.exp w‖ ≤ Real.exp ‖w‖ := Complex.norm_exp_le_exp_norm w
+    have hone : 1 ≤ Real.exp ‖w‖ := Real.one_le_exp (norm_nonneg w)
+    calc
+      ‖Complex.exp w - 1‖ ≤ ‖Complex.exp w‖ + ‖(1 : ℂ)‖ := norm_sub_le _ _
+      _ ≤ Real.exp ‖w‖ + 1 := by
+            exact add_le_add hnorm (by norm_num : ‖(1 : ℂ)‖ ≤ (1 : ℝ))
+      _ ≤ Real.exp ‖w‖ + Real.exp ‖w‖ := by linarith [hone]
+      _ = 2 * Real.exp ‖w‖ := by ring
+      _ ≤ 2 * ‖w‖ * Real.exp ‖w‖ := by
+            nlinarith [hge, Real.exp_pos ‖w‖]
+
+-- 25.2 cpow → exp: (n+1)^{−s} = exp(−s·log(n+1)) (底为正实数, 无分支问题)
+lemma eta_cpow_eq_exp (s : ℂ) (n : ℕ) :
+    ((n + 1 : ℕ) : ℂ) ^ (-s) = Complex.exp (-s * (Real.log (((n + 1 : ℕ) : ℝ)) : ℂ)) := by
+  have hnz : ((n + 1 : ℕ) : ℂ) ≠ 0 := by
+    exact_mod_cast (by omega : (n + 1 : ℕ) ≠ 0)
+  rw [Complex.cpow_def_of_ne_zero hnz]
+  have hlog : Complex.log ((n + 1 : ℕ) : ℂ) = (Real.log (((n + 1 : ℕ) : ℝ)) : ℂ) := by
+    have hcast : ((n + 1 : ℕ) : ℂ) = ((((n + 1 : ℕ) : ℝ)) : ℂ) := by norm_num
+    rw [hcast]
+    exact (Complex.ofReal_log (by positivity : 0 ≤ (((n + 1 : ℕ) : ℝ)))).symm
+  rw [hlog]
+  ring
+
+-- 25.3 精确步: 差分的 exp 表示界
+--   ‖(n+1)^{−s} − (n+2)^{−s}‖
+--     ≤ (n+2)^{−σ} · 2 · ‖s‖ · log((n+2)/(n+1)) · exp(‖s‖·log((n+2)/(n+1)))
+--   推导: (n+k)^{−s} = exp(−s·log(n+k)); 差 = exp(z')·(exp(z−z')−1),
+--   ‖exp z'‖ = exp(Re z') = (n+2)^{−σ}, 再用 25.1.
+theorem eta_variation_step (s : ℂ) (n : ℕ) :
+    ‖((n + 1 : ℕ) : ℂ) ^ (-s) - ((n + 2 : ℕ) : ℂ) ^ (-s)‖
+      ≤ (((n + 2 : ℕ) : ℝ)) ^ (-s.re)
+          * 2 * ‖s‖ * Real.log ((((n + 2 : ℕ) : ℝ)) / (((n + 1 : ℕ) : ℝ)))
+          * Real.exp (‖s‖ * Real.log ((((n + 2 : ℕ) : ℝ)) / (((n + 1 : ℕ) : ℝ)))) := by
+  let z : ℂ := -s * (Real.log (((n + 1 : ℕ) : ℝ)) : ℂ)
+  let z' : ℂ := -s * (Real.log (((n + 1 + 1 : ℕ) : ℝ)) : ℂ)
+  have hz : ((n + 1 : ℕ) : ℂ) ^ (-s) = Complex.exp z := by
+    rw [eta_cpow_eq_exp s n]
+  have hz' : ((n + 2 : ℕ) : ℂ) ^ (-s) = Complex.exp z' := by
+    rw [eta_cpow_eq_exp s (n + 1)]
+  rw [hz, hz']
+  have harg : ((n + 1 + 1 : ℕ) : ℝ) = ((n + 2 : ℕ) : ℝ) := by
+    push_cast
+    ring
+  have hz're : z'.re = -s.re * Real.log (((n + 2 : ℕ) : ℝ)) := by
+    change (-s * (Real.log (((n + 1 + 1 : ℕ) : ℝ)) : ℂ)).re
+        = -s.re * Real.log (((n + 2 : ℕ) : ℝ))
+    rw [Complex.mul_re]
+    simp only [Complex.ofReal_re, Complex.neg_re, Complex.neg_im, Complex.ofReal_im,
+      mul_zero, sub_zero]
+  have hnorm' : ‖Complex.exp z'‖ = (((n + 2 : ℕ) : ℝ)) ^ (-s.re) := by
+    rw [Complex.norm_exp, hz're]
+    rw [mul_comm]
+    exact (Real.rpow_def_of_pos (by positivity : 0 < (((n + 2 : ℕ) : ℝ))) (-s.re)).symm
+  have hzsub : Complex.exp z - Complex.exp z'
+      = Complex.exp z' * (Complex.exp (z - z') - 1) := by
+    calc
+      Complex.exp z - Complex.exp z'
+          = Complex.exp z' * Complex.exp (z - z') - Complex.exp z' := by
+              congr 1
+              rw [← Complex.exp_add]
+              congr 1
+              ring
+      _ = Complex.exp z' * (Complex.exp (z - z') - 1) := by ring
+  have hlogdiv : Real.log (((n + 2 : ℕ) : ℝ)) - Real.log (((n + 1 : ℕ) : ℝ))
+      = Real.log ((((n + 2 : ℕ) : ℝ)) / (((n + 1 : ℕ) : ℝ))) := by
+    exact (Real.log_div (by positivity : (((n + 2 : ℕ) : ℝ)) ≠ 0)
+      (by positivity : (((n + 1 : ℕ) : ℝ)) ≠ 0)).symm
+  have hlogpos : 0 ≤ Real.log (((n + 2 : ℕ) : ℝ)) - Real.log (((n + 1 : ℕ) : ℝ)) := by
+    rw [hlogdiv]
+    exact Real.log_nonneg (by
+      have hpos : 0 < (((n + 1 : ℕ) : ℝ)) := by positivity
+      rw [le_div_iff₀ hpos]
+      norm_num)
+  have hz'lin : z - z' = s * ((Real.log (((n + 2 : ℕ) : ℝ)) - Real.log (((n + 1 : ℕ) : ℝ))) : ℂ) := by
+    calc
+      z - z' = -s * ↑(Real.log ↑(n + 1)) - (-s * ↑(Real.log ↑(n + 1 + 1))) := by
+                rfl
+      _ = s * (↑(Real.log ↑(n + 1 + 1)) - ↑(Real.log ↑(n + 1))) := by ring
+      _ = s * (↑(Real.log ↑(n + 2)) - ↑(Real.log ↑(n + 1))) := by rw [harg]
+      _ = s * ((Real.log (((n + 2 : ℕ) : ℝ)) - Real.log (((n + 1 : ℕ) : ℝ))) : ℂ) := by
+                rw [← Complex.ofReal_sub]
+  have hnormzdiff : ‖z - z'‖ = ‖s‖ * (Real.log (((n + 2 : ℕ) : ℝ)) - Real.log (((n + 1 : ℕ) : ℝ))) := by
+    rw [hz'lin]
+    rw [norm_mul]
+    have habs : ‖((Real.log (((n + 2 : ℕ) : ℝ)) - Real.log (((n + 1 : ℕ) : ℝ))) : ℂ)‖
+        = Real.log (((n + 2 : ℕ) : ℝ)) - Real.log (((n + 1 : ℕ) : ℝ)) := by
+      rw [← Complex.ofReal_sub]
+      rw [Complex.norm_real]
+      exact abs_of_nonneg hlogpos
+    rw [habs]
+  have hnormexp : Real.exp ‖z - z'‖
+      = Real.exp (‖s‖ * Real.log ((((n + 2 : ℕ) : ℝ)) / (((n + 1 : ℕ) : ℝ)))) := by
+    rw [hnormzdiff, hlogdiv]
+  calc
+    ‖Complex.exp z - Complex.exp z'‖
+        = ‖Complex.exp z' * (Complex.exp (z - z') - 1)‖ := by rw [hzsub]
+    _ = ‖Complex.exp z'‖ * ‖Complex.exp (z - z') - 1‖ := by rw [norm_mul]
+    _ = (((n + 2 : ℕ) : ℝ)) ^ (-s.re) * ‖Complex.exp (z - z') - 1‖ := by rw [hnorm']
+    _ ≤ (((n + 2 : ℕ) : ℝ)) ^ (-s.re) * (2 * ‖z - z'‖ * Real.exp ‖z - z'‖) := by
+            exact mul_le_mul_of_nonneg_left (complex_exp_sub_one_norm_le_two (z - z'))
+              (Real.rpow_nonneg (by positivity : 0 ≤ (((n + 2 : ℕ) : ℝ))) (-s.re))
+    _ = (((n + 2 : ℕ) : ℝ)) ^ (-s.re)
+            * (2 * (‖s‖ * (Real.log (((n + 2 : ℕ) : ℝ)) - Real.log (((n + 1 : ℕ) : ℝ))))
+            * Real.exp (‖s‖ * Real.log ((((n + 2 : ℕ) : ℝ)) / (((n + 1 : ℕ) : ℝ))))) := by
+            rw [hnormexp, hnormzdiff]
+    _ = (((n + 2 : ℕ) : ℝ)) ^ (-s.re)
+            * (2 * (‖s‖ * Real.log ((((n + 2 : ℕ) : ℝ)) / (((n + 1 : ℕ) : ℝ))))
+            * Real.exp (‖s‖ * Real.log ((((n + 2 : ℕ) : ℝ)) / (((n + 1 : ℕ) : ℝ))))) := by
+            rw [hlogdiv]
+    _ = (((n + 2 : ℕ) : ℝ) ^ (-s.re)) * 2 * ‖s‖
+            * Real.log ((((n + 2 : ℕ) : ℝ)) / (((n + 1 : ℕ) : ℝ)))
+            * Real.exp (‖s‖ * Real.log ((((n + 2 : ℕ) : ℝ)) / (((n + 1 : ℕ) : ℝ)))) := by ring
+
+-- 25.4 简化引理 (原子 cast, 与 25.3 一致):
+--   ① log((n+2)/(n+1)) ≤ 1/(n+1)   (log(1+x) ≤ x)
+--   ② (n+2)/(n+1) ≤ 2              ⟹ log ≤ log 2
+--   ③ (n+2)^{−σ} ≤ (n+1)^{−σ}      (正指数单调 + 取倒数)
+lemma eta_ratio_log_le_inv (n : ℕ) :
+    Real.log ((((n + 2 : ℕ) : ℝ)) / (((n + 1 : ℕ) : ℝ)))
+      ≤ 1 / (((n + 1 : ℕ) : ℝ)) := by
+  let r : ℝ := (((n + 2 : ℕ) : ℝ)) / (((n + 1 : ℕ) : ℝ))
+  have hpos : 0 < r := by
+    dsimp [r]
+    exact div_pos (by positivity : 0 < (((n + 2 : ℕ) : ℝ))) (by positivity : 0 < (((n + 1 : ℕ) : ℝ)))
+  have hsub : r - 1 = 1 / (((n + 1 : ℕ) : ℝ)) := by
+    dsimp [r]
+    have hpos1 : (((n + 1 : ℕ) : ℝ)) ≠ 0 := by positivity
+    field_simp [hpos1]
+    push_cast
+    ring
+  exact (Real.log_le_sub_one_of_pos hpos).trans_eq hsub
+
+lemma eta_ratio_le_two (n : ℕ) :
+    ((((n + 2 : ℕ) : ℝ)) / (((n + 1 : ℕ) : ℝ))) ≤ 2 := by
+  have hpos : 0 < (((n + 1 : ℕ) : ℝ)) := by positivity
+  rw [div_le_iff₀ hpos]
+  push_cast
+  nlinarith
+
+lemma eta_ratio_log_le_log_two (n : ℕ) :
+    Real.log ((((n + 2 : ℕ) : ℝ)) / (((n + 1 : ℕ) : ℝ))) ≤ Real.log 2 := by
+  have hpos : 0 < ((((n + 2 : ℕ) : ℝ)) / (((n + 1 : ℕ) : ℝ))) := by
+    exact div_pos (by positivity : 0 < (((n + 2 : ℕ) : ℝ))) (by positivity : 0 < (((n + 1 : ℕ) : ℝ)))
+  exact (Real.log_le_log_iff hpos (by norm_num : 0 < (2 : ℝ))).mpr (eta_ratio_le_two n)
+
+lemma eta_ratio_log_nonneg (n : ℕ) :
+    0 ≤ Real.log ((((n + 2 : ℕ) : ℝ)) / (((n + 1 : ℕ) : ℝ))) := by
+  have hpos : 0 < (((n + 1 : ℕ) : ℝ)) := by positivity
+  have hge : 1 ≤ ((((n + 2 : ℕ) : ℝ)) / (((n + 1 : ℕ) : ℝ))) := by
+    rw [le_div_iff₀ hpos]
+    push_cast
+    nlinarith
+  exact Real.log_nonneg hge
+
+lemma eta_pow_dec (s : ℂ) (hs : 0 < s.re) (n : ℕ) :
+    (((n + 2 : ℕ) : ℝ)) ^ (-s.re) ≤ (((n + 1 : ℕ) : ℝ)) ^ (-s.re) := by
+  have hle : (((n + 1 : ℕ) : ℝ)) ≤ (((n + 2 : ℕ) : ℝ)) := by
+    exact_mod_cast (by omega : (n + 1 : ℕ) ≤ (n + 2 : ℕ))
+  have hσ : 0 ≤ s.re := le_of_lt hs
+  have hpos1 : 0 < (((n + 1 : ℕ) : ℝ)) := by positivity
+  have hbase : (((n + 1 : ℕ) : ℝ)) ^ s.re ≤ (((n + 2 : ℕ) : ℝ)) ^ s.re :=
+    Real.rpow_le_rpow hpos1.le hle hσ
+  rw [Real.rpow_neg (by positivity : 0 ≤ (((n + 2 : ℕ) : ℝ)))]
+  rw [Real.rpow_neg (by positivity : 0 ≤ (((n + 1 : ℕ) : ℝ)))]
+  have hpos2 : 0 < (((n + 2 : ℕ) : ℝ)) := by positivity
+  exact (inv_le_inv₀ (Real.rpow_pos_of_pos hpos2 s.re) (Real.rpow_pos_of_pos hpos1 s.re)).mpr hbase
+
+-- 25.5 总变差可和: Σ_n ‖(n+1)^{−s} − (n+2)^{−s}‖ < ∞  (0 < Re s)
+--   路径: eta_variation_step (精确步) → 25.4 简化 → 对比 Σ(n+1)^{−σ−1} (p 级数)
+theorem eta_bounded_variation (s : ℂ) (hs : 0 < s.re) :
+    Summable (fun n : ℕ => ‖((n + 1 : ℕ) : ℂ) ^ (-s) - ((n + 2 : ℕ) : ℂ) ^ (-s)‖) := by
+  let C : ℝ := 2 * ‖s‖ * Real.exp (‖s‖ * Real.log 2)
+  have hC : 0 ≤ C := by
+    dsimp [C]
+    positivity
+  have hmain : ∀ n : ℕ,
+      ‖((n + 1 : ℕ) : ℂ) ^ (-s) - ((n + 2 : ℕ) : ℂ) ^ (-s)‖
+        ≤ C * (((n + 1 : ℕ) : ℝ)) ^ (-s.re - 1) := by
+    intro n
+    let r : ℝ := (((n + 2 : ℕ) : ℝ)) / (((n + 1 : ℕ) : ℝ))
+    have hlogle := eta_ratio_log_le_inv n
+    have hexp : Real.exp (‖s‖ * Real.log r) ≤ Real.exp (‖s‖ * Real.log 2) := by
+      dsimp [r]
+      exact (Real.exp_le_exp).mpr (mul_le_mul_of_nonneg_left (eta_ratio_log_le_log_two n) (norm_nonneg s))
+    have hpow := eta_pow_dec s hs n
+    have hlognonneg : 0 ≤ Real.log r := by
+      dsimp [r]
+      exact eta_ratio_log_nonneg n
+    have hb0 : 0 ≤ 2 * ‖s‖ := by positivity
+    have hb1 : 0 ≤ Real.exp (‖s‖ * Real.log r) := (Real.exp_pos _).le
+    have hb2 : 0 ≤ (((n + 1 : ℕ) : ℝ)) ^ (-s.re) :=
+      Real.rpow_nonneg (by positivity : 0 ≤ (((n + 1 : ℕ) : ℝ))) (-s.re)
+    have hstep := eta_variation_step s n
+    have hmain' : ‖((n + 1 : ℕ) : ℂ) ^ (-s) - ((n + 2 : ℕ) : ℂ) ^ (-s)‖
+        ≤ (((n + 1 : ℕ) : ℝ)) ^ (-s.re)
+            * (2 * ‖s‖ * (1 / (((n + 1 : ℕ) : ℝ))) * Real.exp (‖s‖ * Real.log 2)) := by
+      calc
+        ‖((n + 1 : ℕ) : ℂ) ^ (-s) - ((n + 2 : ℕ) : ℂ) ^ (-s)‖
+            ≤ (((n + 2 : ℕ) : ℝ)) ^ (-s.re)
+                * (2 * ‖s‖ * Real.log r * Real.exp (‖s‖ * Real.log r)) := by
+                  simpa [r, mul_assoc] using hstep
+        _ ≤ (((n + 1 : ℕ) : ℝ)) ^ (-s.re)
+                * (2 * ‖s‖ * Real.log r * Real.exp (‖s‖ * Real.log r)) := by
+                  exact mul_le_mul_of_nonneg_right hpow
+                    (mul_nonneg (mul_nonneg hb0 hlognonneg) hb1)
+        _ ≤ (((n + 1 : ℕ) : ℝ)) ^ (-s.re)
+                * (2 * ‖s‖ * (1 / (((n + 1 : ℕ) : ℝ))) * Real.exp (‖s‖ * Real.log r)) := by
+                  have hm : 2 * ‖s‖ * Real.log r ≤ 2 * ‖s‖ * (1 / (((n + 1 : ℕ) : ℝ))) :=
+                    mul_le_mul_of_nonneg_left hlogle hb0
+                  exact mul_le_mul_of_nonneg_left (mul_le_mul_of_nonneg_right hm hb1) hb2
+        _ ≤ (((n + 1 : ℕ) : ℝ)) ^ (-s.re)
+                * (2 * ‖s‖ * (1 / (((n + 1 : ℕ) : ℝ))) * Real.exp (‖s‖ * Real.log 2)) := by
+                  have hbK : 0 ≤ 2 * ‖s‖ * (1 / (((n + 1 : ℕ) : ℝ))) := by
+                    exact mul_nonneg hb0 (by positivity : 0 ≤ 1 / (((n + 1 : ℕ) : ℝ)))
+                  exact mul_le_mul_of_nonneg_left (mul_le_mul_of_nonneg_left hexp hbK) hb2
+    have hpow2 : (((n + 1 : ℕ) : ℝ)) ^ (-s.re) * (1 / (((n + 1 : ℕ) : ℝ)))
+        = (((n + 1 : ℕ) : ℝ)) ^ (-s.re - 1) := by
+      have hpos : 0 < (((n + 1 : ℕ) : ℝ)) := by positivity
+      rw [one_div, ← Real.rpow_neg_one (((n + 1 : ℕ) : ℝ))]
+      rw [← Real.rpow_add hpos]
+      congr 1
+    calc
+      ‖((n + 1 : ℕ) : ℂ) ^ (-s) - ((n + 2 : ℕ) : ℂ) ^ (-s)‖
+          ≤ (((n + 1 : ℕ) : ℝ)) ^ (-s.re)
+              * (2 * ‖s‖ * (1 / (((n + 1 : ℕ) : ℝ))) * Real.exp (‖s‖ * Real.log 2)) := hmain'
+      _ = (((n + 1 : ℕ) : ℝ)) ^ (-s.re) * (1 / (((n + 1 : ℕ) : ℝ)))
+              * (2 * ‖s‖ * Real.exp (‖s‖ * Real.log 2)) := by ring
+      _ = (((n + 1 : ℕ) : ℝ)) ^ (-s.re - 1) * (2 * ‖s‖ * Real.exp (‖s‖ * Real.log 2)) := by
+              rw [hpow2]
+      _ = C * (((n + 1 : ℕ) : ℝ)) ^ (-s.re - 1) := by
+              dsimp [C]
+              ring
+  -- 基序列 (n+1)^(-σ-1) 可和 (p 级数, σ>0)
+  have hsum1 : Summable (fun m : ℕ => (((m : ℕ) : ℝ) ^ (s.re + 1))⁻¹) :=
+    (Real.summable_nat_rpow_inv).mpr (by linarith [hs])
+  have hsum2 : Summable (fun n : ℕ => ((((n + 1 : ℕ) : ℝ)) ^ (s.re + 1))⁻¹) :=
+    hsum1.comp_injective (fun a b h => by omega)
+  have hsum : Summable (fun n : ℕ => (((n + 1 : ℕ) : ℝ)) ^ (-s.re - 1)) := by
+    refine hsum2.congr ?_
+    intro n
+    rw [show -s.re - 1 = -(s.re + 1) by ring]
+    rw [Real.rpow_neg (by positivity : 0 ≤ (((n + 1 : ℕ) : ℝ)))]
+  have hCsum : Summable (fun n : ℕ => C * (((n + 1 : ℕ) : ℝ)) ^ (-s.re - 1)) :=
+    hsum.mul_left C
+  exact Summable.of_nonneg_of_le (fun n => norm_nonneg _) hmain hCsum
+
+
+-- ============================================================
+-- §26 复数 Γ 递推下界 — x-方向 → t-方向 (内禀排除的第一块 t-方向砖, 2026-09-01)
+--   |Γ(x+n+iy)| ≥ |y|^n · |Γ(x+iy)|  (x>0, n : ℕ)
+--   gamma_ge_pow_mul_self (Γ(x+n) ≥ xⁿΓ(x), 实轴) 的复推广.
+--   每个因子 |x+k+iy| = √((x+k)²+y²) ≥ |y| (x²≥0 恒真), 连乘即得.
+--   诚实边界: 这给的是「整数实轴步数 n」的虚部增长; 排除还需
+--   |Γ(σ+it)| 随 t 的**连续**渐近 — 中间差「整数步 → 连续实轴」的桥
+--   (log Γ 凸性插值, Bohr–Mollerup 已形式化), 或用反射/加倍公式直接连 s/2 与 (1−s)/2.
+-- ============================================================
+
+-- 子引理: |x+iy| ≥ |y| (任意 x, 因 x²≥0)
+lemma norm_add_I_ge_abs {x y : ℝ} :
+    |y| ≤ ‖(x : ℂ) + Complex.I * (y : ℂ)‖ := by
+  have hsq : y ^ 2 ≤ ‖(x : ℂ) + Complex.I * (y : ℂ)‖ ^ 2 := by
+    rw [← Complex.normSq_eq_norm_sq]
+    rw [Complex.normSq_apply]
+    simp
+    nlinarith [sq_nonneg x]
+  have h := sq_le_sq.mp hsq
+  rwa [abs_of_nonneg (norm_nonneg _)] at h
+
+-- 复数 Γ 递推下界
+theorem gamma_norm_ge_y_pow {x y : ℝ} (hx : 0 < x) (n : ℕ) :
+    |y| ^ n * ‖Complex.Gamma ((x : ℂ) + Complex.I * (y : ℂ))‖ ≤
+      ‖Complex.Gamma (((x + (n : ℝ)) : ℂ) + Complex.I * (y : ℂ))‖ := by
+  induction n with
+  | zero =>
+      simp
+  | succ n ih =>
+      let z : ℂ := ((x + (n : ℝ)) : ℂ) + Complex.I * (y : ℂ)
+      have hge : |y| ≤ ‖z‖ := by
+        have hsq : y ^ 2 ≤ ‖z‖ ^ 2 := by
+          rw [← Complex.normSq_eq_norm_sq]
+          dsimp [z]
+          rw [Complex.normSq_apply]
+          simp
+          nlinarith [sq_nonneg (x + (n : ℝ))]
+        have h := sq_le_sq.mp hsq
+        rwa [abs_of_nonneg (norm_nonneg _)] at h
+      have hz0 : z ≠ 0 := by
+        intro h
+        have hre : z.re = (0 : ℝ) := congrArg Complex.re h
+        have hre_pos : (0 : ℝ) < z.re := by
+          change (0 : ℝ) < (((x + (n : ℝ)) : ℂ) + Complex.I * (y : ℂ)).re
+          simp [Complex.add_re, Complex.ofReal_re, Complex.mul_re, Complex.I_re, Complex.I_im]
+          exact add_pos_of_pos_of_nonneg hx (Nat.cast_nonneg n)
+        linarith
+      have hG : ‖Complex.Gamma (z + 1)‖ = ‖z‖ * ‖Complex.Gamma z‖ := by
+        rw [Complex.Gamma_add_one z hz0]
+        rw [norm_mul]
+      calc
+        |y| ^ (n + 1) * ‖Complex.Gamma ((x : ℂ) + Complex.I * (y : ℂ))‖
+            = |y| * (|y| ^ n * ‖Complex.Gamma ((x : ℂ) + Complex.I * (y : ℂ))‖) := by ring
+        _ ≤ |y| * ‖Complex.Gamma (((x + (n : ℝ)) : ℂ) + Complex.I * (y : ℂ))‖ := by
+            exact mul_le_mul_of_nonneg_left ih (abs_nonneg y)
+        _ = |y| * ‖Complex.Gamma z‖ := by
+            dsimp [z]
+        _ ≤ ‖z‖ * ‖Complex.Gamma z‖ := by
+            exact mul_le_mul_of_nonneg_right hge (norm_nonneg _)
+        _ = ‖Complex.Gamma (z + 1)‖ := by rw [hG]
+        _ = ‖Complex.Gamma (((x + ((n + 1 : ℕ) : ℝ)) : ℂ) + Complex.I * (y : ℂ))‖ := by
+            dsimp [z]
+            congr 1
+            push_cast
+            ring_nf
+
+
 end RiemannHIBS.Abundance
