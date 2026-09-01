@@ -132,6 +132,8 @@ stage: current
 - **Hadamard 组合链依赖图状态 (§28/§29, 2026-08-26)**: [A]条带内ζ上界(η/Abel量化)未形式化 → [B]Γ粗上界(积分拆分)未形式化 → [C]ξ上界组合依赖AB → [D]Borel–Carathéodory **✅mathlib已有** (Complex.borelCaratheodory) → [E]BC应用+Cauchy估计→G常数→h=e^{bs} 未形式化 → [F]对称性强迫多项式 (轻,代数,xiEntire_one_sub已备) → [G]**✅Γ递推下界已证** (Real.gamma_ge_pow_mul_self) → [H]实轴矛盾组装(轻). 两端已有基建, 中段[A][B][E]是剩余工作量; B-C链补的是Hadamard侧反证组合(Hadamard版缺口B), 不补Hardy均值公式缺口(A)
 - **Hadamard 路线初等化发现 (2026-08-26, §27)**: 非平凡零点无限多的整函数载体 ξ 已落地 — 关键是 mathlib 的 completedRiemannZeta₀ (去极点辅助整函数) 经代数变形 ξ=(1/2)s(s−1)Λ₀+1/2 使整性/对称性免费. **Stirling 并非丰度必经之路**: 增长上界只需 Euler 积分拆分粗界 |Γ(s)|≤e^{O(|s|log|s|)}, 实轴下界只需 Γ 递推 Γ(x+n)≥xⁿΓ(x) — 全初等. 组合链 (Borel–Carathéodory → logDeriv 常数 → 对称强制多项式 → 实轴矛盾) 未形式化, mathlib BorelCaratheodory.lean 已侦察存在
 - **零点隔离完成度 (§26)**: 排除半边已落地 (`no_zero_of_boundary_dominance` 最大模原理路线); 存在半边 (主导线性项 ⟹ 恰一个零点) 需要 winding number 整数性/同伦不变性 — mathlib 缺失该理论 (已侦察确认), 完整 Rouché 待基建
+- **推论 6「自配对 = RH」逐句复核 (2026-09-01, 按推导判定)**: 原推论两句**真值不同**, 不可一概而论 — **第2句正确且 ⟺ RH**: 「不存在偏离 ‖w‖=√e 的非自配对零点」用到 `self_pair_on_circle` 的有效**逆否** (‖w‖≠√e ⟹ e/w≠w), 故"偏离圆"已自动蕴含"非自配对", 该句 ≡「圆环内无 ‖w‖≠√e 的零点」≡ RH. **第1句「每个反射对都自配对」有歧义, 按点层定义为假**: 关键恒等式 —— 在 ‖w‖=√e 上 **e/w = conj w**, 故 e/w=w ⟺ e^{2i·Im s}=1 ⟺ **Im s ∈ πℤ**. 两层须严格分开: **集合层** ‖e/w‖=‖w‖ (轨道整体在圆上) **= RH**; **点层** e/w=w (w=±√e, 提升高度∈πℤ) **严格强于 RH 且为假**. 两条独立否决: ①γ₁=14.13472514 严格介于 4π≈12.5664 与 5π≈15.7080 之间 ⟹ ∉πℤ (单个反例足够, 且它不违反 RH); ②渐近: πℤ 间距 π, 平均零点间距 2π/log(T/2π)→0 (T=1000: ≈807 个零点 vs 319 个 πℤ 点); 覆盖点层更严: 1−s=s ⟹ s=1/2, 而 ζ(1/2)≈−1.4604≠0. ⟹ **「补上逆命题」是数学死路 (推导所得, 非猜测)**. **正确约化**: RH ⟺ 每个反射对整体落在 ‖w‖=√e 上 ⟺ 圆环内无 ‖w‖≠√e 的零点 (= §13 hno). Lean 侧 `self_pair_iff`/`self_pair_on_circle` 单向正确; `InversionPairDecomposition.no_nonself_pair` 已改名 `no_zero_off_circle` (蕴含方向 自配对⟹RH 为真, 错在"等价"; 点层读法是假命题, 假命题不可证, 不能充当缺口)
+- **§19 组装是结构体骨架, 非已证定理 (2026-09-01 澄清)**: `CriticalCircleInfinity` (Abundance §19) 的 assemble 是字段组合声明 (position_circle → frequency_fold → energy_lower → mean_value → density_projection → bounded_energy_of_finite → infinite_on_circle), **无证明体**; 组件中 R5 `alignment_density` 是猜想、`bounded_energy_of_finite` 是 Hardy 外部输入、`infinite_on_circle` 未证. 临界圆无限零点的实际供给 = **Hardy 1914** (经典定理的坐标化传输, 论文 §9). R6 频率结构是真定理但**只依赖高度 t 不依赖半径 σ**, 不区分圆上/离圆零点. **RH = `no_zero_off_circle` 未验证**: R3 排 σ≥2, 函数方程反射排 σ<0 侧, 临界带 0<σ<1 完全开放; 隐数坐标给出 RH 的精确等价重述 (机制环 + no_zero_off_circle) 但排除论证不存在
 - 螺旋无限延伸 ≠ 全称证明: 舞台(覆盖)完备 ≠ 演员(零点)在台上
 - 非平凡零点存在性与无限性: 已证仅平凡零点无限 (§15); 非平凡部分需增长阶+因子分解/幅角原理, 已有机理皆"必要条件/缺增长"型, 不携带 ζ 的增长行为, 如实标注边界
 
@@ -320,9 +322,11 @@ stage: current
   cpow_ne_zero_iff) + **zero_pair_reflect** (零点在 s↦1−s 下成对, 隐数读法 =
   反演 w↦e/w) + self_pair_iff (自配对 w=e/w ⟺ w²=e ⟺ w=±√e, 因式分解
   (w−√e)(w+√e)=0) + self_pair_on_circle (自配对 ⟹ ‖w‖=√e) + reflect_involutive
-  (1−(1−s)=s) — **命题甲压缩为一句**: "不存在非自配对反演对" ⟹ 全在不动圆上
-  ⟹ RH (机制环); InversionPairDecomposition 诚实标注 (no_nonself_pair 即
-  环内无 |w|≠√e 零点 = RH 核心, 未证)
+  (1−(1−s)=s) — **命题甲压缩为一句 (2026-09-01 措辞校正)**: "圆环内无 ‖w‖≠√e 的
+  零点"(即反射对**整体落在**不动圆上, 集合层) ⟹ RH (机制环); **不可**写成"不存在非
+  自配对反演对"(点层 e/w=w ⟺ w=±√e, 严格强于 RH 且与已知零点冲突 — 见下方订正条);
+  InversionPairDecomposition 字段已由 `no_nonself_pair` 改名 `no_zero_off_circle`
+  (= RH 核心, 未证)
 
 - R5 对齐密度猜想 (Abundance §17 + experiments/fig15, 本日提交):
   FrequencyAlignmentConjecture 显式声明 — 零点 (对齐事件) 密度 = 频率相位投影
