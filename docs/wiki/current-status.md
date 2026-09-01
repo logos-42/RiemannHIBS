@@ -231,6 +231,25 @@ stage: current
 
 ## 内禀排除：模平衡载体 + 候选组合 (2026-09-01)
 
+## 隐数排除第一轮：统一逼近证书接口 (2026-09-01)
+
+新增 `RiemannHIBS/HiddenExclusion.lean`，把排除路线的最小逻辑桥正式化：
+
+- `radialDisplacement s = Re(s)-1/2`：隐数圆环中偏离临界圆的有符号径向坐标；
+- `hiddenXi u theta = xiEntire(1/2+u+i·theta)`：完成 ζ 在提升坐标中的表示；
+- `hiddenXi_reflect`：函数方程反射变成 `(u,theta) ↦ (-u,-theta)`；
+- `hiddenZeta`、`hiddenDirichletApproximant`、`hiddenDirichletRemainder`：把有限旋转向量部分和及其精确余项写成可继续估计的对象；
+- `hiddenZeta_eq_dirichletSeries` 与 `hiddenDirichletApproximant_tendsto_hiddenZeta`：在 `Re(s)>1` 绝对收敛区证明部分和确实趋近 ζ；
+- `critical_lifted_term_norm` 与 `critical_lifted_terms_not_summable`：在临界叶证明单项模长为 `(n+1)^(-1/2)` 且绝对值级数发散，正式确认普通绝对尾项排除路线不能跨过临界圆；
+- `hiddenEtaPartialSum_tends_some`：借用已形式化的 Abel/变差估计，在 `Re(s)>0` 证明交错 η 部分和趋于某个极限；但该极限与解析延拓 ζ 的等式以及统一非零下界仍未建立；
+- `radialEnergy`、`radialEnergy_nonneg` 与 `on_critical_line_of_radialEnergy_eq_zero`：完成正定路线的有限样本逻辑桥；若能从显式公式推出径向总能量为零，则样本中所有点都在临界线上，但“总能量恒为零”的公式尚未找到；
+- `offCircleWindow`：固定径向距离 `delta` 与有限未折叠高度 `T` 的窗口；
+- `UniformApproximation` / `UniformNonvanishingCertificate`：将近似、余项和近似函数的统一下界分开记录；
+- `nonzero_of_uniform_certificate`：若整个窗口上 `‖F-A‖≤epsilon<‖A‖`，则 `F` 在窗口无零点；
+- `radialEnergyAtom`：单个零点的径向偏差平方，非负且为零当且仅当 `Re(s)=1/2`。
+
+这一步的意义是把“无限逼近为什么不能排除”压成一个精确缺口：需要构造对所有高度和整个径向窗口有效的非零下界，不能只证明有限相位和趋近于零。当前文件已证明远离临界带的绝对收敛逼近，也已证明临界叶上的绝对尾项路线结构性失败；η 条件收敛可以跨过 `Re=1`，但只给出极限存在，不给出 ζ 的排除性下界。尚未提供 RH 所需的分析性排除证书。`lake build RiemannHIBS` 已通过。
+
 **模平衡恒等式 (已证, Abundance §23) — 排除论证的载体:**
 ```
 zeta_mod_balance: |ζ(1−s)| = |χ(s)|·|ζ(s)|   (函数方程取模)

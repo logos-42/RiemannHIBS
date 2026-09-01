@@ -13,3 +13,4 @@ import RiemannHIBS.Riemann
 import RiemannHIBS.Envelope
 import RiemannHIBS.EnvelopeC
 import RiemannHIBS.Analytic
+import RiemannHIBS.HiddenExclusion
