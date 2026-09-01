@@ -35,6 +35,7 @@ import Mathlib.Data.Rat.BigOperators
 import Mathlib.Analysis.PSeries
 import Mathlib.Topology.Algebra.InfiniteSum.NatInt
 import Mathlib.Analysis.SpecialFunctions.Pow.Asymptotics
+import Mathlib.NumberTheory.LSeries.Nonvanishing
 
 open scoped Topology
 open scoped ComplexConjugate
@@ -2914,6 +2915,147 @@ theorem chi_mod_sin_gamma {s : ℂ} (hsinπ : Complex.sin ((Real.pi : ℂ) * s) 
   rw [show ‖(Real.pi : ℂ)‖ = Real.pi by
     simpa [RCLike.norm_ofReal] using (le_of_lt Real.pi_pos : 0 ≤ Real.pi)]
   rw [norm_mul]
+
+
+-- ============================================================
+-- §30 全局 ⟺: RiemannHypothesis ⟺ zeroFreeHalfPlane (2026-09-01)
+--   把内禀排除判据 (σ>1/2 无零点) 与 mathlib 正式 RH 声明连成双向等价.
+--   ───────────────────────────────────────────────────────────
+--   方向 1 (RH → 排除): 干净. σ≥1 用 mathlib riemannZeta_ne_zero_of_one_le_re
+--   (含 s=1 的 junk value, PNT 前提); 1/2<σ<1 用 RH 本身 (s 非平凡 + s≠1 由
+--   实部排除), 得 σ=1/2 矛盾.
+--   方向 2 (排除 → RH): σ>1 用 mathlib 排除; σ<0 用 sin 版函数方程排除
+--   (非平凡零点不在左半平面); 临界带内 1/2<σ<1 用排除本身, 0<σ<1/2 用反射.
+--   全程无 Stirling — 是纯代数/特殊值 (sin/Γ 零点分类, mathlib 已备).
+-- ============================================================
+
+-- 30.1 方向 1: RH ⟹ σ>1/2 无零点
+theorem riemannHypothesis_implies_zeroFreeHalfPlane (rh : RiemannHypothesis) :
+    zeroFreeHalfPlane := by
+  intro s hσ hz
+  by_cases hσ1 : 1 ≤ s.re
+  · exact (riemannZeta_ne_zero_of_one_le_re hσ1) hz
+  · have hσ_lt_1 : s.re < 1 := lt_of_not_ge hσ1
+    have hs_neq_1 : s ≠ 1 := by
+      intro h
+      have hre : s.re = 1 := by simpa using congrArg Complex.re h
+      linarith
+    have hs_nontriv : ¬∃ n : ℕ, s = -2 * (n + 1) := by
+      rintro ⟨n, hn⟩
+      have hre : s.re = (-2 : ℝ) * ((n + 1 : ℕ) : ℝ) := by
+        rw [hn]
+        norm_num
+      nlinarith [show (0 : ℝ) ≤ ((n + 1 : ℕ) : ℝ) by positivity]
+    have hhalf : s.re = 1 / 2 := rh s hz hs_nontriv hs_neq_1
+    linarith
+
+-- 30.2 sin 版函数方程: ζ(s) = 2(2π)^{s−1}·Γ(1−s)·sin(πs/2)·ζ(1−s)
+--   (从 riemannZeta_one_sub 对 1−s 取, 1−(1−s)=s, cos(π/2−x)=sin x)
+theorem zeta_eq_sin_mul_zeta_one_sub {s : ℂ} (hs0 : s ≠ 0)
+    (hs_pos : ∀ n : ℕ, s ≠ 1 + n) :
+    riemannZeta s = (2 : ℂ) * (2 * (Real.pi : ℂ)) ^ (s - 1) * Complex.Gamma (1 - s) *
+      Complex.sin ((Real.pi : ℂ) * s / 2) * riemannZeta (1 - s) := by
+  have hs' : ∀ n : ℕ, 1 - s ≠ -↑n := by
+    intro n hn
+    have hs_eq : s = 1 + n := by
+      have h := congrArg (fun z : ℂ => 1 - z) hn
+      norm_num at h
+      simpa using h
+    exact hs_pos n hs_eq
+  have hs1' : 1 - s ≠ 1 := by
+    intro h
+    have : s = 0 := by
+      have := congrArg (fun z : ℂ => 1 - z) h
+      norm_num at this
+      exact this
+    exact hs0 this
+  have hfe := riemannZeta_one_sub (s := 1 - s) hs' hs1'
+  calc
+    riemannZeta s
+        = riemannZeta (1 - (1 - s)) := by ring_nf
+    _ = (2 : ℂ) * (2 * (Real.pi : ℂ)) ^ (-(1 - s)) * Complex.Gamma (1 - s) *
+          Complex.cos ((Real.pi : ℂ) * (1 - s) / 2) * riemannZeta (1 - s) := hfe
+    _ = (2 : ℂ) * (2 * (Real.pi : ℂ)) ^ (s - 1) * Complex.Gamma (1 - s) *
+          Complex.cos ((Real.pi : ℂ) * (1 - s) / 2) * riemannZeta (1 - s) := by
+          congr 1
+          congr 1
+          rw [show -(1 - s) = s - 1 by ring]
+    _ = (2 : ℂ) * (2 * (Real.pi : ℂ)) ^ (s - 1) * Complex.Gamma (1 - s) *
+          Complex.sin ((Real.pi : ℂ) * s / 2) * riemannZeta (1 - s) := by
+          congr 1
+          congr 1
+          have hcos : Complex.cos ((Real.pi : ℂ) * (1 - s) / 2)
+              = Complex.cos ((Real.pi : ℂ) / 2 - (Real.pi : ℂ) * s / 2) := by
+            congr 1
+            ring
+          rw [hcos, Complex.cos_pi_div_two_sub]
+
+-- 30.3 纯算术: 负偶整数 = 平凡零点形态 (ℂ 层)
+--   s = 2k (k:ℤ) 且 k<0 ⟹ ∃ n, 2k = -2n - 2
+lemma two_mul_int_neg_eq_neg_two_mul_nat (k : ℤ) (hk : k < 0) :
+    ∃ n : ℕ, (2 * (k : ℂ)) = -2 * ((n : ℕ) : ℂ) - 2 := by
+  let n : ℕ := Int.toNat (-k - 1)
+  have hn : (n : ℤ) = -k - 1 := by
+    dsimp [n]
+    rw [Int.toNat_of_nonneg]
+    omega
+  refine ⟨n, ?_⟩
+  norm_cast
+  rw [hn]
+  omega
+
+-- 30.4 σ<0 排除: 非平凡零点不在左半平面 (sin 版函数方程 + 特殊值分类)
+theorem zeta_ne_zero_of_neg_re_of_nontrivial {s : ℂ} (hσ : s.re < 0)
+    (hnt : ¬∃ n : ℕ, s = -2 * (n + 1)) : riemannZeta s ≠ 0 := by
+  intro hz
+  have hs0 : s ≠ 0 := by
+    intro h
+    have hre : s.re = 0 := by rw [h]; norm_num
+    linarith
+  have hs_pos : ∀ n : ℕ, s ≠ 1 + n := by
+    intro n h
+    have hre : s.re = (1 + (n : ℕ) : ℂ).re := by rw [h]
+    norm_num at hre
+    nlinarith [show (0 : ℝ) ≤ ((n : ℕ) : ℝ) by positivity]
+  have hfe := zeta_eq_sin_mul_zeta_one_sub hs0 hs_pos
+  rw [hfe] at hz
+  have h2 : (2 : ℂ) ≠ 0 := by norm_num
+  have hpow : (2 * (Real.pi : ℂ)) ^ (s - 1) ≠ 0 := by
+    exact (Complex.cpow_ne_zero_iff (x := 2 * (Real.pi : ℂ)) (y := s - 1)).mpr
+      (Or.inl (mul_ne_zero (by norm_num : (2 : ℂ) ≠ 0)
+        (by exact_mod_cast Real.pi_ne_zero : (Real.pi : ℂ) ≠ 0)))
+  have hG : Complex.Gamma (1 - s) ≠ 0 := by
+    exact Complex.Gamma_ne_zero_of_re_pos (by
+      rw [Complex.sub_re, Complex.one_re]
+      linarith)
+  have hsin : Complex.sin ((Real.pi : ℂ) * s / 2) ≠ 0 := by
+    intro hsin0
+    rcases (Complex.sin_eq_zero_iff.mp hsin0) with ⟨k, hk⟩
+    have hπ : (Real.pi : ℂ) ≠ 0 := by exact_mod_cast Real.pi_ne_zero
+    have hs_eq : s = 2 * (k : ℂ) := by
+      field_simp [hπ] at hk
+      ring_nf at hk
+      rw [mul_comm] at hk
+      exact hk
+    have hkneg : k < 0 := by
+      have hre : s.re = 2 * (k : ℝ) := by rw [hs_eq]; norm_num
+      have hneg : (2 : ℝ) * (k : ℝ) < 0 := by rw [← hre]; exact hσ
+      have hkR : (k : ℝ) < 0 := by nlinarith
+      exact_mod_cast hkR
+    rcases (two_mul_int_neg_eq_neg_two_mul_nat k hkneg) with ⟨n, hn⟩
+    apply hnt ⟨n, ?_⟩
+    rw [hs_eq]
+    -- 目标: 2*(k:ℂ) = -2*((n:ℕ)+1)
+    simpa [Nat.cast_add, Nat.cast_one, mul_add] using hn
+  have hζ : riemannZeta (1 - s) ≠ 0 := by
+    exact riemannZeta_ne_zero_of_one_lt_re (by
+      rw [Complex.sub_re, Complex.one_re]
+      linarith)
+  have hnonzero :
+      (2 : ℂ) * (2 * (Real.pi : ℂ)) ^ (s - 1) * Complex.Gamma (1 - s) *
+          Complex.sin ((Real.pi : ℂ) * s / 2) * riemannZeta (1 - s) ≠ 0 := by
+    exact mul_ne_zero (mul_ne_zero (mul_ne_zero (mul_ne_zero h2 hpow) hG) hsin) hζ
+  exact hnonzero hz
 
 
 end RiemannHIBS.Abundance
