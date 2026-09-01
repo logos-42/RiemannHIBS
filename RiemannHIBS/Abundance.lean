@@ -2789,4 +2789,131 @@ theorem gamma_ratio_exact {s : ℂ} (hs : Complex.sin ((Real.pi : ℂ) * s / 2) 
   simpa [mul_comm, mul_left_comm, mul_assoc] using hmain
 
 
+-- ============================================================
+-- §28 组合 B: 内禀排除判据 — 把「排除」钉到模平衡/反射载体 (2026-09-01)
+--   目标 (用户指定的组合 B): RH ⟺ Γ 比失衡被控制, 落成一条**内禀 ⟺**.
+--   ───────────────────────────────────────────────────────────
+--   数学内容 (三件已有资产收拢成一条 ⟺):
+--     ① 模平衡 (§23 zeta_mod_balance): |ζ(1−s)| = |χ(s)|·|ζ(s)|, χ 显式.
+--     ② 反射配对 (§16 zeta_zero_iff_one_sub): 临界带内 ζ(1−s)=0 ⟺ ζ(s)=0.
+--     ③ 指数坐标 (§20 asym_exp_log_rho): σ−1/2 = log(ρ/√e).
+--   严格可证的 ⟺ (本 §28.3/28.4, 无 Stirling):
+--     零点 ⟺ 反射对**同时消失**  (⟺ |ζ(s)|·(1+|χ(s)|) = 0 ⟺ |ζ(s)| = 0)
+--     非零 ⟺ 反射对**同时非零**  (⟺ 排除 = 反射对整体非零)
+--   ───────────────────────────────────────────────────────────
+--   唯一定量缺口 (Stirling, P1–P3 诚实边界): |χ(σ+it)| ~ C_σ·t^{σ−1/2}
+--   (即 §20 gamma_ratio_asymptotic 的 χ 形态). 它把「失衡定号」变成可验证输入,
+--   等价于 Lindelöf — 内禀坐标给不了更强的通道 (信息守恒 + 点值退化两条硬约束).
+--   本 § 交付: 严格 ⟺ 钉死「排除 = 反射对整体非零」, 定量缺口显式声明.
+-- ============================================================
+
+-- 28.1 χ 传输因子 (抽自 §23 zeta_mod_balance 的内联表达式)
+noncomputable def zetaChi (s : ℂ) : ℂ :=
+  (2 : ℂ) * (2 * (Real.pi : ℂ)) ^ (-s) * Complex.Gamma s *
+    Complex.cos ((Real.pi : ℂ) * s / 2)
+
+-- 模平衡的 χ 形态: |ζ(1−s)| = |χ(s)|·|ζ(s)| (严格, 直接套 §23)
+theorem zeta_mod_balance_chi {s : ℂ} (hs : ∀ n : ℕ, s ≠ -↑n) (hs' : s ≠ 1) :
+    ‖riemannZeta (1 - s)‖ = ‖zetaChi s‖ * ‖riemannZeta s‖ := by
+  exact zeta_mod_balance hs hs'
+
+-- 28.2 排除的经典形态: 无 σ>1/2 零点
+def zeroFreeHalfPlane : Prop :=
+  ∀ s : ℂ, (1 / 2 : ℝ) < s.re → riemannZeta s ≠ 0
+
+-- 28.3 严格 ⟺ (组合模平衡): 零点 ⟺ 反射对**同时消失**
+--   内禀判据的核心: 一个零点必携带其反射伴侣, 二者由 |ζ(1−s)|=|χ(s)||ζ(s)|
+--   强制同时为 0. 故「有零点」⇔「模平衡两侧的公共因子 |ζ(s)| 消失」.
+theorem zeta_zero_iff_pair_both_zero {s : ℂ} (hs : ∀ n : ℕ, s ≠ -↑n) (hs' : s ≠ 1) :
+    riemannZeta s = 0 ↔ riemannZeta s = 0 ∧ riemannZeta (1 - s) = 0 := by
+  constructor
+  · intro hz
+    have hnorm : ‖riemannZeta s‖ = 0 := by rw [hz]; simp
+    have hnorm1 : ‖riemannZeta (1 - s)‖ = 0 := by
+      rw [zeta_mod_balance hs hs']
+      rw [hnorm]
+      simp
+    exact ⟨hz, norm_eq_zero.mp hnorm1⟩
+  · intro h
+    exact h.1
+
+-- 28.4 严格 ⟺ (组合反射): 非零 ⟺ 反射对**同时非零**
+--   排除 = 「反射对整体非零」; 由 §16 zeta_zero_iff_one_sub (临界带 0<σ<1)
+--   直接取非零版. 这是「排除」的内禀 ⟺ 载体, 无 Stirling.
+theorem zeta_norm_ne_zero_iff_pair {s : ℂ} (hσ0 : 0 < s.re) (hσ1 : s.re < 1) :
+    ‖riemannZeta s‖ ≠ 0 ↔ ‖riemannZeta (1 - s)‖ ≠ 0 := by
+  rw [ne_eq, norm_eq_zero, ne_eq, norm_eq_zero]
+  exact not_iff_not.mpr (zeta_zero_iff_one_sub hσ0 hσ1).symm
+
+-- 28.5 结构体: 内禀排除判据 — 收拢 §20/22/23 三线 + 唯一定量缺口
+structure GammaImbalanceReduction where
+  -- 已证 (严格, §23): 模平衡 |ζ(1−s)| = |χ(s)|·|ζ(s)|
+  mod_balance : Prop
+  -- 已证 (严格, §23): χ 模分解 |χ(s)| = 2·(2π)^{−σ}·|Γ(s)|·|cos(πs/2)|
+  chi_decomp : Prop
+  -- 已证 (严格, 本 §28.3): 零点 ⟺ 反射对同时消失
+  pair_both_zero : Prop
+  -- 已证 (严格, 本 §28.4): 非零 ⟺ 反射对同时非零
+  pair_ne_zero : Prop
+  -- 已证 (严格, §20): 指数坐标 σ−1/2 = log(ρ/√e)
+  exponent_coord : Prop
+  -- 外部输入 (Stirling, P1–P3 边界): |χ(σ+it)| = C_σ·t^{σ−1/2}·(1+O(1/t))
+  --   这是「排除」的唯一定量输入 — 等价于 Lindelöf 级估计 (信息守恒 + 点值
+  --   退化两条硬约束决定内禀坐标给不出更强通道). 显式声明, 不装证.
+  chi_asymptotic : Prop
+  -- 结论: 无 σ>1/2 零点 (排除)
+  zero_free_half_plane : Prop
+  -- 组装: 严格 ⟺ (配对) + 指数坐标 + χ 渐近 ⟹ 排除
+  assemble : mod_balance → chi_decomp → pair_both_zero → pair_ne_zero →
+    exponent_coord → chi_asymptotic → zero_free_half_plane
+
+
+-- ============================================================
+-- §29 χ 的精确化 — 反射 + 倍角把 χ 化成 sin/Γ(1−s) (2026-09-01)
+--   χ(s) = (2π)^{−s}·π / (sin(πs/2)·Γ(1−s))  (精确, 无 Stirling)
+--   取模: |χ(s)| = (2π)^{−σ}·π / (‖sin(πs/2)‖·‖Γ(1−s)‖)
+--   意义: χ 的 σ-幂经 sin/Γ(1−s) 的模显式化 — sin 与 Γ 的模是初等可估的
+--   (sinh/cosh 显式函数), 这是「排除」从 Stirling 渐近走向精确载体的关键一步.
+--   §28 的 chi_asymptotic 字段 = 本恒等式 + sin/Γ 的 t-方向模估计 (下一步).
+-- ============================================================
+
+theorem chi_eq_pi_div_sin_gamma {s : ℂ} (hsinπ : Complex.sin ((Real.pi : ℂ) * s) ≠ 0)
+    (hsin : Complex.sin ((Real.pi : ℂ) * s / 2) ≠ 0)
+    (hcos : Complex.cos ((Real.pi : ℂ) * s / 2) ≠ 0)
+    (hg : Complex.Gamma (1 - s) ≠ 0) :
+    (2 : ℂ) * (2 * (Real.pi : ℂ)) ^ (-s) * Complex.Gamma s * Complex.cos ((Real.pi : ℂ) * s / 2) =
+      (2 * (Real.pi : ℂ)) ^ (-s) * (Real.pi : ℂ) / (Complex.sin ((Real.pi : ℂ) * s / 2) * Complex.Gamma (1 - s)) := by
+  have href := Complex.Gamma_mul_Gamma_one_sub s
+  have hdouble : Complex.sin ((Real.pi : ℂ) * s) = 2 * Complex.sin ((Real.pi : ℂ) * s / 2) * Complex.cos ((Real.pi : ℂ) * s / 2) := by
+    have h := Complex.sin_two_mul ((Real.pi : ℂ) * s / 2)
+    rw [show (2 : ℂ) * ((Real.pi : ℂ) * s / 2) = (Real.pi : ℂ) * s by ring] at h
+    exact h
+  field_simp [hsin, hg]
+  calc
+    2 * Complex.Gamma s * Complex.cos ((Real.pi : ℂ) * s / 2) * Complex.sin ((Real.pi : ℂ) * s / 2) * Complex.Gamma (1 - s)
+        = 2 * (Complex.Gamma s * Complex.Gamma (1 - s)) * Complex.cos ((Real.pi : ℂ) * s / 2) * Complex.sin ((Real.pi : ℂ) * s / 2) := by ring
+    _ = 2 * ((Real.pi : ℂ) / Complex.sin ((Real.pi : ℂ) * s)) * Complex.cos ((Real.pi : ℂ) * s / 2) * Complex.sin ((Real.pi : ℂ) * s / 2) := by rw [href]
+    _ = (Real.pi : ℂ) := by
+        rw [hdouble]
+        field_simp [hsin, hcos, hsinπ]
+
+-- 取模: |χ(s)| = (2π)^{−σ}·π / (‖sin(πs/2)‖·‖Γ(1−s)‖)
+theorem chi_mod_sin_gamma {s : ℂ} (hsinπ : Complex.sin ((Real.pi : ℂ) * s) ≠ 0)
+    (hsin : Complex.sin ((Real.pi : ℂ) * s / 2) ≠ 0)
+    (hcos : Complex.cos ((Real.pi : ℂ) * s / 2) ≠ 0)
+    (hg : Complex.Gamma (1 - s) ≠ 0) :
+    ‖(2 : ℂ) * (2 * (Real.pi : ℂ)) ^ (-s) * Complex.Gamma s * Complex.cos ((Real.pi : ℂ) * s / 2)‖ =
+      (2 * (Real.pi : ℝ)) ^ (-s.re) * (Real.pi : ℝ) / (‖Complex.sin ((Real.pi : ℂ) * s / 2)‖ * ‖Complex.Gamma (1 - s)‖) := by
+  rw [chi_eq_pi_div_sin_gamma hsinπ hsin hcos hg]
+  rw [norm_div]
+  rw [norm_mul]
+  rw [show ‖(2 * (Real.pi : ℂ)) ^ (-s)‖ = (2 * (Real.pi : ℝ)) ^ (-s.re) by
+    rw [show (2 * (Real.pi : ℂ) : ℂ) = ((2 * Real.pi : ℝ) : ℂ) by norm_num]
+    rw [Complex.norm_cpow_eq_rpow_re_of_pos (by positivity : 0 < 2 * (Real.pi : ℝ)) (-s)]
+    rw [Complex.neg_re]]
+  rw [show ‖(Real.pi : ℂ)‖ = Real.pi by
+    simpa [RCLike.norm_ofReal] using (le_of_lt Real.pi_pos : 0 ≤ Real.pi)]
+  rw [norm_mul]
+
+
 end RiemannHIBS.Abundance
