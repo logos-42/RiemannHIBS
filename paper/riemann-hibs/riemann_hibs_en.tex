@@ -69,8 +69,11 @@ pairing of nontrivial zeros, and Hardy's theorem transports directly to the
 statement that infinitely many lifted zeros lie over this circle. The energy and
 frequency calculations are included as exact coordinate diagnostics; they do
 not by themselves create zeros or prove a density law. The Riemann hypothesis
-is consequently isolated as the remaining assertion that every nontrivial
-reflection pair is self-paired. Lean identifiers are retained in the source
+is consequently isolated as the remaining assertion that no nontrivial zero in
+the annulus departs from the critical circle $|w|=\sqrt e$; equivalently, every
+reflection pair lies entirely on that circle. Note that this does not require
+the pair to collapse to a single point: on $|w|=\sqrt e$ the inversion acts as
+conjugation. Lean identifiers are retained in the source
 for traceability but are suppressed in the typeset article.
 \end{abstract}
 
@@ -107,9 +110,10 @@ regions, and Hardy's theorem are taken as known analytic results.
 \item[Exact deductions.] Coordinate changes, modulus identities, reflection
 pairing, and the equivalence between the critical-line and critical-circle
 descriptions are proved directly.
-\item[Open statements.] The exclusion of non-self-paired zeros in the
-critical annulus is exactly the Riemann hypothesis. Numerical density and
-energy heuristics are not used to hide this gap.
+\item[Open statements.] The exclusion of zeros with $|w|\neq\sqrt e$ in the
+critical annulus, equivalently the assertion that every reflection pair lies
+entirely on the critical circle, is exactly the Riemann hypothesis. Numerical
+density and energy heuristics are not used to hide this gap.
 \end{description}
 
 \paragraph{Bibliographic context.}
@@ -347,7 +351,13 @@ partner on the opposite side of the circle. The map $w\mapsto e/w$ exchanges
 radii $\rho$ and $e/\rho$ and preserves their product $e$. Only when
 $\rho=\sqrt e$ can the two radii agree. The analytic question left by the
 functional equation is therefore not whether reflection exists, but whether
-the zero set contains any genuinely non-self-paired orbit.
+the zero set contains an orbit that leaves $|w|=\sqrt e$.
+
+Two meanings of ``fixed by the inversion'' must be kept apart. At the level of
+sets, the inversion maps the whole circle $|w|=\sqrt e$ to itself. At the
+level of points, being fixed means $w=e/w$, which happens at two points only.
+The next theorem records the pointwise statement and shows that its converse
+fails.
 
 \begin{theorem}[self-pairs and the critical circle]\label{thm:selfpair}
 For $w\neq0$,
@@ -358,24 +368,42 @@ For $w\neq0$,
   \quad\Longleftrightarrow\quad
   w=\pm\sqrt e.
 \]
-Thus a self-paired zero, if present, lies on $|w|=\sqrt e$.
+Thus a self-paired zero, if present, lies on $|w|=\sqrt e$. The converse
+fails: when $|w|=\sqrt e$, writing $w=\sqrt e\,e^{i\theta}$, inversion acts as
+conjugation,
+\[
+  \frac ew=\sqrt e\,e^{-i\theta}=\overline w ,
+\]
+so the reflection partner of a point on the critical circle is generally
+$\overline w\neq w$; the two coincide only for $w=\pm\sqrt e$, that is, for
+lifted heights $t\in\pi\mathbb Z$.
 \end{theorem}
 
 The preceding deductions give the exact reduction:
 
 \begin{corollary}[the remaining statement is RH]\label{cor:rh-reduction}
 For nontrivial zeros, the Riemann hypothesis is equivalent to the assertion
-that every reflection pair in $1<|w|<e$ is self-paired. Equivalently, there
-are no non-self-paired zeros away from $|w|=\sqrt e$.
+that every reflection pair $\{w,e/w\}$ in $1<|w|<e$ lies entirely on the
+critical circle $|w|=\sqrt e$. Equivalently, there is no zero in the annulus
+with $|w|\neq\sqrt e$.
 \end{corollary}
 
 This is a reduction rather than a solution. If one starts with the Riemann
-hypothesis, every nontrivial zero has $\Re s=1/2$ and hence lies on the
-circle. Conversely, if every reflection orbit in the annulus collapses to a
-self-pair, the algebra above forces $w^2=e$, and the corresponding lift has
-$\Re s=1/2$. The two directions use different ingredients: the first is the
-definition of the hypothesis in the original coordinate, while the second
-uses the reflection pairing and the self-pair calculation.
+hypothesis, every nontrivial zero has $\Re s=1/2$, and $|w|=e^{\Re s}$ then
+places it on the circle. Conversely, if every reflection orbit in the annulus
+lies on $|w|=\sqrt e$, each zero satisfies $\log|w|=1/2$, that is,
+$\Re s=1/2$, which is the Riemann hypothesis.
+
+The conclusion is that the orbits lie on the circle, not that they collapse
+to a point. By Theorem~\ref{thm:selfpair}, inversion equals conjugation on
+$|w|=\sqrt e$, so under the Riemann hypothesis zeros still occur in conjugate
+pairs $w,\overline w$. For instance, the first known critical-line zero
+$s=\tfrac12+14.1347\ldots i$ has height satisfying
+$4\pi\approx12.566<14.1347<15.708\approx5\pi$, hence outside $\pi\mathbb Z$,
+and therefore forms a genuine two-element orbit on the circle rather than a
+self-paired fixed point. Thus ``every reflection pair is self-paired'' is much stronger
+than the Riemann hypothesis, is in conflict with the known zero data, and
+cannot serve as an equivalent formulation of it.
 
 \begin{figure}[t]
 \centering
@@ -526,9 +554,9 @@ its logarithmic radius is $1/2$.
 functional equation derives reflection pairs.
 \item Hardy's known theorem derives infinitely many circle zeros by direct
 transport.
-\item The Riemann hypothesis is the still-open exclusion of non-self-paired
-zeros in the annulus. Neither the coordinate change nor the diagnostic
-calculations prove that exclusion.
+\item The Riemann hypothesis is the still-open exclusion of zeros with
+$|w|\neq\sqrt e$ in the annulus. Neither the coordinate change nor the
+diagnostic calculations prove that exclusion.
 \end{enumerate}
 
 Any future attempt to replace Hardy's input with an internal proof must supply

@@ -1562,13 +1562,16 @@ structure InversionPairDecomposition where
   self_pair_algebra : Prop
   -- 已证: 反射对合 (reflect_involutive)
   involution : Prop
-  -- 缺口 (RH 本身): 不存在非自配对反演对 (即所有零点对都在不动圆上自配对)
-  --   等价表述: 圆环 1<|w|<e 内无 |w|≠√e 的零点 — 与 zeta_zero_iff_one_sub
+  -- 缺口 (RH 本身): 圆环 1<|w|<e 内无 |w|≠√e 的零点 — 与 zeta_zero_iff_one_sub
   --   组合后即"零点 ⟹ Re s = 1/2" (hno) = 机制环最后一格
-  no_nonself_pair : Prop
-  -- 结论: 机制环 A⟺B⟺C⟺D (已证) 给出 no_nonself_pair ⟹ RH
+  --   措辞校正 (2026-09-01): 缺口是"反射对整体落在不动圆上"(集合层, |e/w|=|w|),
+  --   **不是**"每个反射对都自配对"(点层, e/w=w ⟺ w=±√e, 提升高度 t∈πℤ).
+  --   反例: s=1/2+14.1347i 在圆上但 e/w=conj w≠w (14.1347∉πℤ), 是二元轨道.
+  --   故"每个对都自配对"严格强于 RH 且与已知零点冲突, 不可作 RH 等价表述.
+  no_zero_off_circle : Prop
+  -- 结论: 机制环 A⟺B⟺C⟺D (已证) 给出 no_zero_off_circle ⟹ RH
   rh : Prop
-  assemble : no_nonself_pair → rh
+  assemble : no_zero_off_circle → rh
 
 
 -- ============================================================
