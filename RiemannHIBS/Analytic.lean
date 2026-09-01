@@ -2697,6 +2697,12 @@ def rotVecOnLine (σ : ℝ) (n : ℕ) (t : ℝ) : ℂ :=
 def dirichletPartialSumLine (N : ℕ) (σ : ℝ) (t : ℝ) : ℂ :=
   ∑ n ∈ Finset.range N, rotVecOnLine σ n t
 
+-- 31.0.1 旋转向量连续性 (可积性输入)
+theorem continuous_rotVecOnLine (σ : ℝ) (n : ℕ) :
+    Continuous (fun t : ℝ => rotVecOnLine σ n t) := by
+  unfold rotVecOnLine
+  continuity
+
 -- 31.1 旋转积分原子 (Δ ≠ 0): ∫_{−T}^{T} e^{(I·Δ)x} dx = (e^{IΔT} − e^{−IΔT})/(IΔ).
 theorem integral_rotating_atom (T Δ : ℝ) (hΔ : Δ ≠ 0) :
     (∫ x in (-T)..T, Complex.exp ((Complex.I * Δ) * x))
@@ -2801,9 +2807,15 @@ theorem rotVec_mul_conj (m n : ℕ) (σ t : ℝ) :
       * Complex.exp (-(Complex.I * t) * Real.log ((n + 1 : ℝ))))
       = (((((n + 1 : ℝ)) ^ (-σ) : ℝ) : ℂ)
           * Complex.exp ((Complex.I * t) * Real.log ((n + 1 : ℝ)))) := by
-    rw [map_mul, Complex.conj_ofReal, ← Complex.exp_conj]
-    show conj (Complex.exp _) = _
-    rw [Complex.exp_conj]
+    rw [map_mul, Complex.conj_ofReal]
+    have hc : conj (Complex.exp (-(Complex.I * t) * (Real.log ((n + 1 : ℝ)) : ℂ))) =
+        Complex.exp ((Complex.I * t) * (Real.log ((n + 1 : ℝ)) : ℂ)) := by
+      rw [← Complex.exp_conj]
+      congr 1
+      rw [map_mul, map_neg, map_mul, Complex.conj_I,
+        Complex.conj_ofReal, Complex.conj_ofReal]
+      ring
+    rw [hc]
 
   rw [hcE, mul_mul_mul_comm, ← Complex.exp_add]
   simp only [mul_sub]
@@ -2832,26 +2844,39 @@ theorem l2_mean_partialSum_finite (N : ℕ) (σ T : ℝ) :
           ((((m + 1 : ℝ)) ^ (-σ) : ℝ) : ℂ) * ((((n + 1 : ℝ)) ^ (-σ) : ℝ) : ℂ)
             * (∫ x in (-T)..T,
                 Complex.exp ((Complex.I * x)
-                  * (Real.log ((n + 1 : ℝ)) - Real.log ((m + 1 : ℝ)))))) := by
+                  * (Real.log ((n + 1 : ℝ)) - Real.log ((m + 1 : ℝ))))) := by
   have hintegrable : ∀ m n : ℕ, IntervalIntegrable
       (fun x : ℝ => rotVecOnLine σ m x * conj (rotVecOnLine σ n x))
-      MeasureTheory.volume (-T) T :=
-    by
-      intro m n
-      have hc : Continuous
-          (fun x : ℝ => rotVecOnLine σ m x * conj (rotVecOnLine σ n x)) := by
-        fun_prop
-      exact hc.intervalIntegrable (-T) T
+      MeasureTheory.volume (-T) T := by
+    intro m n
+    have hc : Continuous
+        (fun x : ℝ => rotVecOnLine σ m x * conj (rotVecOnLine σ n x)) := by
+      exact (continuous_rotVecOnLine σ m).mul
+        (Complex.continuous_conj.comp (continuous_rotVecOnLine σ n))
+    exact hc.intervalIntegrable (-T) T
   rw [intervalIntegral.integral_congr (fun x _hx =>
     sqNorm_partialSum_pointwise N σ x)]
-  rw [intervalIntegral.integral_finset_sum (fun m _hm =>
-    (hintegrable m).mono le_rfl)]
+  rw [intervalIntegral.integral_finset_sum
+    (f := fun m (x : ℝ) => ∑ n ∈ Finset.range N, rotVecOnLine σ m x * conj (rotVecOnLine σ n x))
+    (fun m _hm => by
+      convert (IntervalIntegrable.sum (s := Finset.range N) (fun n _hn => hintegrable m n)) using 1
+      ext x
+      simp [Finset.sum_apply])]
   refine Finset.sum_congr rfl fun m _hm => ?_
-  rw [intervalIntegral.integral_finset_sum (fun n _hn =>
-    ((hintegrable m n).mono le_rfl))]
-  simp only [Finset.mul_sum]
+  rw [intervalIntegral.integral_finset_sum (fun n _hn => hintegrable m n)]
   refine Finset.sum_congr rfl fun n _hn => ?_
-  rw [rotVec_mul_conj]
+  calc
+    (∫ x in (-T)..T, rotVecOnLine σ m x * conj (rotVecOnLine σ n x))
+        = (∫ x in (-T)..T,
+            ((((m + 1 : ℝ)) ^ (-σ) : ℝ) : ℂ) * ((((n + 1 : ℝ)) ^ (-σ) : ℝ) : ℂ)
+              * Complex.exp ((Complex.I * x) * (Real.log ((n + 1 : ℝ)) - Real.log ((m + 1 : ℝ))))) := by
+          apply intervalIntegral.integral_congr
+          intro x _hx
+          exact rotVec_mul_conj m n σ x
+    _ = ((((m + 1 : ℝ)) ^ (-σ) : ℝ) : ℂ) * ((((n + 1 : ℝ)) ^ (-σ) : ℝ) : ℂ)
+          * (∫ x in (-T)..T,
+              Complex.exp ((Complex.I * x) * (Real.log ((n + 1 : ℝ)) - Real.log ((m + 1 : ℝ))))) := by
+          rw [intervalIntegral.integral_const_mul]
 
 
 end RiemannHIBS.Analytic

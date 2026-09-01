@@ -3143,4 +3143,54 @@ structure OneLineZeroFree where
     zero_log_deriv → conclusion
 
 
+-- ============================================================
+-- §33 台阶1 (续): ζ'/ζ 级数实部提取 — Re((n+1)^{−s}) 核心原子 (2026-09-01)
+--   把逐项非负 (§32) 接到 ζ'/ζ 的 Dirichlet 级数. 核心桥:
+--   Re((n+1)^{−s}) = (n+1)^{−s.re}·cos(s.im·log(n+1)) (s=σ+it).
+--   这是 3-4-1 非负性从「cos 版本」到「ζ'/ζ 实部版本」的桥梁.
+-- ============================================================
+
+-- 1. 核心原子: Re((n+1)^{−s}) = (n+1)^{−s.re}·cos(−s.im·log(n+1))
+theorem re_cpow_neg (n : ℕ) (s : ℂ) :
+    (((n + 1 : ℕ) : ℂ) ^ (-s)).re =
+      (n + 1 : ℝ) ^ (-s.re) * Real.cos ((-s.im) * Real.log (n + 1 : ℝ)) := by
+  rw [eta_cpow_eq_exp s n]
+  rw [Complex.exp_re]
+  simp only [Nat.cast_add, Nat.cast_one]
+  have hre : (-s * (Real.log (n + 1 : ℝ) : ℂ)).re =
+      -s.re * Real.log (n + 1 : ℝ) := by
+    simp [Complex.mul_re, Complex.neg_re, Complex.neg_im, Complex.ofReal_re, Complex.ofReal_im]
+  have him : (-s * (Real.log (n + 1 : ℝ) : ℂ)).im =
+      -s.im * Real.log (n + 1 : ℝ) := by
+    simp [Complex.mul_im, Complex.neg_re, Complex.neg_im, Complex.ofReal_re, Complex.ofReal_im]
+  rw [hre, him]
+  have hrpow : Real.exp ((-s.re) * Real.log (n + 1 : ℝ)) =
+      (n + 1 : ℝ) ^ (-s.re) := by
+    rw [mul_comm (-s.re) (Real.log (n + 1 : ℝ))]
+    exact (Real.rpow_def_of_pos (by positivity : 0 < (n + 1 : ℝ)) (-s.re)).symm
+  rw [hrpow]
+
+-- 2. 特例: Re((n+1)^{−it}) = cos(t·log(n+1)) (s = t·I, s.re = 0, s.im = t)
+theorem re_cpow_neg_mul_I (n : ℕ) (t : ℝ) :
+    (((n + 1 : ℕ) : ℂ) ^ (-((t : ℂ) * Complex.I))).re =
+      Real.cos (t * Real.log (n + 1 : ℝ)) := by
+  rw [re_cpow_neg n ((t : ℂ) * Complex.I)]
+  simp [Complex.mul_re, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im,
+    Complex.I_re, Complex.I_im, Real.rpow_zero, neg_zero, neg_mul, Real.cos_neg]
+
+-- 3. 3-4-1 实部非负 (真版本): Re(3 + 4(n+1)^{−it} + (n+1)^{−2it}) ≥ 0
+--    与 mertens_coeff_re_nonneg 的区别: 那一条停在 cos 版本, 这一条把
+--    (n+1)^{−it} 的实部 (re_cpow_neg_mul_I) 真正接上.
+theorem mertens_three_four_one_re_nonneg (t : ℝ) (n : ℕ) :
+    0 ≤ (((3 : ℝ) : ℂ) + ((4 : ℝ) : ℂ) * (((n + 1 : ℕ) : ℂ) ^ (-((t : ℂ) * Complex.I))) +
+      (((n + 1 : ℕ) : ℂ) ^ (-(((2 * t : ℝ) : ℂ) * Complex.I)))).re := by
+  rw [Complex.add_re, Complex.add_re]
+  rw [Complex.mul_re]
+  rw [Complex.ofReal_re, Complex.ofReal_im]
+  rw [re_cpow_neg_mul_I n t, re_cpow_neg_mul_I n (2 * t)]
+  norm_num
+  simpa [add_comm, mul_comm, mul_left_comm, mul_assoc] using
+    three_four_one_nonneg (t * Real.log (n + 1 : ℝ))
+
+
 -- =============================...[truncated]

@@ -261,7 +261,15 @@ chi_mod_decomp:   |χ(s)| = 2·(2π)^{−σ}·|Γ(s)|·|cos(πs/2)|
 2. 剩余新分析工作 = Riemann 和误差控制, 初等但琐, 未落码。
 3. **不拆排除墙**: 模平衡在零点处 0=0 退化, 即使拿到锐 |χ| ~ t^{σ−1/2}, 排除仍需无零点区域/零密度 (mathlib ❌)。这条路线拆的是 Γ t-渐近墙, 不是 RH 本身。
 
-**台阶1 落码进展 (2026-09-01)**: 数条数逼近排除墙的第一台阶 ζ(1+it)≠0 (= PNT 核心) 已落骨架 (Abundance §32, 无 sorry): `mertens_lambda_term_nonneg` (Λ 加权逐项非负, 真定理) + `mertens_lambda_sum_nonneg` (有限和非负) + `zeta_ne_zero_on_one_line` (结论 def) + `OneLineZeroFree` 结构体钉形状. mathlib 家底: ζ'/ζ = −Λ 级数 (`LSeries_vonMangoldt_eq_deriv_riemannZeta_div`) + Λ≥0 (`vonMangoldt_nonneg`) + ζ 单极点 (`tendsto_riemannZeta_sub_one_div`) 均已有. 完整证明仍缺: ζ'/ζ 级数实部提取 + 零点重数 logDeriv 行为 + σ→1⁺ 极限传递 (分析难点). 台阶1 之后到 RH (σ>1/2) 中间仍是零密度/均方+凸性墙, 数条数目前够不到.
+**台阶1 落码进展 (2026-09-01)**: 数条数逼近排除墙的第一台阶 ζ(1+it)≠0 (= PNT 核心) 已落骨架 (Abundance §32-33, 无 sorry): `mertens_lambda_term_nonneg` (Λ 加权逐项非负, 真定理) + `mertens_lambda_sum_nonneg` (有限和非负) + **`re_cpow_neg`/`re_cpow_neg_mul_I` (实部提取桥: Re((n+1)^{−s}) = (n+1)^{−σ}·cos(−s.im·log(n+1)), 真定理)** + **`mertens_three_four_one_re_nonneg` (3-4-1 实部非负真版本)** + `zeta_ne_zero_on_one_line` (结论 def) + `OneLineZeroFree` 结构体钉形状. mathlib 家底: ζ'/ζ = −Λ 级数 (`LSeries_vonMangoldt_eq_deriv_riemannZeta_div`) + Λ≥0 (`vonMangoldt_nonneg`) + ζ 单极点 (`tendsto_riemannZeta_sub_one_div`) 均已有. 完整证明仍缺: 零点重数 logDeriv 行为 + σ→1⁺ 极限传递 (分析难点). 台阶1 之后到 RH (σ>1/2) 中间仍是零密度/均方+凸性墙, 数条数目前够不到.
+
+## 谱方法：Hilbert–Pólya 约化 (2026-09-01, 新方向)
+
+**评估**: 超双指数/高阶 Householder 迭代是 ∃ 型(逼近已知零点), RH 是 ∀ 型(所有零点在临界线) — 量词不同, 提高收敛阶不解决 RH (leo 粘贴讨论结论). **真正方向 = Hilbert–Pólya 谱方法**: 若存在自伴算子 H 使 Spec(H) = 零点虚部集, 则自伴⟹谱实⟹零点形如 1/2+iγ⟹RH. 与隐数/谱框架天然连接.
+
+**Lean 落码 (RiemannHIBS/Spectral.lean, 无 sorry)**: `zeroImaginaryParts` (零点虚部集) + `zeta_zero_on_critical_line_iff` + `re_of_critical_line_point` (Re(1/2+iγ)=1/2 代数原子) + `HilbertPolya` 结构体 (谱覆盖 + 谱实 → RH). 文档: docs/wiki/spectral-method.md.
+
+**诚实边界**: 核心未解 = 找到这样的自伴算子 H (外部输入, Hilbert–Pólya 猜想本身); 零点虚部集⊆ℝ 是 trivial 的, HP 的真实内容是存在性; 这是 RH 的谱等价重述 (同类于机制环/零密度墙), 不给 RH 真值, 但把目标从零点分布转成谱结构.
 
 ## 候选机制 (等价/直觉, 非力迫)
 - **ξ 载体与能量发散链 (2026-08-26)**: §27 已落地 `xiEntire` 的整性、对称性及其与 `completedRiemannZeta`/ζ 的显式乘积关系，因而把“非平凡零点问题”压缩到整函数 ξ 的零点问题。需要注意：当前代码仍未完成“ξ 零点集无限”的 Hadamard 组合论证；临界带内 ξ=0 与 ζ=0 的双向桥也应以独立定理显式补齐，不能只凭注释中的“载体”二字视为已证。
