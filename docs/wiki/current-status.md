@@ -12,7 +12,7 @@ stage: current
 # 当前状态 (2026-08-27)
 
 ## 发表状态（2026-08-27）
-- **aixiv.science**: [aixiv.260827.000002](https://aixiv.science) — The Riemann Zeta Function in Hidden-Number Coordinates: From Classical Inputs to the Critical-Circle Reduction（英文版, 人类身份, CC-BY-4.0, Under Review）
+- **aixiv.science**: [aixiv.260827.000002](https://aixiv.science) — The Riemann Zeta Function in Hidden-Number Coordinates: From Classical Inputs to the Critical-Circle Reduction（英文版, 人类身份, CC-BY-4.0; v1.0 official review completed, **v1.1 Under Review** 2026-09-02 id 1420, 摘要已更新为"环内无偏离临界圆 |w|=√e 的零点 ⇔ 反射对整体落圆上"）
 - **以太坊 EAS 主网**: attestation `0xab83532e8be8cf882db70583a8cc8e2a9f9bb38135b5183ef6b53dbda5010133` — https://easscan.org/attestation/view/0xab83532e8be8cf882db70583a8cc8e2a9f9bb38135b5183ef6b53dbda5010133（IPFS CID QmYRqinyW2m6tpdN8g2TuysiMrQUK3srij7nGBQFMSJQtk 已 pin, schema #405）
 - 元数据模板: `paper/riemann-hibs/aixiv_meta_rh_en.json`；脚本: `~/.hermes/eas-bind/eas-bind-paper.js`；完整记录: `~/.hermes/eas-bind/README.md`
 
