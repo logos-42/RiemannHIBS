@@ -453,6 +453,172 @@ Lean 开发记录了上述许多代数和序理论组件：坐标恒等式、反
 如果未来要不用 Hardy 输入而在坐标系内部证明丰度，就必须补上解析延拓的
 零点计数或边界绕数估计。明确指出这个要求，本身就是论证的一部分。
 
+\section{为什么排除无法在坐标内部产生}\label{sec:negative}
+
+上一节隔离了那个开放的命题。本节记录我们试图封闭它时学到了什么，
+因为这个否定性结论是结构性的，而非暂时的，并且可以被精确陈述。
+
+\subsection{判决}
+
+三个事实确定了任何基于坐标的尝试的地位。
+
+\begin{enumerate}
+\item 映射 $s\mapsto e^{s}$ 是到 $\mathbb C\setminus\{0\}$ 的双射，本文的
+每个翻译步骤都是等价。双射的变量替换是命题布尔代数的同构：它可以重述
+问题，但不能添加假设，也不能创造不等式。\Lean{zetaCoverIsomorphism}
+\item 剩余命题已经与经典黎曼猜想严格等价，而且该等价的证明全程不使用
+Stirling 输入：黎曼猜想成立当且仅当 $\zeta$ 在 $\sigma>1/2$ 无零点。
+\Lean{riemannHypothesis_iff_zeroFreeHalfPlane}
+\item 因此，所缺的不是更好的表述，而是一条 Lindel\"of 量级的定量估计。
+\end{enumerate}
+
+\begin{remark}[缺失的逻辑类型]\label{rem:type}
+已形式化的结果分属三种逻辑类型：恒等式与等价（不产生新信息）；发散与丰度
+陈述（只产生存在性，永不产生排除）；临界性陈述（定位阈值，如 $\sigma=1/2$）。
+黎曼猜想属于第四种类型——排除某种可能性——而前三种类型的任意合取都推不出
+第四种类型的命题。
+\end{remark}
+
+\subsection{不对称量及其消失的两种方式}
+
+函数方程携带的唯一 $\sigma$-不对称量，是两个 Gamma 因子之比。对函数方程
+取模给出模平衡 \Lean{zeta_mod_balance}
+%
+\begin{equation}\label{eq:modbalance}
+\abs{\zeta(1-s)}=\abs{\chi(s)}\,\abs{\zeta(s)},
+\end{equation}
+%
+而 Stirling 公式给出 \Lean{GammaRatioAsymmetry}
+%
+\begin{equation}\label{eq:chiasym}
+\abs{\chi(\sigma+it)}\sim (t/2\pi)^{1/2-\sigma}\qquad (t\to\infty).
+\end{equation}
+%
+把离圆偏移写成隐数坐标中的形式 \Lean{asym_exp_log_rho}
+%
+\begin{equation}\label{eq:udef}
+u=\sigma-\tfrac12=\log\frac{\abs w}{\sqrt e},
+\end{equation}
+%
+则 $u=0$ 恰好就是临界圆。于是 \eqref{eq:chiasym} 变为
+%
+\begin{equation}\label{eq:chiu}
+\abs{\chi(\tfrac12+u+it)}\sim (t/2\pi)^{-u},
+\end{equation}
+%
+而 \eqref{eq:modbalance} 读作反射两侧一个真正的幂律失衡：
+%
+\begin{equation}\label{eq:imbalance}
+\frac{\abs{\zeta(\frac12+u+it)}}{\abs{\zeta(\frac12-u+it)}}\sim (t/2\pi)^{u},
+\qquad u\neq 0.
+\end{equation}
+
+这一点值得强调，因为该失衡要比经典的无零点区域强得多。后者的形状是
+$\sigma\ge 1-c/\log\abs t$，即对 $\sigma=1$ 的对数级修正
+\citep{deLaValleePoussin1899,Titchmarsh1986}，而已知最好的同类区域仍是
+相似的对数级形状 \citep{IwaniecKowalski2004}。相反，\eqref{eq:imbalance}
+是 $t$ 的一个幂次。\emph{因此，慢并不是障碍。}
+
+障碍在于：这一失衡以两种彼此独立的方式消失，而每一种都恰好发生在需要它的
+那些点上。
+
+\begin{proposition}[双重退化]\label{prop:degeneration}
+设 $\rho$ 为非平凡零点，$u=\Re\rho-\tfrac12$ 为其离圆偏移。则：
+\begin{enumerate}
+\item 若 $u=0$，则 $\abs{\chi(\rho)}=1$ 精确成立，于是
+\eqref{eq:modbalance} 退化为
+$\abs{\zeta(\overline\rho)}=\abs{\zeta(\rho)}$，即 Schwarz 反射的平凡推论，
+不携带任何信息。
+\item 对任意 $u$，由于 $\zeta(\rho)=0$ 蕴含 $\zeta(1-\rho)=0$
+\Lean{zeta_zero_iff_one_sub}，在 $s=\rho$ 处取值时
+\eqref{eq:modbalance} 读作 $0=(t/2\pi)^{-u}\cdot 0$。
+\end{enumerate}
+因此，不对称只在离圆的点上非平凡——那里并不期望有零点——而它在圆上与在
+每个零点处都消失。
+\end{proposition}
+
+第一重退化正是 Hardy 实值函数背后的精确陈述：在临界线上传输因子是幺模的，
+故 $\zeta$ 与它的共轭只相差一个相位。第二重是纯代数的，对每个零点都成立，
+无论在圆上还是圆外。
+
+\begin{remark}[为何这是结构性的，而非技术上的缺口]
+由反射、由反演 $w\mapsto e/w$、或由圆反演 $w\mapsto e/\overline w$ 生成的
+每个量，在反射轨道上都是常数，因为零点集在 $s\mapsto1-s$ 下不变。由于偏移
+$u$ 在反射下变号，这类量必为 $u$ 的偶函数，因而无法把 $u=0$ 单独挑出来。
+要把 $u=0$ 与 $u\neq0$ 分开，必须有一个 $\sigma$-不对称的输入；由
+\eqref{eq:chiu}，唯一这样的输入就是 Gamma 之比——它是 $\zeta$ 的性质而非
+坐标的性质——而它按命题 \ref{prop:degeneration} 退化。
+\end{remark}
+
+\subsection{为什么逼近无法补足排除}
+
+四条彼此独立的理由，使得隐数坐标中的任何逼近方案都无法封闭这个缺口，
+无论其速率多快。
+
+\begin{enumerate}
+\item \emph{坐标不改变速率。} 提升后的函数是
+$\widehat\zeta(w)=\zeta(\log w)$；双射的重参数化把同样的有限和求值成同样的
+数值，无法改进收敛性。
+\item \emph{临界圆上不绝对收敛。} 在 $\abs w=\sqrt e$ 上每项模长为
+$(n+1)^{-1/2}$，而 $\sum (n+1)^{-1/2}$ 发散，故通常的绝对尾项估计不可用。
+这是被证明的，而不只是被观察到的。
+\Lean{critical_lifted_terms_not_summable}
+\item \emph{圆上没有周期性。} 尽管 $\theta=\arg w$ 是角坐标，但
+$\zeta(1/2+i(\theta+2\pi))\neq\zeta(1/2+i\theta)$；提升后的函数只在万有覆盖
+上单值，而不在圆上单值。因此没有关于 $\theta$ 的 Fourier 展开可用，圆也没有
+把问题转化成紧致问题。
+\item \emph{速率本身也不够。} 一列非零的逼近可以收敛到零；这个反例在形式化
+中被显式记录。\Lean{nonzero_approximants_can_converge_to_zero}
+\end{enumerate}
+
+此外，可达速率还被一个内在于 $\zeta$ 的理由所限制：完成函数 $\xi$ 是阶为
+$1$ 的整函数，而 Bernstein 定理把最佳逼近的速率与解析延拓区域的宽度联系
+起来。临界带宽度有限，故指数级收敛就是天花板，超指数级收敛不可能，这与
+坐标的选择无关。
+
+\subsection{四条排除路线及其失败方式}
+
+\begin{itemize}
+\item \emph{有限旋转向量的一致逼近。} 由上述理由 2 在临界圆上结构性失败，
+只在充分靠右的半平面成功——那里 $\zeta$ 的无零点性已知。
+\Lean{hiddenZeta_ne_zero_of_u_ge_three_halves_via_rouche}
+\item \emph{初等的 $3$--$4$--$1$ 数条数路线。} 最多给出 de la Vall\'ee
+Poussin 型区域 $\sigma\ge1-c/\log\abs t$，其边界随 $\abs t$ 增大而趋向
+$\sigma=1$，即背离 $\sigma=1/2$ 而非靠近它
+\citep{Titchmarsh1986}。这是结构性天花板，不是工程难度。
+\item \emph{Weil、Li 与 Lagarias 型正性判据。} 它们把猜想替换为一个显式
+二次型或一列实数的非负性 \citep{Weil1952,Lagarias2002}。这个翻译是忠实
+而有用的，但非负性断言本身等价于该猜想，故这条路线是重述而非证明。在当前
+框架内这一点以精确形式显现：若允许测试函数遍历整个函数空间，则正性条件
+恰好在临界线上成立、在其他地方都不成立。这是一个严格等价，因而不携带
+独立的内容。\Lean{fourth_direction_positivity_iff_critical}
+\item \emph{正定径向能量。} 若某个显式公式给出
+$E_T=\sum K(\theta_\rho)\,u_\rho^{2}=0$ 且 $K>0$，则可推出 $u_\rho=0$
+\Lean{on_critical_line_of_weighted_energy_eq_zero}。正性这一步已被证明；
+$E_T=0$ 这个恒等式恰是缺失的东西，而把它设为假设就等于假设结论。
+\end{itemize}
+
+\subsection{该框架确实给出了什么}
+
+上述否定性结果本身是有信息的，它使坐标描述的价值更清晰，而不是更模糊。
+
+\begin{itemize}
+\item 它解释了临界位置的身份：由于 $\log\sqrt e=1/2$，这个半径
+不是约定，而是被反演所强制的 \citep{LiuXu2026bridge}。
+\item 它把猜想约化为一个几何句子：每个反射对整体落在 $\abs w=\sqrt e$ 上，
+等价于圆环中不存在 $\abs w\neq\sqrt e$ 的零点。
+\Lean{no_zero_off_circle}
+\item 它隔离了唯一的障碍。不对称存在且很强；按命题
+\ref{prop:degeneration}，它在圆上消失。因此任何证明都必须让不对称在
+两侧同时为零的那些点上变得可见，即必须用积分恒等式取代逐点模平衡。这
+恰好是 Weil 型显式公式所做的事，也恰好是它们为何返回一个等价的正性问题
+而非一个证明的原因。
+\end{itemize}
+
+在这个意义上，坐标做了它该做的工作：它把目标说干净，它解释了一个经典框架
+根本无从提出的位置，并且它把障碍定位得足够精确，从而表明：对同样这些
+成分的进一步重排都无法消除它。
+
 \section{结论}\label{sec:conclusion}
 
 隐数坐标 $w=e^s$ 把已知理论组织成一条短的推导链：函数方程反射变为
