@@ -284,7 +284,8 @@ chi_mod_decomp:   |χ(s)| = 2·(2π)^{−σ}·|Γ(s)|·|cos(πs/2)|
 2. 剩余新分析工作 = Riemann 和误差控制, 初等但琐, 未落码。
 3. **不拆排除墙**: 模平衡在零点处 0=0 退化, 即使拿到锐 |χ| ~ t^{σ−1/2}, 排除仍需无零点区域/零密度 (mathlib ❌)。这条路线拆的是 Γ t-渐近墙, 不是 RH 本身。
 
-**台阶1 落码进展 (2026-09-01)**: 数条数逼近排除墙的第一台阶 ζ(1+it)≠0 (= PNT 核心) 已落骨架 (Abundance §32-33, 无 sorry): `mertens_lambda_term_nonneg` (Λ 加权逐项非负, 真定理) + `mertens_lambda_sum_nonneg` (有限和非负) + **`re_cpow_neg`/`re_cpow_neg_mul_I` (实部提取桥: Re((n+1)^{−s}) = (n+1)^{−σ}·cos(−s.im·log(n+1)), 真定理)** + **`mertens_three_four_one_re_nonneg` (3-4-1 实部非负真版本)** + `zeta_ne_zero_on_one_line` (结论 def) + `OneLineZeroFree` 结构体钉形状. mathlib 家底: ζ'/ζ = −Λ 级数 (`LSeries_vonMangoldt_eq_deriv_riemannZeta_div`) + Λ≥0 (`vonMangoldt_nonneg`) + ζ 单极点 (`tendsto_riemannZeta_sub_one_div`) 均已有. 完整证明仍缺: 零点重数 logDeriv 行为 + σ→1⁺ 极限传递 (分析难点). 台阶1 之后到 RH (σ>1/2) 中间仍是零密度/均方+凸性墙, 数条数目前够不到.
+**台阶1 (ζ(1+it)≠0) — 代码已于 2026-09-01 整段删除 (Abundance.lean §32–§33.5, 3090–3530 行, 共 442 行)**. 删除前状态 (并行会话成果, 一并记录以免丢失): 已落完整骨架 + 级数侧真证 — `mertens_lambda_term_nonneg` / `mertens_lambda_sum_nonneg` / `re_cpow_neg` / `re_cpow_neg_mul_I` / `mertens_three_four_one_re_nonneg` / `zeta_ne_zero_on_one_line` (def) / `OneLineZeroFree` 结构体, 以及 §32.5 收尾 `logDeriv_re_eq_neg_LSeries_re` (单点桥 Re(ζ'/ζ)=−Re(L Λ)) + `re_LSeries_vonMangoldt_tsum` + **`mertens_logDeriv_re_nonpos` (级数侧主定理 F(σ)≤0)** + `zeta_ne_zero_on_one_line_of_asymptotics` (矛盾拼接主定理); 剩余唯一分析输入 = 3 个渐近 (hpol/hzero/hzero2 = 极点/零点重数行为, mathlib 无零点重数理论). **删除理由 (推导判定)**: ①**目标命题 mathlib 已有且更强** — `riemannZeta_ne_zero_of_one_le_re` 覆盖 `1 ≤ Re(s)` 整个半平面, 台阶1 只是其推论, 完成它**不增加任何排除范围**; ②**结构性天花板** — 自然推广是 Hadamard–de la Vallée Poussin 区域 `σ ≥ 1 − c/log(|t|+2)`, 边界随 t 增大**趋近 σ=1、远离 1/2** (t=1000 时约 σ≥0.985, RH 要 σ>1/2), 3-4-1 型非负性方法的信息量上限就是 dVP 型, 属结构性限制非工程难度; ③**不推进 RH**, 只能"练兵"(验证工具链) 不能"攻城". **⚠️ 并发冲突待处理**: 备份 `/tmp/Abundance.lean.bak` (3530 行) 在我删除时处于**编译失败**状态 (10+ 错误: `Complex.norm_eq_abs`/`abs_cos_le_one`/`tsum_const_mul` 等引理在本 mathlib 版本不存在), 与并行会话日志声称的"无 sorry, 6450 jobs 通过"**互相矛盾**, 疑为并发写入的中间状态. 若日后要恢复台阶1, 须先修通这批复现错误. **该方向现已关闭; 未来若重启, 须先回答上述 ①②两点.** 删除后 `lake build RiemannHIBS` 恢复通过 (3232 jobs). 详见 log.md
+> (以下为删除前该段落的原始记载, 保留作历史存档) 数条数逼近排除墙的第一台阶 ζ(1+it)≠0 (= PNT 核心) 已落完整骨架 + 级数侧真证 (Abundance §32-33, 无 sorry, 全量 6450 jobs): `mertens_lambda_term_nonneg` (Λ 加权逐项非负, 真定理) + `mertens_lambda_sum_nonneg` (有限和非负) + **`re_cpow_neg`/`re_cpow_neg_mul_I` (实部提取桥, 真定理)** + **`mertens_three_four_one_re_nonneg` (3-4-1 实部非负真版本)** + `zeta_ne_zero_on_one_line` (结论 def) + `OneLineZeroFree` 结构体钉形状. **级数侧真证收尾 (§32.5)**: `logDeriv_re_eq_neg_LSeries_re` (单点桥: Re(ζ'/ζ)=−Re(L Λ), 真定理) + `re_LSeries_vonMangoldt_tsum` (Re(L Λ)=ΣΛ(n)n^{−σ}cos(t·log n), 真定理) + **`mertens_logDeriv_re_nonpos` (级数侧主定理: F(σ)=Re(3ζ'/ζ(σ)+4ζ'/ζ(σ+it)+ζ'/ζ(σ+2it)) ≤ 0, 真定理)** + `zeta_ne_zero_on_one_line_of_asymptotics` (矛盾拼接主定理: 级数侧 F≤0 + 3 个渐近输入 ⟹ ζ(1+it)≠0). mathlib 家底: ζ'/ζ = −Λ 级数 + Λ≥0 + ζ 单极点均已有. **剩余唯一分析输入**: 3 个渐近 (hpol/hzero/hzero2 = 极点/零点重数行为, mathlib 无零点重数理论) — 这是真正的 RH 难点, 不是簿记. 台阶1 之后到 RH (σ>1/2) 中间仍是零密度/均方+凸性墙, 数条数目前够不到.
 
 ## 正定能量路线：显式公式 + 正性 + 总量为零 (2026-09-01, leo 指示主路线)
 
@@ -303,6 +304,54 @@ chi_mod_decomp:   |χ(s)| = 2·(2π)^{−σ}·|Γ(s)|·|cos(πs/2)|
 **Lean 落码 (RiemannHIBS/Spectral.lean, 无 sorry)**: `zeroImaginaryParts` (零点虚部集) + `zeta_zero_on_critical_line_iff` + `re_of_critical_line_point` (Re(1/2+iγ)=1/2 代数原子) + `HilbertPolya` 结构体 (谱覆盖 + 谱实 → RH). 文档: docs/wiki/spectral-method.md.
 
 **诚实边界**: 核心未解 = 找到这样的自伴算子 H (外部输入, Hilbert–Pólya 猜想本身); 零点虚部集⊆ℝ 是 trivial 的, HP 的真实内容是存在性; 这是 RH 的谱等价重述 (同类于机制环/零密度墙), 不给 RH 真值, 但把目标从零点分布转成谱结构.
+
+## 四元素标签基座：第 4 方向的 ∞ 维破缺 (2026-09-01, leo 提案 + 推导验证, 已落码)
+
+**提案**: 引数坐标系的投影从 3 个元素标签 `{S,R,iR}` 扩到 4 个, 第 4 个元素与隐数空间的 `S` 同功能 = "连接其他元素". 问: 能否构成新的基座更改、拿到排除力.
+
+**判定: 取决于第 4 标签的纤维是离散叶还是函数空间.**
+
+| 形态 | 第 4 标签纤维 | 判据性质 | 排除力 |
+|---|---|---|---|
+| A (与 S 同投影) | 离散叶 (PUnit) | 与反射 `s↦1−s` 交换 ⟹ 零点处 `0=0` 退化 | **无** (保守扩张) |
+| B (本轮落码) | 函数空间 `ℂ→ℂ` (∞ 维) | 只在对角 `s = 1−conj(s)` 上退化为模方 | **有正性/破缺** |
+
+**关键结构发现 (本轮的数学内容):**
+```
+经典反射   s ↦ 1 − s        不动集 = {1/2}        (0 维, 一个点)
+共轭反射   σ*(s) = 1 − conj(s)  不动集 = 整条临界线   (1 维实)
+```
+"连接元"必须连**后者**: 只有后者的不动集能承载"零点所在的线". 这是 `Tag4Basis.conjReflect_eq_self_iff` 与 `classical_reflect_fixed_iff` 的对照.
+
+**第 4 方向配对读数 (Weil 二次型原子):**
+```
+connectorPair Φ s = 2·Re( Φ(s)·conj(Φ(σ*(s))) )
+```
+- 在不动点 `Re(s)=1/2`: `σ*(s)=s` ⟹ `connectorPair = 2‖Φ s‖² ≥ 0` (**真定理**, 纯代数)
+- 离圆 `Re(s)≠1/2`: `s` 与 `σ*(s)` 是两不同点 ⟹ 配对值可取负 (**破缺见证**, 靠函数空间在两互异点指定 `1` 与 `−1` 的自由度)
+
+**核心等价 (真定理, 无外部输入):**
+```
+fourth_direction_positivity_iff_critical:
+   (∀ Φ : ℂ → ℂ, 0 ≤ connectorPair Φ s)  ⟺  Re(s) = 1/2
+```
+**这是 1/2 的第六条刻画, 也是第一条携带不等式 (正性) 的刻画** — 前五条 (反射不动 / 反演不动圆 / 能量阈值 / 均方相变 / Γ 比退化) 全是位置型或临界型, 不含正性.
+
+**A 形态为何不行的三条对照定理:**
+- `tag4Fiber_discrete_subsingleton`: 前三个标签的纤维是 `Subsingleton` (零自由度) — 承载不了分离能力;
+- `tag4Fiber_T_not_subsingleton`: 第 4 标签的纤维不是 — 这就是"∞ 维"的可证内容;
+- `reflection_and_conj_invariant_is_even_in_u`: 反射等变 + 共轭等变 ⟹ 判据在 `u` 上为偶 ⟹ 在 `u` 与 `−u` 处取同值, **无法把正性集中在 `u=0` 这一条线上**.
+
+**缺口被压成单个字段**: `FourthDirectionWeilCertificate.separation` — admissible 类在任意互异两点的内插能力. 全函数空间下平凡 (`full_space_is_separating`); **Mellin 变换类下这是真正的分析缺口**. 并给出到抽象 `WeilPositivityCertificate` 的桥 `toWeilCertificate`, 直接复用已证的 `no_off_circle_zero_of_weil_certificate`.
+
+**诚实边界 (三层):**
+1. 破缺用的是**全函数空间** `ℂ→ℂ` 的自由度 (`if z = s then 1 else -1` 这种非自然函数). 真实 Weil 判据要求 Φ 来自合法 Mellin 变换类 (显式公式适用条件), 那里内插**不再平凡**.
+2. 这是**等价重述, 不缩短 RH**: 它把「所有零点在临界线上」换成「第 4 方向的正性判据成立」, 攻击面变了 (∀ 零点 → 二次型正性), 难度守恒 — 与 Weil/Li/Hilbert–Pólya 同源.
+3. 仍缺「局部化」: `separation` 给单点负值, 还需压住其他零点的正贡献才能让**总和**为负 — 这是 `off_circle_witness` 字段, Weil/Bombieri 型判据的分析核心, 外部输入.
+
+**编译状态**: 第 1–6 节核心用 `import Mathlib` 独立副本验证通过 (8026 jobs, 临时文件已删); 第 7–8 节 (Weil 接线, 依赖 `criticalBandZero`/`radialDisplacement`/`WeilPositivityCertificate`) 待 `Abundance.lean` 并行修改编译通过后整体验证.
+
+**mathlib 踩坑 (对后续有用)**: 本版本 `Complex.conj` **不存在** (共轭已迁到 `star`); `Complex.normSq_eq_norm_sq` 需**反向** `rw` 才能把 `‖z‖²` 换成 `normSq`; `Complex.mul_conj` / `Complex.conj_re` 等旧名不可用.
 
 ## 候选机制 (等价/直觉, 非力迫)
 - **ξ 载体与能量发散链 (2026-08-26)**: §27 已落地 `xiEntire` 的整性、对称性及其与 `completedRiemannZeta`/ζ 的显式乘积关系，因而把“非平凡零点问题”压缩到整函数 ξ 的零点问题。需要注意：当前代码仍未完成“ξ 零点集无限”的 Hadamard 组合论证；临界带内 ξ=0 与 ζ=0 的双向桥也应以独立定理显式补齐，不能只凭注释中的“载体”二字视为已证。
